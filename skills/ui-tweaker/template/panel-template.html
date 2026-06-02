@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+  ════════════════════════════════════════════════════════════════
+  UI TWEAKER — fixed-interface template (panel-template.html)
+  ════════════════════════════════════════════════════════════════
+  This is the ui-tweaker skill's "frozen UI" template. Every time you
+  open a control panel, copy this file and replace ONLY the marked
+  ⟦PROJECT-SPECIFIC⟧ blocks below. Everything else (the three-pane
+  panel, number boxes, PS-style linked radii, the left Layers tree,
+  drag-to-scrub, alignment icons, all CSS and the builder JS) stays
+  byte-for-byte identical so every project's panel looks the same.
+
+  Spots to replace (search for the ⟦PROJECT-SPECIFIC⟧ markers):
+    1. <title>
+    2. font <link> (your project's actual fonts)
+    3. stylesheet <link href> (your project's REAL CSS — never hand-copy values)
+    4. preview DOM inside #card-stage (your real component markup; each
+       atomic element gets data-pick)
+    5. SEL map (pick key → selector used to query inside the widget)
+    6. OUT_SEL map (pick key → CSS selector emitted in the confirm output)
+    7. LAYERS tree (your real DOM decomposed to atomic level; LAYER_LABEL
+       is derived automatically)
+    8. confirm-output "component / source" strings
+    9. #card-stage component reset CSS — ONLY needed when your real
+       component is hidden / absolutely positioned in production (it
+       resets it to a visible static element on the stage and wires the
+       card-level transform var). For a normally-visible component you
+       can leave the generic .demo-card rule as-is or adapt the selector.
+
+  As shipped, this template is wired to the generic demo component in
+  ../../../examples/demo.css so you can open it and see the panel work.
+  Everything else must stay untouched.
+  ════════════════════════════════════════════════════════════════
+-->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- ⟦PROJECT-SPECIFIC #1: title⟧ -->
+<title>UI Tweaker — Demo Card</title>
+
+<!-- ⟦PROJECT-SPECIFIC #2: replace with your project's actual font links⟧ -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=TASA+Explorer:wght@400..800&display=swap" rel="stylesheet">
+
+<!-- ⟦PROJECT-SPECIFIC #3: link your project's REAL stylesheet so the browser resolves the full cascade (including every !important override layer). Never hand-copy values into this file's <style>. Shipped pointing at the generic demo component.⟧ -->
+<link rel="stylesheet" href="../../../examples/demo.css">
+
+<style>
+  /* ===== Tweaker shell (does not affect the component own styles) ===== */
+  :root { color-scheme: light; }
+  html, body.tw-body { background:#e9ecf1; margin:0; }
+  body.tw-body { font-family: 'TASA Explorer','Chiron Hei HK','Chocolate Classical Sans',sans-serif; }
+  .tw-wrap { display:grid; grid-template-columns: 230px 1fr 360px; gap:0; height:100vh; }
+
+  /* ===== Left: Pages / Layers (Figma style) ===== */
+  .tw-layers { background:#fff; border-right:1px solid #e3e3e7; overflow-y:auto; display:flex; flex-direction:column; }
+  .tw-lay-top { flex:none; display:flex; align-items:center; gap:8px; padding:13px 14px 12px; border-bottom:1px solid #ececec; font-size:12.5px; font-weight:600; color:#1e1e1e; }
+  .tw-lay-top .tw-lay-emoji { font-size:14px; }
+  .tw-lay-sec { padding:10px 8px; border-bottom:1px solid #f1f1f1; }
+  .tw-lay-sec:last-child { border-bottom:none; }
+  .tw-lay-h { font-size:10.5px; font-weight:600; letter-spacing:.5px; color:#aaa; text-transform:uppercase; padding:2px 8px 6px; }
+  .tw-lay-page { display:flex; align-items:center; gap:7px; padding:6px 8px; border-radius:6px; font-size:12px; color:#3c4043; background:#f3f3f4; cursor:default; }
+  .tw-lay-row { display:flex; align-items:center; gap:6px; padding:5px 8px; border-radius:6px; font-size:12px; color:#3c4043; cursor:pointer; white-space:nowrap; user-select:none; }
+  .tw-lay-row:hover { background:#f3f3f4; }
+  .tw-lay-row.on { background:#e8f0fe; color:#1a73e8; }
+  .tw-lay-row.on .tw-lay-ico { color:#1a73e8; }
+  .tw-lay-caret { width:12px; flex:none; color:#bbb; font-size:11px; line-height:1; text-align:center; cursor:pointer; }
+  .tw-lay-caret.leaf { visibility:hidden; }
+  .tw-lay-ico { flex:none; color:#9aa0a6; display:flex; }
+  .tw-lay-ico svg { width:15px; height:15px; }
+  .tw-lay-name { overflow:hidden; text-overflow:ellipsis; }
+  .tw-lay-children { display:block; }
+  .tw-lay-children.collapsed { display:none; }
+  .tw-left { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; overflow:auto; padding:24px; background:
+      radial-gradient(circle at 30% 20%, #f6f8fb, #e3e7ee); }
+  .tw-right { background:#fff; border-left:1px solid #e3e3e7; overflow:hidden; padding:0; display:flex; flex-direction:column; height:100vh; box-sizing:border-box; }
+
+  /* Preview control bar (device width + undo/redo) */
+  .tw-toolbar { position:absolute; top:14px; left:0; right:0; display:flex; justify-content:space-between; gap:14px; align-items:center; z-index:5; padding:0 20px; box-sizing:border-box; }
+  .tw-tb-center { display:flex; gap:14px; align-items:center; }
+  .tw-seg { display:flex; background:#fff; border:1px solid #dadce0; border-radius:10px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+  .tw-seg button { border:none; background:transparent; padding:7px 10px; cursor:pointer; color:#5f6368; display:flex; }
+  .tw-seg button.on { background:#1a73e8; color:#fff; }
+  .tw-seg button svg { width:18px; height:18px; }
+  .tw-hist { display:flex; gap:6px; }
+  .tw-hist button { width:34px; height:34px; border-radius:9px; border:1px solid #dadce0; background:#fff; cursor:pointer; color:#5f6368; box-shadow:0 1px 3px rgba(0,0,0,.08); display:flex; align-items:center; justify-content:center; }
+  .tw-hist button:disabled { opacity:.4; cursor:default; }
+  .tw-hist button svg { width:18px; height:18px; }
+  .tw-hist button.on { background:#1a73e8; border-color:#1a73e8; color:#fff; }
+  #multi-align[hidden] { display:none; }
+  .tw-multi-div { width:1px; align-self:stretch; background:#dadce0; margin:2px 2px; }
+  /* Zoom view (scales the preview only, not the whole page) */
+  .tw-zoom { display:flex; gap:6px; align-items:center; }
+  .tw-zoom button { width:34px; height:34px; border-radius:9px; border:1px solid #dadce0; background:#fff; cursor:pointer; color:#5f6368; box-shadow:0 1px 3px rgba(0,0,0,.08); display:flex; align-items:center; justify-content:center; }
+  .tw-zoom button svg { width:18px; height:18px; }
+  .tw-zoom #zoom-val { min-width:46px; text-align:center; font-size:12px; color:#3c4043; background:#fff; border:1px solid #dadce0; border-radius:9px; height:34px; line-height:32px; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,.08); padding:0 6px; }
+
+  /* One-click alignment tools (icon buttons) */
+  .tw-align { margin:4px 0 11px; display:flex; flex-direction:column; gap:8px; }
+  .tw-align-grp { display:flex; align-items:center; gap:4px; }
+  .tw-align-lbl { font-size:11px; color:#999; width:56px; flex:none; }
+  .tw-align-grp button { width:30px; height:28px; padding:0; border-radius:6px; border:1px solid #e6e6e6; background:#f7f7f8; color:#5f6368; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:.12s; }
+  .tw-align-grp button svg { width:17px; height:17px; }
+  .tw-align-grp button:hover { background:#ececef; border-color:#d6d6d8; }
+  .tw-align-grp button.on { background:#1a73e8; border-color:#1a73e8; color:#fff; }
+
+  /* ⟦PROJECT-SPECIFIC #9: component stage reset⟧
+     Only needed when your real component is hidden / absolutely positioned in
+     production. This resets it to a visible static element on the stage and wires
+     the card-level transform var (--tw-card-transform). Swap `.demo-card` for your
+     real root selector; drop the visibility/position overrides if your component is
+     already visible & static. Keep the transform line so card-level transform works. */
+  #card-stage { display:flex; align-items:center; justify-content:center; }
+  #card-stage .demo-card {
+    position: relative !important;
+    left:auto !important; right:auto !important; top:auto !important; bottom:auto !important;
+    transform: var(--tw-card-transform, none) !important;
+    transform-origin: center center !important;
+    margin:0 !important;
+    opacity:1 !important; visibility:visible !important; pointer-events:auto !important;
+  }
+  /* Alignment guides */
+  .tw-guide { position:absolute; background:#1a73e8; z-index:9; opacity:0; transition:opacity .15s; pointer-events:none; }
+  .tw-guide.vx { width:1px; top:0; bottom:0; left:50%; }
+  .tw-guide.hy { height:1px; left:0; right:0; top:50%; }
+  .tw-guide.show { opacity:.7; }
+  .tw-guide-label { position:absolute; top:8px; left:50%; transform:translateX(-50%); background:#1a73e8; color:#fff; font-size:11px; padding:2px 8px; border-radius:6px; z-index:10; opacity:0; transition:opacity .15s; pointer-events:none; }
+  .tw-guide-label.show { opacity:1; }
+
+  /* Preview element selection hint (low-noise: inner outline, does not pollute box-shadow) */
+  .tw-pick { outline:2px solid rgba(26,115,232,.9); outline-offset:-2px; }
+
+  /* ===== Transform box (selection box -> scale/move/rotate, does not pollute box-shadow: pure overlay) ===== */
+  /* The transform box must paint above every child of the preview component; if the component itself has a high z-index (e.g. a card with z-index:100), this must be higher */
+  #tw-tbox { position:absolute; z-index:99999; pointer-events:none; display:none; }
+  #tw-tbox.on { display:block; }
+  .tw-tbox-frame { position:absolute; inset:0; border:1.5px solid #1a73e8; pointer-events:none; box-sizing:border-box; }
+  .tw-tbox-body { position:absolute; inset:0; pointer-events:auto; cursor:move; z-index:1; }
+  .tw-tbox-h { position:absolute; width:9px; height:9px; box-sizing:border-box; background:#fff; border:1.5px solid #1a73e8; border-radius:2px; pointer-events:auto; z-index:3; }
+  .tw-tbox-h.e-nw{ left:-5px;  top:-5px;    cursor:nwse-resize; }
+  .tw-tbox-h.e-n { left:50%;   top:-5px;    margin-left:-4.5px; cursor:ns-resize; }
+  .tw-tbox-h.e-ne{ right:-5px; top:-5px;    cursor:nesw-resize; }
+  .tw-tbox-h.e-e { right:-5px; top:50%;     margin-top:-4.5px;  cursor:ew-resize; }
+  .tw-tbox-h.e-se{ right:-5px; bottom:-5px; cursor:nwse-resize; }
+  .tw-tbox-h.e-s { left:50%;   bottom:-5px; margin-left:-4.5px; cursor:ns-resize; }
+  .tw-tbox-h.e-sw{ left:-5px;  bottom:-5px; cursor:nesw-resize; }
+  .tw-tbox-h.e-w { left:-5px;  top:50%;     margin-top:-4.5px;  cursor:ew-resize; }
+  .tw-tbox-rotline { position:absolute; left:50%; top:-16px; width:1.5px; height:16px; margin-left:-.75px; background:#1a73e8; pointer-events:none; z-index:2; }
+  .tw-tbox-rot { position:absolute; left:50%; top:-28px; width:13px; height:13px; margin-left:-6.5px; box-sizing:border-box; border-radius:50%; border:1.5px solid #1a73e8; background:#fff; pointer-events:auto; cursor:grab; z-index:3; }
+  .tw-tbox-size { position:absolute; left:50%; top:100%; transform:translate(-50%,9px); background:#1a73e8; color:#fff; font-size:11px; font-weight:600; line-height:1; padding:4px 9px; border-radius:6px; white-space:nowrap; pointer-events:none; box-shadow:0 1px 4px rgba(0,0,0,.18); }
+  /* Multi-select: keep only the outer frame + move, hide scale/rotate handles */
+  #tw-tbox.multi .tw-tbox-h, #tw-tbox.multi .tw-tbox-rot, #tw-tbox.multi .tw-tbox-rotline { display:none; }
+
+  /* ===== Right control panel (Figma style: three panes - fixed head, scrolling body, fixed footer) ===== */
+  /* Title row: pinned to the top, does not scroll */
+  .tw-h { flex:none; font-size:12.5px; font-weight:600; color:#1e1e1e; margin:0; padding:13px 16px 12px; display:flex; align-items:center; gap:8px; letter-spacing:.2px; background:#fff; border-bottom:1px solid #ececec; }
+  .tw-h small { font-weight:400; color:#b3b3b3; font-size:10.5px; }
+
+  /* Categories: flat collapsible sections split by thin rules; chevron on the left. Only this region scrolls */
+  #panel { flex:1 1 auto; min-height:0; overflow-y:auto; padding:0 16px; }
+  .tw-cat { border:none; border-bottom:1px solid #efefef; border-radius:0; margin:0; overflow:visible; }
+  .tw-cat:last-child { border-bottom:none; }
+  .tw-cat > summary { list-style:none; cursor:pointer; padding:12px 2px; font-size:12px; font-weight:600; color:#1e1e1e; background:transparent; display:flex; align-items:center; gap:8px; user-select:none; }
+  .tw-cat > summary:hover { color:#1a73e8; }
+  .tw-cat > summary::-webkit-details-marker { display:none; }
+  .tw-cat > summary::before { content:'›'; color:#bbb; font-size:15px; line-height:1; display:inline-block; width:10px; text-align:center; transition:transform .15s; }
+  .tw-cat[open] > summary::before { transform:rotate(90deg); }
+  .tw-cat-body { padding:2px 2px 14px; }
+
+  .tw-row { margin:11px 0; }
+  .tw-row label { display:flex; justify-content:space-between; align-items:center; font-size:11px; color:#666; margin-bottom:6px; gap:8px; }
+  .tw-row label .val { color:#1e1e1e; font-variant-numeric:tabular-nums; font-size:11px; background:#f3f3f4; border:1px solid #e6e6e6; border-radius:5px; padding:1px 7px; min-width:44px; text-align:right; line-height:18px; }
+  .tw-row label .val.center { color:#1a73e8; background:#eaf2fd; border-color:#bcd7fa; font-weight:600; }
+  .tw-row input[type=range] { width:100%; accent-color:#1a73e8; margin:0; height:4px; }
+  .tw-row select, .tw-row input[type=color], .tw-row input[type=text] { width:100%; font-size:11.5px; padding:6px 8px; border:1px solid #e0e0e0; border-radius:6px; background:#fff; color:#1e1e1e; }
+  .tw-row select:hover, .tw-row input[type=text]:hover { border-color:#c8c8c8; }
+  .tw-color-row { display:flex; align-items:center; gap:8px; }
+  .tw-color-row input[type=color]{ width:34px; height:28px; padding:0; flex:none; border-radius:6px; }
+  .tw-color-row input[type=range]{ flex:1; }
+
+  /* Figma-style number boxes + grid layout */
+  .tw-grid { display:grid; gap:6px; margin:9px 0; }
+  .tw-sublabel { font-size:10px; color:#aaa; margin:11px 0 1px; letter-spacing:.4px; }
+  .tw-field { display:flex; align-items:center; gap:6px; background:#f7f7f8; border:1px solid #e6e6e6; border-radius:6px; padding:0 8px; height:30px; box-sizing:border-box; transition:border-color .12s, box-shadow .12s, background .12s; }
+  .tw-field:hover { border-color:#d0d0d2; }
+  .tw-field:focus-within { border-color:#1a73e8; background:#fff; box-shadow:0 0 0 2px rgba(26,115,232,.15); }
+  .tw-field-ico { font-size:10.5px; color:#999; flex:none; white-space:nowrap; user-select:none; }
+  .tw-field-ico.scrub { cursor:ew-resize; }
+  .tw-field-ico.scrub:hover { color:#1a73e8; }
+  .tw-field-inp { flex:1; min-width:0; width:100%; border:none; background:transparent; outline:none; font-size:12px; color:#1e1e1e; padding:0; text-align:right; font-variant-numeric:tabular-nums; }
+  .tw-field.center { border-color:#bcd7fa; background:#eaf2fd; }
+  .tw-field.center .tw-field-ico { color:#1a73e8; }
+  .tw-field.center .tw-field-inp { color:#1a73e8; font-weight:600; }
+  .tw-field-ico svg { display:block; }
+
+  /* PS-style radius: 2x2 corners + center link */
+  .tw-radius { margin:10px 0 2px; }
+  .tw-radius-grid { position:relative; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:26px; row-gap:8px; }
+  .tw-radius-link { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:24px; height:24px; border-radius:7px; border:1px solid #e6e6e6; background:#fff; color:#9aa0a6; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:2; box-shadow:0 1px 3px rgba(0,0,0,.1); transition:.12s; }
+  .tw-radius-link:hover { border-color:#c8c8c8; color:#5f6368; }
+  .tw-radius-link.on { background:#1a73e8; border-color:#1a73e8; color:#fff; }
+
+  /* Multi-layer shadow */
+  .tw-shadow-layer { border:1px solid #ededed; border-radius:8px; padding:8px 10px 10px; margin:8px 0; background:#fafafb; }
+  .tw-shadow-head { display:flex; align-items:center; justify-content:space-between; margin:1px 0 6px; }
+  .tw-shadow-head span { font-size:11px; font-weight:600; color:#1e1e1e; }
+  .tw-shadow-del { font-size:10.5px; padding:2px 8px; border-radius:6px; border:1px solid #f0c8c4; background:#fdeeed; color:#c5221f; cursor:pointer; }
+  .tw-shadow-inset label { cursor:pointer; align-items:center; }
+  .tw-shadow-inset input[type=checkbox]{ accent-color:#1a73e8; width:14px; height:14px; }
+  .tw-shadow-empty { font-size:11px; color:#aaa; padding:4px 0 6px; }
+  .tw-add-shadow { width:100%; margin-top:4px; padding:8px; font-size:11px; border:1px dashed #cfcfcf; border-radius:8px; background:#fafafb; color:#1a73e8; cursor:pointer; }
+  .tw-add-shadow:hover { background:#f2f3f4; }
+
+  .tw-confirm { flex:none; margin:0; padding:12px 16px; background:#fff; border-top:1px solid #ececec; }
+  .tw-summary { font-size:11px; color:#888; max-height:84px; overflow:auto; white-space:pre-wrap; background:#f7f7f8; border:1px solid #efefef; border-radius:8px; padding:8px; margin-bottom:10px; font-family: ui-monospace, monospace; }
+  .tw-confirm button { width:100%; padding:11px; border:none; border-radius:8px; background:#1a73e8; color:#fff; font-size:13px; font-weight:600; cursor:pointer; transition:background .12s; }
+  .tw-confirm button:hover { background:#1765cc; }
+  .tw-toast { position:fixed; bottom:18px; left:50%; transform:translateX(-50%) translateY(20px); background:#202124; color:#fff; font-size:12.5px; padding:9px 16px; border-radius:999px; opacity:0; transition:.25s; z-index:50; }
+  .tw-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body class="tw-body">
+<div class="tw-wrap">
+  <!-- ============ Far left: Pages / Layers ============ -->
+  <div class="tw-layers">
+    <div class="tw-lay-top"><span class="tw-lay-emoji">🃏</span>Demo Card</div>
+    <div class="tw-lay-sec">
+      <div class="tw-lay-h">Pages</div>
+      <div class="tw-lay-page"><span class="tw-lay-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg></span>Demo page</div>
+    </div>
+    <div class="tw-lay-sec">
+      <div class="tw-lay-h">Layers</div>
+      <div id="layer-tree"></div>
+    </div>
+  </div>
+  <!-- ============ Center: live component preview ============ -->
+  <div class="tw-left" id="tw-left">
+    <div class="tw-toolbar">
+      <div class="tw-seg" id="dev-seg">
+        <button data-w="300" title="Narrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="18" rx="1"/></svg></button>
+        <button data-w="390" class="on" title="Mobile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg></button>
+        <button data-w="760" title="Wide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/></svg></button>
+      </div>
+      <div class="tw-tb-center">
+      <div class="tw-hist">
+        <button id="btn-undo" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-1"/></svg></button>
+        <button id="btn-redo" title="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h1"/></svg></button>
+        <button id="btn-reset" title="Reset (restore values from before tweaking)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>
+        <button id="btn-guide" title="Guides (center alignment lines)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="3" x2="12" y2="21"/><line x1="3" y1="12" x2="21" y2="12"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
+      <div class="tw-hist tw-multi-bar" id="multi-align" hidden>
+        <button data-ma="left" title="Align left"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="4" width="2" height="16" rx="1"/><rect x="7" y="6" width="13" height="4" rx="1"/><rect x="7" y="14" width="8" height="4" rx="1"/></svg></button>
+        <button data-ma="hcenter" title="Align horizontal center"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="11" y="3" width="2" height="18" rx="1"/><rect x="5.5" y="6" width="13" height="4" rx="1"/><rect x="8" y="14" width="8" height="4" rx="1"/></svg></button>
+        <button data-ma="right" title="Align right"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="19" y="4" width="2" height="16" rx="1"/><rect x="4" y="6" width="13" height="4" rx="1"/><rect x="9" y="14" width="8" height="4" rx="1"/></svg></button>
+        <span class="tw-multi-div"></span>
+        <button data-ma="top" title="Align top"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="3" width="16" height="2" rx="1"/><rect x="6" y="7" width="4" height="13" rx="1"/><rect x="14" y="7" width="4" height="8" rx="1"/></svg></button>
+        <button data-ma="vcenter" title="Align vertical center"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="11" width="18" height="2" rx="1"/><rect x="6" y="5.5" width="4" height="13" rx="1"/><rect x="14" y="8" width="4" height="8" rx="1"/></svg></button>
+        <button data-ma="bottom" title="Align bottom"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="19" width="16" height="2" rx="1"/><rect x="6" y="4" width="4" height="13" rx="1"/><rect x="14" y="9" width="4" height="8" rx="1"/></svg></button>
+      </div>
+      </div>
+      <div class="tw-zoom">
+        <button id="zoom-out" title="Zoom out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="20" y1="20" x2="16.5" y2="16.5"/></svg></button>
+        <span id="zoom-val" title="Click to reset to 100%">100%</span>
+        <button id="zoom-in" title="Zoom in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="20" y1="20" x2="16.5" y2="16.5"/></svg></button>
+      </div>
+    </div>
+
+    <div class="tw-guide vx" id="guide-x"></div>
+    <div class="tw-guide hy" id="guide-y"></div>
+    <div class="tw-guide-label" id="guide-label"></div>
+
+    <div id="card-stage">
+      <!-- ⟦PROJECT-SPECIFIC #4 START: preview DOM⟧
+           Paste your component's REAL tags / classes / nesting (copy it from the
+           JSX/JS that generates it — including icon SVGs, span wrappers, formatted
+           strings). Every atomic, adjustable child gets data-pick="key". If the real
+           code has a bare text node (can't be selected/styled on its own), wrap it in
+           a classed span here, add data-pick, and note in the confirm output that the
+           same span must be added to the real template when applying. Below is the
+           generic demo card (styled by ../../../examples/demo.css). -->
+      <article class="demo-card" id="demo-card">
+        <div class="demo-card-media" data-pick="media">
+          <img id="demo-card-img" data-pick="img" alt="">
+          <span class="demo-card-badge" id="demo-card-badge" data-pick="badge"><svg data-pick="badgeIcon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> <span class="demo-card-badge-text" data-pick="badgeText">NEW</span></span>
+        </div>
+        <div class="demo-card-body">
+          <h3 class="demo-card-title" id="demo-card-title" data-pick="title">Mountain Retreat</h3>
+          <p class="demo-card-desc" id="demo-card-desc" data-pick="desc">A quiet cabin with floor-to-ceiling views over the valley.</p>
+          <div class="demo-card-tags" id="demo-card-tags" data-pick="tags"><span class="demo-tag" data-pick="tag1">Design</span><span class="demo-tag" data-pick="tag2">Nature</span><span class="demo-tag" data-pick="tag3">Stay</span></div>
+          <div class="demo-card-footer">
+            <button class="demo-card-btn" id="demo-card-btn" data-pick="btn" type="button"><span class="demo-card-btn-text" data-pick="btnText">View</span></button>
+          </div>
+        </div>
+      </article>
+      <!-- ⟦PROJECT-SPECIFIC #4 END⟧ -->
+    </div>
+  </div>
+
+  <!-- ============ Right: control panel ============ -->
+  <div class="tw-right">
+    <div class="tw-h"><span id="cur-name">Card</span> <small>live from the real stylesheet</small></div>
+    <div id="panel"></div>
+
+    <div class="tw-confirm">
+      <div class="tw-summary" id="summary">No changes yet</div>
+      <button id="btn-confirm">Confirm &amp; update code</button>
+    </div>
+  </div>
+</div>
+<div class="tw-toast" id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+  // Placeholder image (so the demo <img> isn't empty)
+  document.getElementById('demo-card-img').src =
+    'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="320" height="240"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8ec6f0"/><stop offset="1" stop-color="#cdebd4"/></linearGradient></defs><rect width="320" height="240" fill="url(#g)"/><circle cx="250" cy="60" r="34" fill="#fff" opacity="0.85"/><path d="M0 200 L90 130 L150 175 L230 110 L320 185 L320 240 L0 240 Z" fill="#5a8f6b" opacity="0.7"/></svg>');
+
+  // ⟦PROJECT-SPECIFIC #5: SEL — pick key → selector used to query inside the widget (matches the preview DOM)⟧
+  var SEL = {
+    card:  '#demo-card',
+    media: '.demo-card-media',
+    img:   '#demo-card-img',
+    badge: '#demo-card-badge',
+    badgeIcon: '#demo-card-badge svg',
+    badgeText: '#demo-card-badge .demo-card-badge-text',
+    title: '#demo-card-title',
+    desc:  '#demo-card-desc',
+    tags:  '#demo-card-tags',
+    tag1:  '#demo-card-tags .demo-tag:nth-of-type(1)',
+    tag2:  '#demo-card-tags .demo-tag:nth-of-type(2)',
+    tag3:  '#demo-card-tags .demo-tag:nth-of-type(3)',
+    btn:   '#demo-card-btn',
+    btnText: '#demo-card-btn .demo-card-btn-text'
+  };
+  // ⟦PROJECT-SPECIFIC #6: OUT_SEL — pick key → CSS selector emitted in the confirm output⟧
+  var OUT_SEL = {
+    card:'.demo-card', media:'.demo-card-media', img:'.demo-card-media img',
+    badge:'.demo-card-badge', badgeIcon:'.demo-card-badge svg',
+    badgeText:'.demo-card-badge .demo-card-badge-text',
+    title:'.demo-card-title', desc:'.demo-card-desc',
+    tags:'.demo-card-tags',
+    tag1:'.demo-card-tags .demo-tag:nth-of-type(1)',
+    tag2:'.demo-card-tags .demo-tag:nth-of-type(2)',
+    tag3:'.demo-card-tags .demo-tag:nth-of-type(3)',
+    btn:'.demo-card-btn', btnText:'.demo-card-btn .demo-card-btn-text'
+  };
+  function elFor(key){ return document.querySelector(SEL[key]); }
+
+  var cur = 'card';
+  var multi = {};            // multi-select set (PS-style shift multi-select); cur = primary / last clicked
+  function multiKeys(){ return Object.keys(multi); }
+  var state = {};            // { key: { prop:value, _tx, ... } }
+  var history = []; var hidx = -1;
+
+  // ---- Utilities ----
+  function px(v){ return Math.round(parseFloat(v)||0); }
+  function f1(v){ return (Math.round((parseFloat(v)||0)*100)/100); }
+  function rgbToHex(rgb){
+    var m = (rgb||'').match(/rgba?\(([^)]+)\)/); if(!m) return {hex:'#000000',a:1};
+    var p = m[1].split(',').map(function(s){return parseFloat(s);});
+    var hex = '#'+[p[0],p[1],p[2]].map(function(n){return ('0'+Math.round(n||0).toString(16)).slice(-2);}).join('');
+    return { hex:hex, a: p.length>3 ? p[3] : 1 };
+  }
+  function hexToRgba(hex,a){
+    var n = (hex||'#000000').replace('#',''); if(n.length===3) n=n.split('').map(function(c){return c+c;}).join('');
+    var r=parseInt(n.slice(0,2),16),g=parseInt(n.slice(2,4),16),b=parseInt(n.slice(4,6),16);
+    return 'rgba('+r+','+g+','+b+','+f1(a)+')';
+  }
+
+  // Apply the user overrides to the real element (!important so it beats the stylesheet)
+  function applyEl(key){
+    var el = elFor(key); if(!el) return;
+    var s = state[key] || {};
+    Object.keys(s).forEach(function(prop){
+      if(prop.charAt(0)==='_') return;
+      el.style.setProperty(prop, s[prop], 'important');
+    });
+    if('_tx' in s||'_ty' in s||'_rot' in s||'_scl' in s){
+      var tx=s._tx||0, ty=s._ty||0, rot=s._rot||0, scl=(s._scl==null?1:s._scl);
+      var t='translate('+tx+'px,'+ty+'px) rotate('+rot+'deg) scale('+scl+')';
+      if(key==='card'){ el.style.setProperty('--tw-card-transform', t); }
+      else el.style.setProperty('transform', t, 'important');
+    }
+    if('_shadows' in s){
+      el.style.setProperty('box-shadow', composeShadow(s._shadows), 'important');
+    }
+    if('_bgHex' in s){ el.style.setProperty('background', hexToRgba(s._bgHex,s._bgA), 'important'); }
+    if('_txHex' in s){ el.style.setProperty('color', s._txHex, 'important'); }
+    if('_bdHex' in s){ el.style.setProperty('border-color', hexToRgba(s._bdHex,s._bdA), 'important'); }
+    scheduleTBox();
+  }
+
+  function gcs(key){ return getComputedStyle(elFor(key)); }
+  function cssVal(key, prop){
+    var s=state[key]||{};
+    if(prop in s) return s[prop];
+    return gcs(key).getPropertyValue(prop);
+  }
+
+  var FONT_OPTS = ['inherit','TASA Explorer','Chiron Hei HK','Chocolate Classical Sans','system-ui','-apple-system','Noto Sans TC','PingFang TC'];
+
+  // ---- Build the control panel ----
+  function buildPanel(){
+    var key=cur, p=document.getElementById('panel');
+    p.innerHTML='';
+    var cats=[];
+    var st=state[key]||{};
+
+    cats.push(cat('Typography', (key==='title'||key==='desc'||key==='badge'||key==='tags'||key==='badgeText'||key==='btn'||key==='btnText'), [
+      fieldGrid(2,[
+        numBox('font-size','Size',8,40,0.5,'px', parseFloat(cssVal(key,'font-size'))),
+        numBox('font-weight','Weight',100,900,100,'', parseInt(cssVal(key,'font-weight'))||400)
+      ]),
+      fieldGrid(2,[
+        numBox('line-height','Line height',0.8,2.4,0.05,'', lineH(key)),
+        numBox('letter-spacing','Tracking',-2,6,0.1,'px', letterSp(key))
+      ]),
+      selectRow('font-family','Font', FONT_OPTS, firstFont(cssVal(key,'font-family'))),
+      colorRow('color','Color', cssVal(key,'color'), false, '_txC')
+    ]));
+
+    cats.push(cat('Spacing', false, [
+      subLabel('Padding'),
+      fieldGrid(2,[
+        numBox('padding-top','Top',0,60,1,'px', parseFloat(cssVal(key,'padding-top'))),
+        numBox('padding-right','Right',0,60,1,'px', parseFloat(cssVal(key,'padding-right'))),
+        numBox('padding-bottom','Bottom',0,60,1,'px', parseFloat(cssVal(key,'padding-bottom'))),
+        numBox('padding-left','Left',0,60,1,'px', parseFloat(cssVal(key,'padding-left')))
+      ]),
+      subLabel('Margin'),
+      fieldGrid(2,[
+        numBox('margin-top','Top',-40,60,1,'px', parseFloat(cssVal(key,'margin-top'))),
+        numBox('margin-bottom','Bottom',-40,60,1,'px', parseFloat(cssVal(key,'margin-bottom')))
+      ]),
+      fieldGrid(1,[ numBox('gap','Child gap',0,40,1,'px', parseFloat(cssVal(key,'gap'))||0) ])
+    ]));
+
+    cats.push(cat('Size', (key==='card'||key==='media'||key==='img'||key==='badgeIcon'), [
+      fieldGrid(2,[
+        numBox('width','W',80,440,1,'px', parseFloat(cssVal(key,'width'))),
+        numBox('height','H',20,400,1,'px', parseFloat(cssVal(key,'height')))
+      ]),
+      fieldGrid(1,[ numBox('max-width','Max width',80,520,1,'px', parseFloat(cssVal(key,'max-width'))||0) ])
+    ]));
+
+    cats.push(cat('Radius', (key==='card'||key==='media'||key==='btn'||key==='badge'), [
+      radiusControl(key)
+    ]));
+
+    cats.push(cat('Position / offset', false, [
+      alignTools(key),
+      fieldGrid(2,[
+        numBox('_tx','X',-400,400,1,'px', st._tx||0, true),
+        numBox('_ty','Y',-400,400,1,'px', st._ty||0, true)
+      ]),
+      fieldGrid(2,[
+        numBox('_rot','Rotate',-180,180,1,'deg', st._rot||0),
+        numBox('_scl','Scale',0.3,2,0.01,'', st._scl==null?1:st._scl)
+      ])
+    ]));
+
+    cats.push(shadowCat(key));
+
+    var bf=cssVal(key,'backdrop-filter')||cssVal(key,'-webkit-backdrop-filter')||'none';
+    cats.push(cat('Frosted glass', false, [
+      fieldGrid(1,[ numBox('backdrop-filter','Blur',0,30,0.5,'px', bfBlur(bf)) ])
+    ]));
+
+    cats.push(cat('Color', false, [
+      colorRow('_bg','Background', cssVal(key,'background-color'), true, '_bg'),
+      colorRow('_tx2','Text', cssVal(key,'color'), false, '_txC'),
+      colorRow('_bd','Border', cssVal(key,'border-top-color'), true, '_bd'),
+      fieldGrid(1,[ numBox('border-width','Border width',0,8,0.5,'px', parseFloat(cssVal(key,'border-top-width'))||0) ])
+    ]));
+
+    cats.forEach(function(c){ p.appendChild(c); });
+    bindRows();
+  }
+
+  function lineH(key){
+    var lh=cssVal(key,'line-height'), fs=parseFloat(cssVal(key,'font-size'));
+    if(lh==='normal') return 1.2;
+    var n=parseFloat(lh); if((lh+'').indexOf('px')>-1 && fs) return f1(n/fs);
+    return f1(n);
+  }
+  function letterSp(key){ var v=cssVal(key,'letter-spacing'); return v==='normal'?0:(parseFloat(v)||0); }
+  function firstFont(ff){ return (ff||'').split(',')[0].replace(/["']/g,'').trim(); }
+  function bfBlur(bf){ var m=(bf||'').match(/blur\(([\d.]+)px\)/); return m?parseFloat(m[1]):0; }
+  // ---- Multi-layer shadow ----
+  function parseShadowLayers(box){
+    if(!box || box==='none') return [];
+    return box.split(/,(?![^()]*\))/).map(function(part){
+      var p=part.trim();
+      var inset=/\binset\b/.test(p); p=p.replace(/\binset\b/,'').trim();
+      var layer={x:0,y:0,blur:0,spread:0,hex:'#000000',alpha:1,inset:inset};
+      var cm=p.match(/rgba?\([^)]+\)/);
+      if(cm){ var pa=rgbToHex(cm[0]); layer.hex=pa.hex; layer.alpha=f1(pa.a); p=p.replace(cm[0],''); }
+      else { var hm=p.match(/#[0-9a-fA-F]{3,8}/); if(hm){ layer.hex=normHex(hm[0]); p=p.replace(hm[0],''); } }
+      var nums=p.match(/-?[\d.]+px/g)||[];
+      if(nums[0]!=null)layer.x=px(nums[0]); if(nums[1]!=null)layer.y=px(nums[1]);
+      if(nums[2]!=null)layer.blur=px(nums[2]); if(nums[3]!=null)layer.spread=px(nums[3]);
+      return layer;
+    });
+  }
+  function normHex(h){ var n=h.replace('#',''); if(n.length===3)n=n.split('').map(function(c){return c+c;}).join(''); return '#'+n.slice(0,6).toLowerCase(); }
+  function composeShadow(layers){
+    if(!layers || !layers.length) return 'none';
+    return layers.map(function(l){
+      return (l.inset?'inset ':'')+l.x+'px '+l.y+'px '+l.blur+'px '+l.spread+'px '+hexToRgba(l.hex||'#000000', l.alpha);
+    }).join(', ');
+  }
+  function currentLayers(key){
+    var st=state[key]||{};
+    if(st._shadows) return st._shadows;
+    return parseShadowLayers(cssVal(key,'box-shadow'));
+  }
+  function ensureShadows(key){
+    ensure(key);
+    if(!state[key]._shadows){
+      state[key]._shadows = parseShadowLayers(cssVal(key,'box-shadow')).map(function(l){
+        return {x:l.x,y:l.y,blur:l.blur,spread:l.spread,hex:l.hex,alpha:l.alpha,inset:l.inset};
+      });
+    }
+    return state[key]._shadows;
+  }
+  function shadowCat(key){
+    var d=document.createElement('details'); d.className='tw-cat';
+    var s=document.createElement('summary'); s.textContent='Shadow'; d.appendChild(s);
+    var b=document.createElement('div'); b.className='tw-cat-body';
+    renderShadowBody(key, b); d.appendChild(b); return d;
+  }
+  function renderShadowBody(key, b){
+    b.innerHTML='';
+    var layers=currentLayers(key);
+    if(!layers.length){
+      var empty=document.createElement('div'); empty.className='tw-shadow-empty'; empty.textContent='No shadow yet';
+      b.appendChild(empty);
+    }
+    layers.forEach(function(layer, idx){ b.appendChild(renderShadowLayer(key, layer, idx, b)); });
+    var add=document.createElement('button'); add.className='tw-add-shadow'; add.textContent='+ Add shadow layer';
+    add.addEventListener('click',function(){
+      ensureShadows(key).push({x:0,y:4,blur:8,spread:0,hex:'#000000',alpha:0.2,inset:false});
+      applyEl(key); commit(); renderShadowBody(key, b);
+    });
+    b.appendChild(add);
+  }
+  function renderShadowLayer(key, layer, idx, body){
+    var wrap=document.createElement('div'); wrap.className='tw-shadow-layer';
+    var head=document.createElement('div'); head.className='tw-shadow-head';
+    var ttl=document.createElement('span'); ttl.textContent='Shadow layer '+(idx+1); head.appendChild(ttl);
+    var del=document.createElement('button'); del.className='tw-shadow-del'; del.textContent='Delete';
+    del.addEventListener('click',function(){
+      ensureShadows(key).splice(idx,1); applyEl(key); commit(); renderShadowBody(key, body);
+    });
+    head.appendChild(del); wrap.appendChild(head);
+    wrap.appendChild(shadowToggle(key, idx, layer));
+    wrap.appendChild(shadowSlider(key, idx, 'x','X offset',-40,40,1,layer.x));
+    wrap.appendChild(shadowSlider(key, idx, 'y','Y offset',-40,40,1,layer.y));
+    wrap.appendChild(shadowSlider(key, idx, 'blur','Blur',0,80,1,layer.blur));
+    wrap.appendChild(shadowSlider(key, idx, 'spread','Spread',-30,30,1,layer.spread));
+    wrap.appendChild(shadowColor(key, idx, layer));
+    return wrap;
+  }
+  function shadowToggle(key, idx, layer){
+    var row=document.createElement('div'); row.className='tw-row tw-shadow-inset';
+    row.innerHTML='<label><span>Inset shadow</span><input type="checkbox"'+(layer.inset?' checked':'')+'></label>';
+    var cb=row.querySelector('input');
+    cb.addEventListener('change',function(){ ensureShadows(key)[idx].inset=cb.checked; applyEl(key); commit(); });
+    return row;
+  }
+  function shadowSlider(key, idx, field, label, min,max,step, val){
+    var row=document.createElement('div'); row.className='tw-row';
+    var vid='sv-'+idx+'-'+field;
+    row.innerHTML='<label>'+label+'<span class="val" id="'+vid+'">'+f1(val)+'px</span></label>'+
+      '<input type="range" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'">';
+    var inp=row.querySelector('input');
+    inp.addEventListener('input',function(){
+      var v=parseFloat(inp.value); ensureShadows(key)[idx][field]=v;
+      var lbl=document.getElementById(vid); if(lbl)lbl.textContent=f1(v)+'px'; applyEl(key);
+    });
+    inp.addEventListener('change',commit);
+    return row;
+  }
+  function shadowColor(key, idx, layer){
+    var row=document.createElement('div'); row.className='tw-row';
+    row.innerHTML='<label>Shadow color / opacity<span class="val" id="sa-'+idx+'">'+f1(layer.alpha)+'</span></label>'+
+      '<div class="tw-color-row"><input type="color" value="'+layer.hex+'">'+
+      '<input type="range" min="0" max="1" step="0.01" value="'+f1(layer.alpha)+'"></div>';
+    var ci=row.querySelector('input[type=color]'), ai=row.querySelector('input[type=range]');
+    var upd=function(){
+      var L=ensureShadows(key)[idx]; L.hex=ci.value; L.alpha=parseFloat(ai.value);
+      var lbl=document.getElementById('sa-'+idx); if(lbl)lbl.textContent=f1(L.alpha); applyEl(key);
+    };
+    ci.addEventListener('input',upd); ai.addEventListener('input',upd);
+    ci.addEventListener('change',commit); ai.addEventListener('change',commit);
+    return row;
+  }
+
+  // ---- DOM builders ----
+  // Figma-style typeable number box (no slider); when snap=true, X/Y near 0 snaps to 0 and shows Center
+  function numBox(prop,label,min,max,step,unit,init,snap){
+    var v=(init==null||isNaN(init))?min:init;
+    var f=document.createElement('div'); f.className='tw-field';
+    f.dataset.row=prop; f.dataset.kind='num'; f.dataset.unit=unit;
+    f.dataset.snap=snap?'1':''; f.dataset.min=min; f.dataset.max=max; f.dataset.step=step;
+    f.innerHTML='<span class="tw-field-ico">'+label+'</span>'+
+      '<input class="tw-field-inp" id="i-'+prop+'" type="text" inputmode="decimal" value="'+fmtNum(v)+'">';
+    if(snap && v===0) f.classList.add('center');
+    return f;
+  }
+  function fieldGrid(cols, fields){
+    var g=document.createElement('div'); g.className='tw-grid';
+    g.style.gridTemplateColumns='repeat('+cols+',minmax(0,1fr))';
+    fields.forEach(function(f){ g.appendChild(f); });
+    return g;
+  }
+  function subLabel(t){ var d=document.createElement('div'); d.className='tw-sublabel'; d.textContent=t; return d; }
+  // Corner icons for the four radius corners
+  var CIC={
+    tl:'<path d="M13 3 H7 A4 4 0 0 0 3 7 V13"/>',
+    tr:'<path d="M3 3 H9 A4 4 0 0 1 13 7 V13"/>',
+    bl:'<path d="M13 13 H7 A4 4 0 0 1 3 9 V3"/>',
+    br:'<path d="M3 13 H9 A4 4 0 0 0 13 9 V3"/>'
+  };
+  function cornerSvg(c){ return '<svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">'+CIC[c]+'</svg>'; }
+  function linkSvg(){ return '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="9" width="8" height="6" rx="3"/><rect x="13" y="9" width="8" height="6" rx="3"/><path d="M9 12h6"/></svg>'; }
+  var radiusLinked = true;   // PS-style: corners linked (on by default)
+  // PS-style radius: 2x2 corners + center link button (binds itself; not handled by the generic bindRows listener)
+  function radiusControl(key){
+    var wrap=document.createElement('div'); wrap.className='tw-radius';
+    var defs=[['border-top-left-radius','tl'],['border-top-right-radius','tr'],['border-bottom-left-radius','bl'],['border-bottom-right-radius','br']];
+    var grid=document.createElement('div'); grid.className='tw-radius-grid';
+    var fields=defs.map(function(d){
+      var f=numBox(d[0],cornerSvg(d[1]),0,60,0.5,'px', parseFloat(cssVal(key,d[0])));
+      f.dataset.kind='';                 // skip the generic bindRows number-box listener
+      grid.appendChild(f); return f;
+    });
+    var inputs=fields.map(function(f){ return f.querySelector('input'); });
+    var props=defs.map(function(d){ return d[0]; });
+    var link=document.createElement('button'); link.type='button'; link.className='tw-radius-link'+(radiusLinked?' on':'');
+    link.title=radiusLinked?'All corners linked (click to unlink)':'Corners independent (click to link)';
+    link.innerHTML=linkSvg();
+    link.addEventListener('click',function(){
+      radiusLinked=!radiusLinked; link.classList.toggle('on', radiusLinked);
+      link.title=radiusLinked?'All corners linked (click to unlink)':'Corners independent (click to link)';
+    });
+    grid.appendChild(link);
+    wrap.appendChild(grid);
+    function applyOne(i, doCommit){
+      var inp=inputs[i], v=parseFloat(inp.value); if(isNaN(v)) return;
+      if(v<0)v=0; if(v>60)v=60;
+      applyNum(props[i], v, 'px');
+      if(radiusLinked){
+        inputs.forEach(function(o,j){ if(j!==i){ o.value=fmtNum(v); applyNum(props[j], v, 'px'); }});
+      }
+      if(doCommit){ inp.value=fmtNum(v); commit(); }
+    }
+    inputs.forEach(function(inp,i){
+      inp.addEventListener('focus',function(){ inp.select(); });
+      inp.addEventListener('input',function(){ applyOne(i,false); });
+      inp.addEventListener('change',function(){ applyOne(i,true); });
+      inp.addEventListener('keydown',function(e){
+        if(e.key==='ArrowUp'||e.key==='ArrowDown'){
+          e.preventDefault();
+          var v=parseFloat(inp.value)||0;
+          v += (e.key==='ArrowUp'?1:-1)*(e.shiftKey?5:0.5);
+          if(v<0)v=0; if(v>60)v=60; inp.value=fmtNum(v); applyOne(i,true);
+        } else if(e.key==='Enter'){ e.preventDefault(); inp.blur(); }
+      });
+      attachScrub(fields[i], inp, 0, 60, 0.5, function(){ applyOne(i,false); }, function(){ applyOne(i,true); });
+    });
+    return wrap;
+  }
+  function fmtNum(v){ return String(Math.round(v*1000)/1000); }
+  // Figma-style drag-to-scrub: drag left/right on the field label/icon to change the value (you can still click into the input to type)
+  function attachScrub(f, inp, min, max, step, onMove, onEnd){
+    var ico=f.querySelector('.tw-field-ico'); if(!ico) return;
+    ico.classList.add('scrub');
+    ico.addEventListener('mousedown', function(e){
+      e.preventDefault();                      // avoid focus / text selection
+      var startX=e.clientX, startV=parseFloat(inp.value)||0, moved=false;
+      document.body.style.cursor='ew-resize';
+      function mv(ev){
+        moved=true;
+        var v=startV + (ev.clientX-startX)*step;
+        if(v<min)v=min; if(v>max)v=max;
+        v=Math.round(v/step)*step;
+        inp.value=fmtNum(v); onMove();
+      }
+      function up(){
+        document.removeEventListener('mousemove',mv);
+        document.removeEventListener('mouseup',up);
+        document.body.style.cursor='';
+        if(moved) onEnd();
+      }
+      document.addEventListener('mousemove',mv);
+      document.addEventListener('mouseup',up);
+    });
+  }
+  function applyNum(prop,v,unit){
+    ensure(cur);
+    if(prop.charAt(0)==='_'){ state[cur][prop]=v; }
+    else { state[cur][prop]= unit==='' ? String(v) : v+unit; }
+    applyEl(cur);
+  }
+  function cat(title, open, rows){
+    var d=document.createElement('details'); d.className='tw-cat'; if(open)d.open=true;
+    var s=document.createElement('summary'); s.textContent=title; d.appendChild(s);
+    var b=document.createElement('div'); b.className='tw-cat-body';
+    rows.forEach(function(r){ b.appendChild(r); }); d.appendChild(b); return d;
+  }
+  function slider(prop,label,min,max,step,unit,init,snap){
+    var row=document.createElement('div'); row.className='tw-row'; row.dataset.row=prop;
+    row.dataset.kind='slider'; row.dataset.unit=unit; row.dataset.snap=snap?'1':'';
+    var v=(init==null||isNaN(init))?min:init;
+    row.innerHTML='<label>'+label+'<span class="val" id="v-'+prop+'">'+fmt(v,unit)+'</span></label>'+
+      '<input type="range" id="i-'+prop+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+v+'">';
+    return row;
+  }
+  function selectRow(prop,label,opts,init){
+    var row=document.createElement('div'); row.className='tw-row'; row.dataset.row=prop; row.dataset.kind='select';
+    var o=opts.map(function(v){return '<option value="'+v+'"'+(v===init?' selected':'')+'>'+v+'</option>';}).join('');
+    row.innerHTML='<label>'+label+'</label><select id="i-'+prop+'">'+o+'</select>'; return row;
+  }
+  function colorRow(prop,label,rgb,withAlpha,outKey){
+    var pc=rgbToHex(rgb); var row=document.createElement('div'); row.className='tw-row'; row.dataset.row=prop;
+    row.dataset.kind='color'; row.dataset.alpha=withAlpha?'1':''; row.dataset.out=outKey||prop;
+    var alpha = withAlpha? '<input type="range" id="a-'+prop+'" min="0" max="1" step="0.01" value="'+f1(pc.a)+'">':'';
+    row.innerHTML='<label>'+label+'</label>'+
+      '<div class="tw-color-row"><input type="color" id="i-'+prop+'" value="'+pc.hex+'">'+alpha+'</div>';
+    return row;
+  }
+  function fmt(v,unit){ if(unit==='') return f1(v); return f1(v)+unit; }
+
+  // ---- Bindings ----
+  function bindRows(){
+    // Figma-style number box: typeable, up/down keys to step (Shift x10), Enter to apply, X/Y snap near 0
+    document.querySelectorAll('.tw-field[data-kind=num]').forEach(function(f){
+      var prop=f.dataset.row, unit=f.dataset.unit, snap=f.dataset.snap;
+      var min=parseFloat(f.dataset.min), max=parseFloat(f.dataset.max), step=parseFloat(f.dataset.step)||1;
+      var inp=f.querySelector('input');
+      var apply=function(doCommit){
+        var v=parseFloat(inp.value);
+        if(isNaN(v)) return;
+        if(v<min)v=min; if(v>max)v=max;
+        if(snap && Math.abs(v)<=3) v=0;
+        applyNum(prop,v,unit);
+        var isCenter=!!snap && v===0;
+        f.classList.toggle('center', isCenter);
+        if(isCenter) showGuide(prop);
+        if(doCommit){ inp.value=fmtNum(v); commit(); }
+      };
+      inp.addEventListener('focus',function(){ inp.select(); });
+      inp.addEventListener('input',function(){ apply(false); });
+      inp.addEventListener('change',function(){ apply(true); });
+      inp.addEventListener('keydown',function(e){
+        if(e.key==='ArrowUp'||e.key==='ArrowDown'){
+          e.preventDefault();
+          var v=parseFloat(inp.value)||0;
+          v += (e.key==='ArrowUp'?1:-1)*(e.shiftKey?step*10:step);
+          if(v<min)v=min; if(v>max)v=max;
+          inp.value=fmtNum(v); apply(true);
+        } else if(e.key==='Enter'){ e.preventDefault(); inp.blur(); }
+      });
+      attachScrub(f, inp, min, max, step, function(){ apply(false); }, function(){ apply(true); });
+    });
+    document.querySelectorAll('.tw-row').forEach(function(row){
+      var prop=row.dataset.row, kind=row.dataset.kind;
+      if(kind==='slider'){
+        var inp=row.querySelector('input'), unit=row.dataset.unit, snap=row.dataset.snap;
+        inp.addEventListener('input',function(){
+          var v=parseFloat(inp.value);
+          if(snap && Math.abs(v)<=3){ v=0; inp.value=0; }
+          liveSlider(prop,v,unit,snap);
+        });
+        inp.addEventListener('change',commit);
+      } else if(kind==='select'){
+        var sel=row.querySelector('select');
+        sel.addEventListener('change',function(){ ensure(cur); state[cur]['font-family']= sel.value==='inherit'?'inherit':"'"+sel.value+"'"; applyEl(cur); commit(); });
+      } else if(kind==='color'){
+        var ci=row.querySelector('input[type=color]'), ai=row.querySelector('input[type=range]'), out=row.dataset.out;
+        var upd=function(){
+          ensure(cur);
+          var hex=ci.value, a=ai?parseFloat(ai.value):1;
+          if(out==='_sc'){ state[cur]._sc=hex; }
+          else if(out==='_bg'){ state[cur]._bgHex=hex; state[cur]._bgA=a; }
+          else if(out==='_txC'){ state[cur]._txHex=hex; }
+          else if(out==='_bd'){ state[cur]._bdHex=hex; state[cur]._bdA=a; }
+          applyEl(cur);
+        };
+        ci.addEventListener('input',upd); if(ai) ai.addEventListener('input',upd);
+        ci.addEventListener('change',commit); if(ai) ai.addEventListener('change',commit);
+      }
+    });
+  }
+  function ensure(key){ if(!state[key]) state[key]={}; }
+  function liveSlider(prop,v,unit,snap){
+    ensure(cur);
+    var lbl=document.getElementById('v-'+prop);
+    if(prop.charAt(0)==='_'){ state[cur][prop]=v; }
+    else { state[cur][prop]= unit==='' ? String(v) : v+unit; }
+    applyEl(cur);
+    if(lbl){
+      if(snap && v===0){ lbl.textContent='Center'; lbl.classList.add('center'); showGuide(prop); }
+      else { lbl.textContent=fmt(v,unit); lbl.classList.remove('center'); }
+    }
+  }
+
+  // ---- Alignment guides ----
+  var gT, guidesPinned=false;
+  function setGuides(showX, showY, label){
+    var gx=document.getElementById('guide-x'), gy=document.getElementById('guide-y'), gl=document.getElementById('guide-label');
+    gx.classList.toggle('show', !!showX || guidesPinned);
+    gy.classList.toggle('show', !!showY || guidesPinned);
+    if(label){ gl.textContent=label; gl.classList.add('show'); }
+    clearTimeout(gT);
+    if(!guidesPinned){
+      gT=setTimeout(function(){ gx.classList.remove('show'); gy.classList.remove('show'); gl.classList.remove('show'); },900);
+    } else if(label){
+      gT=setTimeout(function(){ gl.classList.remove('show'); },900);
+    }
+  }
+  function showGuide(prop){ setGuides(prop==='_tx', prop==='_ty', prop==='_tx'?'Horizontal center':'Vertical center'); }
+  function flashGuides(mode){
+    if(mode==='hcenter') setGuides(true,false,'Horizontal center');
+    else if(mode==='vcenter') setGuides(false,true,'Vertical center');
+    else if(mode==='both') setGuides(true,true,'Center both');
+  }
+  document.getElementById('btn-guide').addEventListener('click',function(){
+    guidesPinned=!guidesPinned;
+    this.classList.toggle('on', guidesPinned);
+    setGuides(false,false, guidesPinned?'Center lines':'');
+  });
+
+  // ---- One-click alignment ----
+  // Alignment icons (reusing the toolbar style)
+  var AIC={
+    left:'<rect x="3" y="4" width="2" height="16" rx="1"/><rect x="7" y="6" width="13" height="4" rx="1"/><rect x="7" y="14" width="8" height="4" rx="1"/>',
+    hcenter:'<rect x="11" y="3" width="2" height="18" rx="1"/><rect x="5.5" y="6" width="13" height="4" rx="1"/><rect x="8" y="14" width="8" height="4" rx="1"/>',
+    right:'<rect x="19" y="4" width="2" height="16" rx="1"/><rect x="4" y="6" width="13" height="4" rx="1"/><rect x="9" y="14" width="8" height="4" rx="1"/>',
+    top:'<rect x="4" y="3" width="16" height="2" rx="1"/><rect x="6" y="7" width="4" height="13" rx="1"/><rect x="14" y="7" width="4" height="8" rx="1"/>',
+    vcenter:'<rect x="3" y="11" width="18" height="2" rx="1"/><rect x="6" y="5.5" width="4" height="13" rx="1"/><rect x="14" y="8" width="4" height="8" rx="1"/>',
+    bottom:'<rect x="4" y="19" width="16" height="2" rx="1"/><rect x="6" y="4" width="4" height="13" rx="1"/><rect x="14" y="9" width="4" height="8" rx="1"/>',
+    both:'<rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2"/>'
+  };
+  function aBtn(attr,val,ic,title){ return '<button '+attr+'="'+val+'" title="'+title+'"><svg viewBox="0 0 24 24" fill="currentColor">'+AIC[ic]+'</svg></button>'; }
+  function alignTools(key){
+    var wrap=document.createElement('div'); wrap.className='tw-align';
+    wrap.innerHTML=
+      '<div class="tw-align-grp"><span class="tw-align-lbl">Box position</span>'+
+        aBtn('data-al','hcenter','hcenter','Horizontal center')+
+        aBtn('data-al','vcenter','vcenter','Vertical center')+
+        aBtn('data-al','both','both','Center both')+
+      '</div>'+
+      '<div class="tw-align-grp"><span class="tw-align-lbl">Text in box</span>'+
+        aBtn('data-tx','left','left','Left')+
+        aBtn('data-tx','center','hcenter','Center')+
+        aBtn('data-tx','right','right','Right')+
+      '</div>'+
+      '<div class="tw-align-grp"><span class="tw-align-lbl">Vertical align</span>'+
+        aBtn('data-ty','start','top','Top')+
+        aBtn('data-ty','center','vcenter','Middle')+
+        aBtn('data-ty','end','bottom','Bottom')+
+      '</div>';
+    wrap.querySelectorAll('button[data-al]').forEach(function(b){
+      b.addEventListener('click',function(){ alignEl(key, b.dataset.al); });
+    });
+    // Horizontal align: flex container main axis (row -> justify-content / column -> align-items); non-flex uses text-align
+    wrap.querySelectorAll('button[data-tx]').forEach(function(b){
+      b.addEventListener('click',function(){
+        ensure(key);
+        var v=b.dataset.tx;                       // left/center/right
+        state[key]['text-align']=v;
+        var ax=flexAxis(elFor(key));
+        if(ax.isFlex){
+          var dir= v==='left'?'start':(v==='right'?'end':'center');
+          state[key][ax.hProp]=flexVal(dir);
+        }
+        applyEl(key); commit();
+        setActiveBtn(wrap,'data-tx',b);
+      });
+    });
+    // Vertical align: flex container cross axis (row -> align-items / column -> justify-content)
+    wrap.querySelectorAll('button[data-ty]').forEach(function(b){
+      b.addEventListener('click',function(){
+        ensure(key);
+        var v=b.dataset.ty;                       // start/center/end
+        var ax=flexAxis(elFor(key));
+        if(ax.isFlex){
+          state[key][ax.vProp]=flexVal(v);
+        } else {
+          // non-flex: vertical centering needs flex, wrap with minimal side effects
+          state[key]['display']='flex';
+          state[key]['align-items']=flexVal(v);
+        }
+        applyEl(key); commit();
+        setActiveBtn(wrap,'data-ty',b);
+      });
+    });
+    return wrap;
+  }
+  // flex-axis detection: returns the CSS property for horizontal/vertical
+  function flexAxis(el){
+    if(!el) return { isFlex:false, hProp:'justify-content', vProp:'align-items' };
+    var cs=getComputedStyle(el);
+    var isFlex=cs.display.indexOf('flex')>-1;
+    var col=(cs.flexDirection||'').indexOf('column')>-1;
+    return { isFlex:isFlex, hProp:col?'align-items':'justify-content', vProp:col?'justify-content':'align-items' };
+  }
+  function flexVal(dir){ return dir==='start'?'flex-start':(dir==='end'?'flex-end':'center'); }
+  function setActiveBtn(wrap, attr, b){
+    wrap.querySelectorAll('button['+attr+']').forEach(function(o){ o.classList.toggle('on', o===b); });
+  }
+  function alignEl(key, mode){
+    var el=elFor(key); if(!el) return;
+    var parent= key==='card' ? document.getElementById('card-stage') : el.parentElement;
+    if(!parent) return;
+    ensure(key); var st=state[key];
+    var er=el.getBoundingClientRect(), pr=parent.getBoundingClientRect();
+    if(mode==='hcenter'||mode==='both'){ st._tx=Math.round((st._tx||0) + ((pr.left+pr.width/2)-(er.left+er.width/2))/zoom); }
+    if(mode==='vcenter'||mode==='both'){ st._ty=Math.round((st._ty||0) + ((pr.top+pr.height/2)-(er.top+er.height/2))/zoom); }
+    applyEl(key); syncOffsetSliders(key); commit(); flashGuides(mode);
+  }
+  function syncOffsetSliders(key){
+    var st=state[key]||{};
+    ['_tx','_ty'].forEach(function(p){
+      var inp=document.getElementById('i-'+p), v=st[p]||0;
+      if(inp){ inp.value=fmtNum(v); var f=inp.closest('.tw-field'); if(f) f.classList.toggle('center', v===0); }
+    });
+  }
+
+  // ---- Figma-style Layers tree ----
+  // ⟦PROJECT-SPECIFIC #7: LAYERS — decompose your real DOM, nested down to the atomic
+  //   level (until it can't be split further). Nodes WITH a key = selectable real/atomic
+  //   elements; nodes WITHOUT a key = pure grouping containers. LAYER_LABEL is derived
+  //   automatically from this tree — no need to maintain it by hand.⟧
+  var LAYERS = [
+    { key:'card', label:'Card', icon:'frame', children:[
+      { key:'media', label:'Media', icon:'image', children:[
+        { key:'img', label:'Image', icon:'image' },
+        { key:'badge', label:'Badge', icon:'badge', children:[
+          { key:'badgeIcon', label:'Badge icon', icon:'dot' },
+          { key:'badgeText', label:'Badge text', icon:'text' }
+        ]}
+      ]},
+      { label:'Body', icon:'group', children:[
+        { key:'title', label:'Title', icon:'text' },
+        { key:'desc',  label:'Description', icon:'text' },
+        { key:'tags', label:'Tags', icon:'group', children:[
+          { key:'tag1', label:'Tag 1', icon:'tag' },
+          { key:'tag2', label:'Tag 2', icon:'tag' },
+          { key:'tag3', label:'Tag 3', icon:'tag' }
+        ]},
+        { label:'Footer', icon:'group', children:[
+          { key:'btn', label:'Button', icon:'btn', children:[
+            { key:'btnText', label:'Button text', icon:'text' }
+          ]}
+        ]}
+      ]}
+    ]}
+  ];
+  var LAYER_LABEL={};
+  (function idx(list){ list.forEach(function(n){ if(n.key) LAYER_LABEL[n.key]=n.label; if(n.children) idx(n.children); }); })(LAYERS);
+  var LIC={
+    frame:'<rect x="4" y="4" width="16" height="16" rx="2"/>',
+    image:'<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.6"/><path d="M5 18l5-5 4 3 3-3 2 2"/>',
+    badge:'<circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 1.5"/>',
+    text:'<path d="M6 5h12M12 5v14M9 19h6"/>',
+    pin:'<path d="M12 21s7-6.4 7-11a7 7 0 1 0-14 0c0 4.6 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/>',
+    tag:'<path d="M3 12l8-8h6a2 2 0 0 1 2 2v6l-8 8z"/><circle cx="15.5" cy="8.5" r="1.3"/>',
+    btn:'<rect x="3" y="8" width="18" height="8" rx="4"/>',
+    dot:'<circle cx="12" cy="12" r="4"/>',
+    group:'<rect x="4" y="6" width="16" height="3" rx="1"/><rect x="4" y="12" width="11" height="3" rx="1"/>'
+  };
+  function layIcon(name){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(LIC[name]||LIC.frame)+'</svg>'; }
+  function renderLayerNode(node, depth){
+    var frag=document.createElement('div');
+    var row=document.createElement('div'); row.className='tw-lay-row'; row.style.paddingLeft=(8+depth*14)+'px';
+    if(node.key) row.dataset.pick=node.key;
+    var hasKids=node.children && node.children.length;
+    var caret=document.createElement('span'); caret.className='tw-lay-caret'+(hasKids?'':' leaf'); caret.textContent=hasKids?'▾':'';
+    var ico=document.createElement('span'); ico.className='tw-lay-ico'; ico.innerHTML=layIcon(node.icon);
+    var nm=document.createElement('span'); nm.className='tw-lay-name'; nm.textContent=node.label;
+    row.appendChild(caret); row.appendChild(ico); row.appendChild(nm); frag.appendChild(row);
+    var kidsWrap=null;
+    if(hasKids){
+      kidsWrap=document.createElement('div'); kidsWrap.className='tw-lay-children';
+      node.children.forEach(function(c){ kidsWrap.appendChild(renderLayerNode(c, depth+1)); });
+      frag.appendChild(kidsWrap);
+      var toggle=function(e){ e.stopPropagation(); var col=kidsWrap.classList.toggle('collapsed'); caret.textContent=col?'▸':'▾'; };
+      caret.addEventListener('click',toggle);
+      if(!node.key){ row.style.cursor='pointer'; row.addEventListener('click',toggle); }
+    }
+    if(node.key){ row.addEventListener('click',function(e){ pick(node.key, e.shiftKey); }); }
+    return frag;
+  }
+  function buildLayerTree(){
+    var t=document.getElementById('layer-tree'); if(!t) return; t.innerHTML='';
+    LAYERS.forEach(function(n){ t.appendChild(renderLayerNode(n,0)); });
+  }
+
+  // ---- Element selection ----
+  function refreshSelectionUI(){
+    document.querySelectorAll('.tw-lay-row[data-pick]').forEach(function(r){ r.classList.toggle('on', !!multi[r.dataset.pick]); });
+    document.querySelectorAll('.tw-pick').forEach(function(e){ e.classList.remove('tw-pick'); });
+    // single select is shown via the transform box; in multi-select each element still gets a thin frame, and the transform box wraps the group bounds
+    if(multiKeys().length>=2) multiKeys().forEach(function(k){ var el=elFor(k); if(el) el.classList.add('tw-pick'); });
+    var bar=document.getElementById('multi-align'); if(bar) bar.hidden = multiKeys().length < 2;
+    var nm=document.getElementById('cur-name'); if(nm) nm.textContent=LAYER_LABEL[cur]||cur;
+    updateTBox();
+  }
+  function pick(key, additive){
+    if(additive){
+      if(multi[key] && multiKeys().length>1) delete multi[key];   // deselect (but never empty down to 0)
+      else multi[key]=true;
+    } else {
+      multi={}; multi[key]=true;
+    }
+    cur=key;                       // primary element = last interacted; the control panel shows it
+    refreshSelectionUI();
+    buildPanel();
+  }
+  document.getElementById('card-stage').addEventListener('click',function(e){ var t=e.target.closest('[data-pick]'); if(t){ e.stopPropagation(); pick(t.dataset.pick, e.shiftKey); } },true);
+  // ---- PS-style multi-select mutual alignment (relative to the selection bounding box) ----
+  function alignMulti(mode){
+    var keys=multiKeys(); if(keys.length<2) return;
+    var items=keys.map(function(k){ var el=elFor(k); return el?{k:k, r:el.getBoundingClientRect()}:null; }).filter(Boolean);
+    if(items.length<2) return;
+    var L=Math.min.apply(null,items.map(function(o){return o.r.left;}));
+    var R=Math.max.apply(null,items.map(function(o){return o.r.right;}));
+    var T=Math.min.apply(null,items.map(function(o){return o.r.top;}));
+    var B=Math.max.apply(null,items.map(function(o){return o.r.bottom;}));
+    var cx=(L+R)/2, cy=(T+B)/2;
+    items.forEach(function(o){
+      ensure(o.k); var st=state[o.k], r=o.r;
+      if(mode==='left')         st._tx=Math.round((st._tx||0)+(L-r.left)/zoom);
+      else if(mode==='right')   st._tx=Math.round((st._tx||0)+(R-r.right)/zoom);
+      else if(mode==='hcenter') st._tx=Math.round((st._tx||0)+(cx-(r.left+r.width/2))/zoom);
+      else if(mode==='top')     st._ty=Math.round((st._ty||0)+(T-r.top)/zoom);
+      else if(mode==='bottom')  st._ty=Math.round((st._ty||0)+(B-r.bottom)/zoom);
+      else if(mode==='vcenter') st._ty=Math.round((st._ty||0)+(cy-(r.top+r.height/2))/zoom);
+      applyEl(o.k);
+    });
+    syncOffsetSliders(cur); commit();
+  }
+  document.getElementById('multi-align').addEventListener('click',function(e){ var b=e.target.closest('button'); if(b) alignMulti(b.dataset.ma); });
+
+  // ---- Transform box (upgraded selection box: corners = proportional scale, edges = resize width/height, drag inside to move, rotate at top, live px label) ----
+  function setupTBox(){
+    var box=document.createElement('div'); box.id='tw-tbox';
+    var html='<div class="tw-tbox-frame"></div><div class="tw-tbox-body"></div>'+
+      '<div class="tw-tbox-rotline"></div><div class="tw-tbox-rot" title="Rotate"></div>';
+    ['nw','n','ne','e','se','s','sw','w'].forEach(function(h){ html+='<div class="tw-tbox-h e-'+h+'" data-h="'+h+'"></div>'; });
+    html+='<div class="tw-tbox-size"></div>';
+    box.innerHTML=html;
+    document.getElementById('tw-left').appendChild(box);
+    box.addEventListener('mousedown', function(e){
+      if(e.target.closest('.tw-tbox-h')) startResize(e, e.target.closest('.tw-tbox-h').dataset.h);
+      else if(e.target.closest('.tw-tbox-rot')) startRotate(e);
+      else if(e.target.closest('.tw-tbox-body')) startBodyDrag(e);
+    });
+    window.addEventListener('resize', updateTBox);
+    document.getElementById('tw-left').addEventListener('scroll', updateTBox, {passive:true});
+  }
+  var tboxRAF=0;
+  function scheduleTBox(){ if(tboxRAF) return; tboxRAF=requestAnimationFrame(function(){ tboxRAF=0; updateTBox(); }); }
+  function updateTBox(){
+    var box=document.getElementById('tw-tbox'); if(!box) return;
+    var keys=multiKeys();
+    var rects=[]; keys.forEach(function(k){ var el=elFor(k); if(el) rects.push(el.getBoundingClientRect()); });
+    if(!rects.length){ box.classList.remove('on'); return; }
+    var L=Infinity,T=Infinity,R=-Infinity,B=-Infinity;
+    rects.forEach(function(r){ L=Math.min(L,r.left); T=Math.min(T,r.top); R=Math.max(R,r.right); B=Math.max(B,r.bottom); });
+    var le=document.getElementById('tw-left'), lr=le.getBoundingClientRect();
+    box.style.left  = (L-lr.left+le.scrollLeft)+'px';
+    box.style.top   = (T-lr.top +le.scrollTop )+'px';
+    box.style.width = (R-L)+'px';
+    box.style.height= (B-T)+'px';
+    box.classList.toggle('multi', keys.length>=2);
+    box.classList.add('on');
+    var sz=box.querySelector('.tw-tbox-size');
+    if(sz) sz.textContent=Math.round((R-L)/zoom)+' × '+Math.round((B-T)/zoom)+' px';
+  }
+  function endDrag(mv){
+    function up(){ document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); document.body.style.cursor=''; commit(); }
+    document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
+  }
+  // corner = proportional scale (_scl, around center); edge = change width / height
+  function startResize(e, hk){
+    e.preventDefault();
+    var k=cur; ensure(k); var el=elFor(k); if(!el) return;
+    var r=el.getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height/2;
+    var corner=(hk.length===2), horiz=(hk==='e'||hk==='w');
+    var d0=Math.hypot(e.clientX-cx,e.clientY-cy)||1, s0=(state[k]._scl==null?1:state[k]._scl);
+    var startW=r.width/zoom, startH=r.height/zoom, sx=e.clientX, sy=e.clientY;
+    function mv(ev){
+      if(corner){
+        var ns=Math.max(0.3,Math.min(2, Math.round(s0*Math.hypot(ev.clientX-cx,ev.clientY-cy)/d0*100)/100));
+        state[k]._scl=ns; applyEl(k);
+        var i=document.getElementById('i-_scl'); if(i) i.value=fmtNum(ns);
+      } else if(horiz){
+        var nw=Math.max(8,Math.min(2000, Math.round(startW + (ev.clientX-sx)/zoom*(hk==='e'?1:-1))));
+        state[k].width=nw+'px'; applyEl(k);
+        var iw=document.getElementById('i-width'); if(iw) iw.value=fmtNum(nw);
+      } else {
+        var nh=Math.max(8,Math.min(2000, Math.round(startH + (ev.clientY-sy)/zoom*(hk==='s'?1:-1))));
+        state[k].height=nh+'px'; applyEl(k);
+        var ih=document.getElementById('i-height'); if(ih) ih.value=fmtNum(nh);
+      }
+      updateTBox();
+    }
+    document.body.style.cursor=(getComputedStyle(e.target).cursor||'');
+    endDrag(mv);
+  }
+  function startRotate(e){
+    e.preventDefault();
+    var k=cur; ensure(k); var el=elFor(k); if(!el) return;
+    var r=el.getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height/2;
+    var a0=Math.atan2(e.clientY-cy,e.clientX-cx), r0=state[k]._rot||0;
+    function mv(ev){
+      var deg=Math.max(-180,Math.min(180, Math.round(r0+(Math.atan2(ev.clientY-cy,ev.clientX-cx)-a0)*180/Math.PI)));
+      state[k]._rot=deg; applyEl(k);
+      var i=document.getElementById('i-_rot'); if(i) i.value=fmtNum(deg);
+      updateTBox();
+    }
+    document.body.style.cursor='grabbing';
+    endDrag(mv);
+  }
+  // drag inside the box = change _tx/_ty (multi-select moves the whole group); no drag = treat as clicking the element underneath
+  function startBodyDrag(e){
+    e.preventDefault();
+    var sx=e.clientX, sy=e.clientY, moved=false, keys=multiKeys(), starts={};
+    keys.forEach(function(k){ ensure(k); starts[k]={tx:state[k]._tx||0, ty:state[k]._ty||0}; });
+    function mv(ev){
+      if(!moved && Math.abs(ev.clientX-sx)+Math.abs(ev.clientY-sy)<3) return;
+      moved=true;
+      var dx=(ev.clientX-sx)/zoom, dy=(ev.clientY-sy)/zoom;
+      keys.forEach(function(k){
+        ensure(k);
+        var nx=Math.round(starts[k].tx+dx), ny=Math.round(starts[k].ty+dy);
+        if(Math.abs(nx)<=3) nx=0; if(Math.abs(ny)<=3) ny=0;
+        state[k]._tx=nx; state[k]._ty=ny; applyEl(k);
+      });
+      syncOffsetSliders(cur); updateTBox();
+    }
+    function up(ev){
+      document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up);
+      document.body.style.cursor='';
+      if(moved) commit(); else selectUnder(ev);
+    }
+    document.body.style.cursor='move';
+    document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
+  }
+  function selectUnder(ev){
+    var box=document.getElementById('tw-tbox'), disp=box.style.display; box.style.display='none';
+    var under=document.elementFromPoint(ev.clientX, ev.clientY); box.style.display=disp;
+    var t=(under&&under.closest)?under.closest('[data-pick]'):null;
+    if(t) pick(t.dataset.pick, ev.shiftKey);
+  }
+  setupTBox();
+
+  // ---- Device width ----
+  document.getElementById('dev-seg').addEventListener('click',function(e){
+    var b=e.target.closest('button'); if(!b) return;
+    document.querySelectorAll('#dev-seg button').forEach(function(x){x.classList.remove('on');}); b.classList.add('on');
+    document.getElementById('card-stage').style.width=b.dataset.w+'px';
+    scheduleTBox();
+  });
+
+  // ---- Zoom view (scales the preview only, not the whole page; uses CSS zoom so the scroll area grows too) ----
+  var zoom=1;
+  function setZoom(z){
+    zoom=Math.max(0.5, Math.min(4, Math.round(z*100)/100));
+    document.getElementById('card-stage').style.zoom=zoom;
+    document.getElementById('zoom-val').textContent=Math.round(zoom*100)+'%';
+    scheduleTBox();
+  }
+  document.getElementById('zoom-in').addEventListener('click',function(){ setZoom(zoom+0.25); });
+  document.getElementById('zoom-out').addEventListener('click',function(){ setZoom(zoom-0.25); });
+  document.getElementById('zoom-val').addEventListener('click',function(){ setZoom(1); });
+  // Ctrl/Cmd + wheel: zoom over the preview
+  document.getElementById('tw-left').addEventListener('wheel',function(e){
+    if(!(e.ctrlKey||e.metaKey)) return;
+    e.preventDefault();
+    setZoom(zoom + (e.deltaY<0?0.1:-0.1));
+  },{passive:false});
+
+  // ---- history ----
+  function snapshot(){ return JSON.parse(JSON.stringify(state)); }
+  function commit(){
+    history=history.slice(0,hidx+1);
+    history.push(snapshot()); hidx=history.length-1;
+    updateHistBtns(); updateSummary();
+  }
+  function restore(snap){
+    Object.keys(SEL).forEach(function(k){ var el=elFor(k); if(el){ el.style.cssText=''; } });
+    state=JSON.parse(JSON.stringify(snap));
+    Object.keys(state).forEach(function(k){ applyEl(k); });
+    buildPanel();
+    refreshSelectionUI();
+  }
+  function doUndo(){ if(hidx>0){ hidx--; restore(history[hidx]); updateHistBtns(); updateSummary(); } }
+  function doRedo(){ if(hidx<history.length-1){ hidx++; restore(history[hidx]); updateHistBtns(); updateSummary(); } }
+  document.getElementById('btn-undo').addEventListener('click',doUndo);
+  document.getElementById('btn-redo').addEventListener('click',doRedo);
+  // Keyboard: Ctrl/Cmd+Z undo, Ctrl/Cmd+Shift+Z or Ctrl+Y redo
+  document.addEventListener('keydown',function(e){
+    var mod=e.metaKey||e.ctrlKey; if(!mod) return;
+    var k=(e.key||'').toLowerCase();
+    if(k==='z'){ e.preventDefault(); if(e.shiftKey) doRedo(); else doUndo(); }
+    else if(k==='y'){ e.preventDefault(); doRedo(); }
+  });
+  document.getElementById('btn-reset').addEventListener('click',function(){
+    var has=Object.keys(state).some(function(k){ return state[k] && Object.keys(state[k]).length; });
+    if(!has){ toast('No changes to reset'); return; }
+    restore({});                 // restore all elements to before tweaking (clear overrides)
+    commit();                    // record as one step, still undoable
+    toast('Restored to values before tweaking');
+  });
+  function updateHistBtns(){ document.getElementById('btn-undo').disabled=hidx<=0; document.getElementById('btn-redo').disabled=hidx>=history.length-1; }
+
+  // ---- Summary + confirm ----
+  function changedProps(key){
+    var s=state[key]||{}, out={};
+    Object.keys(s).forEach(function(p){
+      if(p==='_tx')out['translateX']=s._tx+'px';
+      else if(p==='_ty')out['translateY']=s._ty+'px';
+      else if(p==='_rot')out['rotate']=s._rot+'deg';
+      else if(p==='_scl')out['scale']=s._scl;
+      else if(p==='_shadows'){}
+      else if(p==='_bgHex')out['background']=hexToRgba(s._bgHex,s._bgA);
+      else if(p==='_txHex')out['color']=s._txHex;
+      else if(p==='_bdHex')out['border-color']=hexToRgba(s._bdHex,s._bdA);
+      else if(p.charAt(0)!=='_') out[p]=s[p];
+    });
+    if('_shadows' in s) out['box-shadow']=composeShadow(s._shadows);
+    return out;
+  }
+  function buildText(){
+    /* ⟦PROJECT-SPECIFIC #8: confirm-output "Component / Source" strings⟧ */
+    var lines=['[UI Tweaker Confirm]','Component: Demo Card','Source: examples/demo.css',''];
+    var any=false;
+    Object.keys(SEL).forEach(function(key){
+      var ch=changedProps(key); var keys=Object.keys(ch); if(!keys.length) return;
+      any=true;
+      lines.push('['+(OUT_SEL[key]||key)+']');
+      keys.forEach(function(p){ lines.push('  - '+p+': '+ch[p]); });
+      lines.push('');
+    });
+    lines.push('Please update the corresponding code directly');
+    return any? lines.join('\n') : '';
+  }
+  function updateSummary(){
+    var t=buildText();
+    document.getElementById('summary').textContent= t? t : 'No changes yet';
+  }
+  document.getElementById('btn-confirm').addEventListener('click',function(){
+    var t=buildText();
+    if(!t){ toast('Nothing has been changed yet'); return; }
+    try{ navigator.clipboard && navigator.clipboard.writeText(t); }catch(e){}
+    if(window.sendPrompt){ try{ window.sendPrompt(t); }catch(e){} }
+    toast('Confirm text copied — paste it back into the chat to apply');
+  });
+  function toast(msg){ var el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); setTimeout(function(){el.classList.remove('show');},2200); }
+
+  // ---- Boot: wait for the stylesheet to load before reading computed style ----
+  function init(){
+    document.getElementById('card-stage').style.width='390px';
+    buildLayerTree();
+    pick('card');
+    history=[snapshot()]; hidx=0; updateHistBtns(); updateSummary();
+  }
+  if(document.readyState==='complete') setTimeout(init,80);
+  else window.addEventListener('load',function(){ setTimeout(init,80); });
+})();
+</script>
+</body>
+</html>

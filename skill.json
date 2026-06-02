@@ -1,0 +1,67 @@
+{
+  "schema": "https://dhosruiasn.github.io/portable-skill-package/schema/v1.json",
+  "id": "ui-tweaker",
+  "name": "UI Tweaker",
+  "version": "1.0.0",
+  "description": "Fine-tune UI components through a live preview and control panel, then apply the confirmed values back to source files.",
+  "author": {
+    "name": "HsuanTung Kao",
+    "github": "dhosruiasn"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/dhosruiasn/ui-tweaker",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dhosruiasn/ui-tweaker.git",
+    "branch": "main",
+    "tags": true
+  },
+  "entry": "skills/ui-tweaker/SKILL.md",
+  "resources": [
+    "skills/ui-tweaker/SKILL.md",
+    "skills/ui-tweaker/SKILL.zh-TW.md",
+    "skills/ui-tweaker/template/panel-template.html",
+    "examples/demo.css"
+  ],
+  "adapters": {
+    "claude-code": {
+      "type": "native-plugin",
+      "manifest": ".claude-plugin/plugin.json",
+      "install": [
+        "/plugin marketplace add dhosruiasn/ui-tweaker",
+        "/plugin install ui-tweaker"
+      ],
+      "update": "Refresh the marketplace and reinstall the plugin after a new push or tag."
+    },
+    "codex": {
+      "type": "skill-folder",
+      "source": "skills/ui-tweaker",
+      "default_dest": "$CODEX_HOME/skills/ui-tweaker"
+    },
+    "cursor": {
+      "type": "project-rule-plus-skill-folder",
+      "rule_dest": ".cursor/rules/ui-tweaker.mdc",
+      "skill_dest": ".cursor/skills/ui-tweaker"
+    },
+    "windsurf": {
+      "type": "project-rule-plus-skill-folder",
+      "rule_dest": ".windsurf/rules/ui-tweaker.md",
+      "skill_dest": ".windsurf/skills/ui-tweaker"
+    },
+    "portable": {
+      "type": "skill-folder",
+      "source": "skills/ui-tweaker"
+    }
+  },
+  "scripts": {
+    "install": "scripts/install",
+    "update": "scripts/update",
+    "doctor": "scripts/doctor"
+  },
+  "update_policy": {
+    "transport": "git",
+    "backup_before_replace": true,
+    "execute_remote_scripts": false,
+    "notes": "Update scripts sync package files only. Host AI tools must opt in through their own adapter paths."
+  }
+}

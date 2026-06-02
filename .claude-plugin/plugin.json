@@ -1,0 +1,12 @@
+{
+  "name": "ui-tweaker",
+  "version": "1.0.0",
+  "description": "Visually fine-tune any UI component inside a Claude conversation with sliders and a Figma/PS-style control panel, then let Claude write the adjusted values straight back into your real source code.",
+  "author": {
+    "name": "HsuanTung Kao"
+  },
+  "homepage": "https://github.com/dhosruiasn/ui-tweaker",
+  "repository": "https://github.com/dhosruiasn/ui-tweaker",
+  "license": "MIT",
+  "keywords": ["claude", "skill", "ui", "css", "design", "tweak", "figma", "live-preview"]
+}

@@ -1,0 +1,90 @@
+#!/bin/sh
+set -eu
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
+DRY_RUN=0
+REMOTE="origin"
+BRANCH="main"
+
+usage() {
+  cat <<'USAGE'
+Usage: scripts/update [--dry-run] [--remote NAME] [--branch NAME]
+
+Checks for upstream changes and updates this package when it is a Git checkout.
+After updating, re-run scripts/install for each host AI adapter you use.
+USAGE
+}
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --dry-run)
+      DRY_RUN=1
+      shift
+      ;;
+    --remote)
+      REMOTE=${2:-}
+      shift 2
+      ;;
+    --branch)
+      BRANCH=${2:-}
+      shift 2
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
+done
+
+if [ ! -d "$ROOT_DIR/.git" ]; then
+  cat >&2 <<EOF
+This package is not a Git checkout:
+  $ROOT_DIR
+
+Clone from https://github.com/dhosruiasn/ui-tweaker.git or update the files manually,
+then re-run scripts/install for each adapter.
+EOF
+  exit 1
+fi
+
+cd "$ROOT_DIR"
+
+current=$(git rev-parse --short HEAD)
+echo "Current commit: $current"
+echo "Fetching $REMOTE $BRANCH..."
+git fetch "$REMOTE" "$BRANCH" --tags
+
+upstream="$REMOTE/$BRANCH"
+latest=$(git rev-parse --short "$upstream")
+echo "Upstream commit: $latest"
+
+if git diff --quiet HEAD "$upstream"; then
+  echo "Already up to date."
+  exit 0
+fi
+
+echo "Changes available:"
+git --no-pager log --oneline "HEAD..$upstream"
+
+if [ "$DRY_RUN" = "1" ]; then
+  echo "Dry run only. Re-run without --dry-run to update."
+  exit 0
+fi
+
+if ! git diff --quiet || ! git diff --cached --quiet; then
+  echo "Working tree has local changes; commit/stash them before updating." >&2
+  exit 1
+fi
+
+backup="../ui-tweaker-backup-$(date +%Y%m%d%H%M%S).tar"
+tar cf "$backup" .
+echo "Backup written to $backup"
+
+git merge --ff-only "$upstream"
+echo "Updated. Re-run scripts/install for each target adapter you use."

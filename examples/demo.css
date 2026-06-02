@@ -1,0 +1,113 @@
+/* ============================================================
+   UI Tweaker — generic demo component stylesheet
+   ------------------------------------------------------------
+   A self-contained "media card" so you can open
+   template/panel-template.html and see the panel work before
+   wiring it up to your own project's real CSS.
+
+   When you adapt the template for a real component, you replace
+   the ⟦PROJECT-SPECIFIC #3⟧ <link> with YOUR stylesheet and stop
+   using this file. Nothing here is special — it is just a normal
+   component stylesheet that the panel reads via getComputedStyle.
+   ============================================================ */
+
+.demo-card {
+  width: 320px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
+  font-family: 'TASA Explorer', system-ui, sans-serif;
+  color: #1e1e1e;
+}
+
+.demo-card-media {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+}
+.demo-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.demo-card-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(20, 20, 24, 0.62);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+.demo-card-badge svg { width: 12px; height: 12px; }
+.demo-card-badge .demo-card-badge-text { line-height: 1; }
+
+.demo-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 18px 20px;
+}
+
+.demo-card-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+.demo-card-desc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #6b7280;
+}
+
+.demo-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+.demo-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #4f46e5;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.demo-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+.demo-card-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border: none;
+  border-radius: 10px;
+  background: #4f46e5;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.demo-card-btn .demo-card-btn-text { line-height: 1; }

@@ -1,0 +1,170 @@
+#!/bin/sh
+set -eu
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
+SKILL_SRC="$ROOT_DIR/skills/ui-tweaker"
+TARGET="portable"
+DEST=""
+MODE="copy"
+
+usage() {
+  cat <<'USAGE'
+Usage: scripts/install [--target portable|codex|cursor|windsurf|claude-code] [--dest PATH] [--copy|--link]
+
+Targets:
+  portable    Copy/link skills/ui-tweaker to --dest.
+  codex       Install as a Codex skill folder. Uses $CODEX_HOME/skills/ui-tweaker when set, otherwise ~/.codex/skills/ui-tweaker.
+  cursor      Install into a project: .cursor/rules/ui-tweaker.mdc plus .cursor/skills/ui-tweaker.
+  windsurf    Install into a project: .windsurf/rules/ui-tweaker.md plus .windsurf/skills/ui-tweaker.
+  claude-code Print native Claude Code plugin commands.
+
+Options:
+  --dest PATH  Destination folder or project root, depending on target.
+  --copy       Copy files. This is the default.
+  --link       Symlink files so local package edits are reflected immediately.
+  -h, --help   Show this help.
+USAGE
+}
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --target)
+      TARGET=${2:-}
+      shift 2
+      ;;
+    --dest)
+      DEST=${2:-}
+      shift 2
+      ;;
+    --copy)
+      MODE="copy"
+      shift
+      ;;
+    --link)
+      MODE="link"
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
+done
+
+require_skill() {
+  if [ ! -f "$SKILL_SRC/SKILL.md" ] || [ ! -f "$SKILL_SRC/template/panel-template.html" ]; then
+    echo "Missing skill files under $SKILL_SRC" >&2
+    exit 1
+  fi
+}
+
+copy_or_link_skill() {
+  src=$1
+  dest=$2
+  parent=$(dirname -- "$dest")
+  mkdir -p "$parent"
+  if [ -e "$dest" ] || [ -L "$dest" ]; then
+    backup="$dest.backup.$(date +%Y%m%d%H%M%S)"
+    mv "$dest" "$backup"
+    echo "Backed up existing install to $backup"
+  fi
+  if [ "$MODE" = "link" ]; then
+    ln -s "$src" "$dest"
+  else
+    mkdir -p "$dest"
+    (cd "$src" && tar cf - .) | (cd "$dest" && tar xf -)
+  fi
+  echo "Installed skill folder: $dest"
+}
+
+write_cursor_rule() {
+  project=$1
+  rule_dir="$project/.cursor/rules"
+  rule_file="$rule_dir/ui-tweaker.mdc"
+  mkdir -p "$rule_dir"
+  cat > "$rule_file" <<'RULE'
+---
+description: Use UI Tweaker when a user wants to visually fine-tune a UI component and write the confirmed values back to source.
+alwaysApply: false
+---
+
+# UI Tweaker
+
+Use the bundled skill instructions at `.cursor/skills/ui-tweaker/SKILL.md`.
+When the user asks to tweak UI visually, follow that skill and use its template at
+`.cursor/skills/ui-tweaker/template/panel-template.html`.
+RULE
+  echo "Installed Cursor rule: $rule_file"
+}
+
+write_windsurf_rule() {
+  project=$1
+  rule_dir="$project/.windsurf/rules"
+  rule_file="$rule_dir/ui-tweaker.md"
+  mkdir -p "$rule_dir"
+  cat > "$rule_file" <<'RULE'
+# UI Tweaker
+
+Use this rule when a user wants to visually fine-tune a UI component and write
+the confirmed values back to source.
+
+Follow the bundled skill instructions at `.windsurf/skills/ui-tweaker/SKILL.md`.
+Use the template at `.windsurf/skills/ui-tweaker/template/panel-template.html`.
+RULE
+  echo "Installed Windsurf rule: $rule_file"
+}
+
+case "$TARGET" in
+  claude-code)
+    cat <<'CLAUDE'
+Use Claude Code's native plugin manager:
+
+/plugin marketplace add dhosruiasn/ui-tweaker
+/plugin install ui-tweaker
+
+To update later, refresh the marketplace and reinstall after a new push or tag.
+CLAUDE
+    ;;
+  codex)
+    require_skill
+    if [ -z "$DEST" ]; then
+      if [ -n "${CODEX_HOME:-}" ]; then
+        DEST="$CODEX_HOME/skills/ui-tweaker"
+      else
+        DEST="$HOME/.codex/skills/ui-tweaker"
+      fi
+    fi
+    copy_or_link_skill "$SKILL_SRC" "$DEST"
+    ;;
+  cursor)
+    require_skill
+    project=${DEST:-$(pwd)}
+    copy_or_link_skill "$SKILL_SRC" "$project/.cursor/skills/ui-tweaker"
+    write_cursor_rule "$project"
+    ;;
+  windsurf)
+    require_skill
+    project=${DEST:-$(pwd)}
+    copy_or_link_skill "$SKILL_SRC" "$project/.windsurf/skills/ui-tweaker"
+    write_windsurf_rule "$project"
+    ;;
+  portable)
+    require_skill
+    if [ -z "$DEST" ]; then
+      echo "--dest is required for --target portable" >&2
+      exit 2
+    fi
+    copy_or_link_skill "$SKILL_SRC" "$DEST"
+    ;;
+  *)
+    echo "Unknown target: $TARGET" >&2
+    usage >&2
+    exit 2
+    ;;
+esac

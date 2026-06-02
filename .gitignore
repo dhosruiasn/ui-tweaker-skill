@@ -1,0 +1,14 @@
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Local experiments — generated tweaker widgets for real projects
+ui-tweaker-*.html
+!template/panel-template.html
+
+# Node (only if you add tooling later)
+node_modules/
+npm-debug.log*

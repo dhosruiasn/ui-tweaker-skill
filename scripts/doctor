@@ -1,0 +1,56 @@
+#!/bin/sh
+set -eu
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
+status=0
+
+check_file() {
+  path=$1
+  if [ -f "$ROOT_DIR/$path" ]; then
+    echo "ok   $path"
+  else
+    echo "miss $path" >&2
+    status=1
+  fi
+}
+
+check_dir() {
+  path=$1
+  if [ -d "$ROOT_DIR/$path" ]; then
+    echo "ok   $path/"
+  else
+    echo "miss $path/" >&2
+    status=1
+  fi
+}
+
+echo "UI Tweaker package: $ROOT_DIR"
+
+check_file "skill.json"
+check_file ".claude-plugin/plugin.json"
+check_file ".claude-plugin/marketplace.json"
+check_file "skills/ui-tweaker/SKILL.md"
+check_file "skills/ui-tweaker/SKILL.zh-TW.md"
+check_file "skills/ui-tweaker/template/panel-template.html"
+check_file "scripts/install"
+check_file "scripts/update"
+check_file "scripts/doctor"
+check_dir "adapters"
+
+if [ -d "$ROOT_DIR/.git" ]; then
+  echo "ok   git checkout"
+  cd "$ROOT_DIR"
+  echo "     commit: $(git rev-parse --short HEAD)"
+else
+  echo "warn not a git checkout; scripts/update cannot pull upstream changes"
+fi
+
+if command -v sh >/dev/null 2>&1; then
+  echo "ok   sh available"
+else
+  echo "miss sh" >&2
+  status=1
+fi
+
+exit "$status"

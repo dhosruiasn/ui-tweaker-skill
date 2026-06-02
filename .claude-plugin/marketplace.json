@@ -1,0 +1,13 @@
+{
+  "name": "ui-tweaker-marketplace",
+  "owner": {
+    "name": "HsuanTung Kao"
+  },
+  "plugins": [
+    {
+      "name": "ui-tweaker",
+      "source": "./",
+      "description": "Visually fine-tune UI components in a Claude conversation, then write the values back into your real source code."
+    }
+  ]
+}

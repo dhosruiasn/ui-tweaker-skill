@@ -1,10 +1,10 @@
-# UI Tweaker — a Claude skill
+# UI Tweaker — portable AI skill
 
 [繁體中文版 README](./README.zh-TW.md)
 
-Fine-tune any UI component **inside a Claude conversation** with a Figma/Photoshop-style control panel — drag sliders, scrub values, move and resize a live preview — then let Claude write the adjusted values **straight back into your real source code**. No more round-trips of "make it a bit bigger… no, smaller… more rounded."
+Fine-tune any UI component **with an AI coding assistant** through a Figma/Photoshop-style control panel — drag sliders, scrub values, move and resize a live preview — then let the assistant write the adjusted values **straight back into your real source code**. No more round-trips of "make it a bit bigger… no, smaller… more rounded."
 
-> **Status:** v1.0.0 · MIT licensed · works wherever Claude can read your files (Claude Code, Claude desktop with file access).
+> **Status:** v1.0.0 · MIT licensed · packaged for Claude Code plus portable adapters for Codex, Cursor, Windsurf, and plain skill-folder installs.
 
 <!-- TODO: drop a demo GIF here — it sells this tool better than any paragraph.
      e.g. ![demo](./examples/demo.gif) -->
@@ -13,7 +13,7 @@ Fine-tune any UI component **inside a Claude conversation** with a Figma/Photosh
 
 ## Why
 
-When you ask an AI to tweak UI by describing it in words ("a touch more padding", "not that round"), you burn turns guessing numbers. UI Tweaker flips it: Claude opens a **live control panel** rendered from *your actual stylesheet*, you adjust visually, hit **Confirm**, and the exact structured values are sent back for Claude to apply and verify.
+When you ask an AI to tweak UI by describing it in words ("a touch more padding", "not that round"), you burn turns guessing numbers. UI Tweaker flips it: the assistant opens a **live control panel** rendered from *your actual stylesheet*, you adjust visually, hit **Confirm**, and the exact structured values are sent back for the assistant to apply and verify.
 
 Core principle: **every adjustment is a structured, round-trippable number** — never a vibe.
 
@@ -24,7 +24,7 @@ Core principle: **every adjustment is a structured, round-trippable number** —
 - **Eight control categories** — typography, spacing, size, radius, position/offset, shadow, frosted glass, color.
 - **Figma/PS interactions** — type-able number boxes, drag-to-scrub, linked corner radii, icon-based alignment, undo/redo + keyboard shortcuts.
 - **Transform box** — select any element to get an 8-handle box: corners scale proportionally, edges resize width/height, drag to move, rotate handle, live px label.
-- **Writes back to source** — on Confirm, Claude parses the values, locates the matching selectors, edits the real files, and verifies (e.g. runs your build / checks computed styles).
+- **Writes back to source** — on Confirm, the assistant parses the values, locates the matching selectors, edits the real files, and verifies (e.g. runs your build / checks computed styles).
 
 ## Install
 
@@ -78,11 +78,11 @@ Just ask, in plain language:
 
 > "Help me tweak the card component" · "I want to adjust the padding on this button" · "this feels too cramped"
 
-Claude will:
+Your AI assistant will:
 1. Copy `skills/ui-tweaker/template/panel-template.html` next to your project (served so the browser can open it).
 2. Fill the 8 `⟦PROJECT-SPECIFIC⟧` markers from your real component (link your stylesheet, paste the real DOM, build the Layers tree).
 3. Open the control panel. You adjust → **Confirm**.
-4. Claude applies the structured values to your source and verifies.
+4. The assistant applies the structured values to your source and verifies.
 
 ## How the fixed template works
 

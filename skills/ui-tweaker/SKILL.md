@@ -220,7 +220,7 @@ Suggested font-family select options:
 
 ### Step 3: Confirm button triggers the AI update
 
-The "Confirm, update code" button at the bottom of the panel uses `sendPrompt()` to send all current values back to Claude in a structured format.
+The "Confirm, update code" button at the bottom of the panel uses `sendPrompt()` to send all current values back to the AI assistant in a structured format.
 
 If the component has multiple children, prefer the per-element format:
 
@@ -259,12 +259,21 @@ Update these values:
 Please update the matching code directly
 ```
 
-After Claude receives a message starting with `[UI Tweaker Confirm]` (or its localized form, e.g. the Chinese `[UI Tweaker 確認]`):
+After the AI assistant receives a message starting with `[UI Tweaker Confirm]` (or its localized form, e.g. the Chinese `[UI Tweaker 確認]`):
 1. Parse all values.
 2. Find the matching CSS class or inline style.
 3. Output the full updated code block.
 4. List the changed lines.
 5. After updating, run whatever verification is available — e.g. if the project has `npm run build`, run the build; check the actually-applied values via browser/computed style when needed.
+
+Design system scope confirmation:
+- Before applying changes to reusable styles, detect whether the selected value comes from a design token, shared utility class, component-level selector, or local override.
+- If the style appears reusable, ask the user to choose the update scope before writing:
+  - **Global**: update the design system token/shared class so all matching usages change.
+  - **Component**: update this reusable component family only.
+  - **Local**: update only the current page/selected instance with a scoped override.
+- Default to **Local** when the scope is unclear. Do not describe Local as "detaching" from the design system; describe it as a scoped override.
+- For **Global** changes, search usages first and summarize likely impacted files/selectors before editing.
 
 Structured-update rules:
 - If the confirmed values exceed a handful of fields, or span multiple selectors / children, use a structured parse-and-update flow — don't hand-copy values line by line.
@@ -309,4 +318,4 @@ Changes:
 - For multi-field or multi-selector updates, use a structured parse/dry-run/write flow; don't hand-copy values.
 - Verify after updating; prefer running the build if there's a build command, then do browser/computed-style checks when visuals or browser behavior matter.
 - When you receive already-tuned values like `[UI Tweaker Confirm]`, commit/push after a successful update + verification; don't auto-commit during the exploration phase.
-- After receiving a `[UI Tweaker Confirm]` message, output the code directly without asking again.
+- After receiving a `[UI Tweaker Confirm]` message, output the code directly without asking again, except when a reusable design-system style is detected and the update scope is not specified.

@@ -2,7 +2,7 @@
 
 [繁體中文版 README](./README.zh-TW.md)
 
-Fine-tune any UI component **with an AI coding assistant** through a Figma/Photoshop-style control panel — drag sliders, scrub values, move and resize a live preview — then let the assistant write the adjusted values **straight back into your real source code**. No more round-trips of "make it a bit bigger… no, smaller… more rounded."
+Fine-tune any UI component **with an AI coding assistant** through a design-tool-style control panel — scrub values, preview changes live, move and resize elements — then let the assistant write the adjusted values **straight back into your real source code**. No more round-trips of "make it a bit bigger… no, smaller… more rounded."
 
 > **Status:** v1.0.0 · MIT licensed · packaged for Claude Code plus portable adapters for Codex, Cursor, Windsurf, and plain skill-folder installs.
 

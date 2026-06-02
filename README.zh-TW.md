@@ -63,10 +63,13 @@ scripts/install --target windsurf --dest /path/to/project
 scripts/update --dry-run
 scripts/update
 scripts/install --target cursor --dest /path/to/project
+scripts/publish -m "Update UI Tweaker"
 scripts/doctor
 ```
 
 `scripts/update` 需要此資料夾是 Git checkout。更新前會備份目前 package，只做 fast-forward update，且不執行下載來的程式碼。更新後請重新跑一次 `scripts/install`，把新版同步到各 adapter 目標。
+
+發布採手動設計。`scripts/publish` 會 stage package 變更、必要時建立 commit，然後把目前分支 push 到 `origin`；它不會安裝背景自動 push hook。
 
 ## 使用方式
 

@@ -1,0 +1,78 @@
+#!/bin/sh
+set -eu
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
+MESSAGE="Update UI Tweaker skill package"
+DRY_RUN=0
+
+usage() {
+  cat <<'USAGE'
+Usage: scripts/publish [-m MESSAGE] [--dry-run]
+
+Stages package changes, creates a commit when needed, and pushes the current
+branch to origin. This is intentionally manual; it does not install a background
+auto-push hook.
+USAGE
+}
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    -m|--message)
+      MESSAGE=${2:-}
+      shift 2
+      ;;
+    --dry-run)
+      DRY_RUN=1
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
+done
+
+if [ ! -d "$ROOT_DIR/.git" ]; then
+  echo "This package is not a Git repository: $ROOT_DIR" >&2
+  exit 1
+fi
+
+cd "$ROOT_DIR"
+
+branch=$(git branch --show-current)
+if [ -z "$branch" ]; then
+  echo "Cannot publish from detached HEAD." >&2
+  exit 1
+fi
+
+if ! git remote get-url origin >/dev/null 2>&1; then
+  echo "Missing origin remote." >&2
+  exit 1
+fi
+
+git add -A
+
+if git diff --cached --quiet; then
+  echo "No staged changes to commit."
+else
+  echo "Pending commit:"
+  git --no-pager diff --cached --stat
+  if [ "$DRY_RUN" = "1" ]; then
+    echo "Dry run only. Re-run without --dry-run to commit and push."
+    exit 0
+  fi
+  git commit -m "$MESSAGE"
+fi
+
+if [ "$DRY_RUN" = "1" ]; then
+  echo "Dry run only. Would push origin $branch."
+  exit 0
+fi
+
+git push -u origin "$branch"

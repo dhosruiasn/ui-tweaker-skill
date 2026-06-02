@@ -64,10 +64,13 @@ Updates:
 scripts/update --dry-run
 scripts/update
 scripts/install --target cursor --dest /path/to/project
+scripts/publish -m "Update UI Tweaker"
 scripts/doctor
 ```
 
 `scripts/update` requires this folder to be a Git checkout. It backs up the current package before a fast-forward update and never executes downloaded code. Re-run `scripts/install` after updating to sync each adapter target.
+
+Publishing is manual by design. `scripts/publish` stages package changes, creates a commit when needed, and pushes the current branch to `origin`; it does not install a background auto-push hook.
 
 ## Usage
 

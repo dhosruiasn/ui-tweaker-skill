@@ -56,6 +56,7 @@
   "scripts": {
     "install": "scripts/install",
     "update": "scripts/update",
+    "publish": "scripts/publish",
     "doctor": "scripts/doctor"
   },
   "update_policy": {

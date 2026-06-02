@@ -35,6 +35,7 @@ check_file "skills/ui-tweaker/SKILL.zh-TW.md"
 check_file "skills/ui-tweaker/template/panel-template.html"
 check_file "scripts/install"
 check_file "scripts/update"
+check_file "scripts/publish"
 check_file "scripts/doctor"
 check_dir "adapters"
 

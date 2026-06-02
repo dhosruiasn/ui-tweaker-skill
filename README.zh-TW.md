@@ -99,7 +99,7 @@ scripts/doctor
 | `#8` | 確認輸出的「元件／來源」字串 |
 | `#9` | 元件舞台 reset CSS——只有當你的真實元件在 production 是隱藏/絕對定位時才需要 |
 
-其餘(版面、CSS、builder JS)byte-for-byte 一字不動。完整規格見 [`SKILL.zh-TW.md`](./SKILL.zh-TW.md)。
+其餘(版面、CSS、builder JS)byte-for-byte 一字不動。完整規格見 [`SKILL.zh-TW.md`](./skills/ui-tweaker/SKILL.zh-TW.md)。
 
 樣板出廠時已接上 [`examples/demo.css`](./examples/demo.css) 的通用 demo 元件,你可以直接打開 `skills/ui-tweaker/template/panel-template.html` 看面板運作,再接自己的專案。
 

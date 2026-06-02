@@ -107,7 +107,7 @@ As shipped, the template is wired to the generic demo component in [`examples/de
 ## Feedback & contributing
 
 - 🐞 **Bugs / requests** → [open an issue](https://github.com/dhosruiasn/ui-tweaker/issues) (templates provided).
-- 💬 **Questions / ideas** → [Discussions](https://github.com/dhosruiasn/ui-tweaker/discussions).
+- 💬 **Questions / ideas** → [open an issue](https://github.com/dhosruiasn/ui-tweaker/issues/new/choose).
 - PRs welcome — see [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
 ## License

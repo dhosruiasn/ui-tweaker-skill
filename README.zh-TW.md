@@ -106,7 +106,7 @@ Claude 會:
 ## 回饋與貢獻
 
 - 🐞 **Bug／需求** → [開 issue](https://github.com/dhosruiasn/ui-tweaker/issues)(有模板)。
-- 💬 **問題／點子** → [Discussions](https://github.com/dhosruiasn/ui-tweaker/discussions)。
+- 💬 **問題／點子** → [開 issue](https://github.com/dhosruiasn/ui-tweaker/issues/new/choose)。
 - 歡迎 PR — 見 [`CONTRIBUTING.md`](./CONTRIBUTING.md)。
 
 ## 授權

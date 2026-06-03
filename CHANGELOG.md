@@ -44,6 +44,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   done via a `::placeholder` rule injected into a per-(state,key) `<style>` from
   `ph:`-prefixed props (not `el.style`), with a slot toggle (after/before font) driving
   the Typography numboxes; confirm emits a separate `[OUT_SEL::placeholder]` block.
+- **`<select>` selected-option text editing + data-driven option fidelity**: a new
+  text mode `optionSel` reads/writes the *currently-selected* `<option>`
+  (`el.options[el.selectedIndex]`), not the first option (`option0`, often a
+  "Please choose…" placeholder), because a `<select>` displays the selected option.
+  The preview `<select>` must show the real "after-selection" state — one real option
+  carrying `selected` — and when option text is composed from data/code (e.g. a theme
+  label = `emoji + space + label` from `getThemeParts`/`composeThemeLabelRaw`, emoji
+  from `THEME_EMOJI_MAP`), the preview options must reproduce that exact format
+  including emoji rather than inventing an emoji-less stand-in set (an extension of the
+  "preview must be faithful to the real code" rule). Confirm output notes the option
+  text is data, not a literal string — edit the theme data / emoji map, not a literal.
 - **SVG icon fill/stroke controls**: when an SVG element is selected, the Color
   category now exposes `fill` / `stroke` separately (each with a "none" transparent
   toggle) plus `stroke-width`, instead of background/text/border — an SVG's tunable
@@ -51,6 +62,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   on confirm as `fill:` / `stroke:`.
 
 ### Changed
+- **Stage-scoped responsive preview rules**: the skill now requires default stage
+  width to match the active device button, device switching to resize inner
+  layout containers (not just the outer frame), production desktop media-query
+  widths to be overridden inside `#card-stage`, and responsive children to use
+  stage-relative sizing (`min()` / `%` / `calc()`) instead of hard-coded widths
+  that crop at narrow sizes.
+- **Stage-relative fixed element handling**: production `position:fixed` elements
+  such as docks / bottom navs must be reset to stage-relative positioning,
+  centered with `left:50%` + `translateX(-50%)`, and sized with
+  `min(MAX_WIDTH, calc(100% - padding))` so they remain centered and complete at
+  every preview width.
+- **Preview HTML validity and multi-width browser verification**: the generation
+  gate now explicitly checks for invalid `data-pick` placement, truncated closing
+  tags, and DOM nesting that would break scoped reset CSS; staged layouts must be
+  verified in a real/headless browser across narrow/default/wide widths, including
+  reset/undo visual state.
+- **Root-key and SVG visibility safeguards**: all template root-key special-cases
+  (`card`) must be replaced when a project root key is used, and staged SVG/icon
+  previews must preserve inline dimensions plus active/inactive stroke/fill rules
+  so reset/undo or stylesheet extraction does not enlarge or hide icons.
 - **undo/redo/reset preserves original inline styles**: `restore()` must no longer
   blow away inline styles with `cssText=''` (which erased real inline styles that
   faithful reproduction ships from JS templates, breaking layout until reload). It now

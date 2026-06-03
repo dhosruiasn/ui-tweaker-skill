@@ -4,6 +4,71 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Multi-state components**: Step 1 now requires confirming the target screen
+  state (loading / detecting / done / empty…) and fully reproducing all of that
+  state's fields, not a simplified subset; decide the state from the real JS branch
+  that generates the DOM.
+- **Text-content editing (optional)**: the control panel can offer a "Text content"
+  input at the top of the Typography category to edit display copy directly
+  (textContent / input placeholder / first `<option>`), restorable via undo/redo/reset,
+  emitted on confirm as `text-content:` with a note to update the real string source.
+- **Single-element box/text logical-layer split**: a single element (e.g. one
+  `<input>`, where frame and text share one DOM node) can be split in the layer tree
+  into a "Box" layer and a "Text" layer via a `ROLES` map (`box`/`text`/`full`) that
+  filters categories in `buildPanel` (`showBox`/`showText`). Box props and text props
+  are disjoint CSS properties on the same SEL, so they never conflict; confirm emits a
+  box block and a text block sharing the same selector.
+- **Click-to-drill selection + click-background-to-deselect**: selection now uses
+  rect-containment + area sort (`clickStackAt`/`pickAt`) instead of `closest('[data-pick]')`,
+  so synthetic layers (text Hug) and child-fills-parent cases (icon in a button) are
+  reachable by clicking alone — repeated clicks drill outward (deepest first, cycling),
+  and clicking glyphs vs padding picks the text vs the box. Clicking the empty canvas
+  deselects (`deselectAll`), with `buildPanel`/`refreshSelectionUI` guarded for the
+  no-selection state.
+- **Nested selection frames + text "Hug" (Figma-style)**: when a single element is
+  split into box/text logical layers, the text layer's frame hugs the actual rendered
+  text (measured via an off-stage mirror span, placed by padding/`text-align`/vertical
+  center × zoom) through a unified `rectFor(key)` instead of the element box. Selecting a
+  text layer dashes its parent (`#tw-parentbox`); hovering shows a solid box + dashed text
+  overlay (`#tw-hover`/`#tw-htext`). The Hug frame hides edge handles and maps corner-drag
+  to `font-size` (not `_scl`), since box/text share one element and only typography is
+  independent.
+- **Dual-slot `<input>` text + independent placeholder typography**: `mode:'input'`
+  splits an input into `_ph` (before-typing placeholder) and `_val` (after-typing value)
+  slots, each with its own text row and an eye toggle to hide/show independently
+  (`_phHidden`/`_valHidden`, keeping the original in `ORIG_TEXT`). Because an `<input>`
+  shares one font between placeholder and value, independent placeholder typography is
+  done via a `::placeholder` rule injected into a per-(state,key) `<style>` from
+  `ph:`-prefixed props (not `el.style`), with a slot toggle (after/before font) driving
+  the Typography numboxes; confirm emits a separate `[OUT_SEL::placeholder]` block.
+- **SVG icon fill/stroke controls**: when an SVG element is selected, the Color
+  category now exposes `fill` / `stroke` separately (each with a "none" transparent
+  toggle) plus `stroke-width`, instead of background/text/border — an SVG's tunable
+  color surface is fill/stroke. Initial values read via `getComputedStyle`; emitted
+  on confirm as `fill:` / `stroke:`.
+
+### Changed
+- **undo/redo/reset preserves original inline styles**: `restore()` must no longer
+  blow away inline styles with `cssText=''` (which erased real inline styles that
+  faithful reproduction ships from JS templates, breaking layout until reload). It now
+  caches each element's original inline style (`ORIG_STYLE` via `captureOrigStyle()`)
+  and restores to it — the same pattern already used for text content (`ORIG_TEXT`).
+- **Stage-reset z-index neutralization**: the transform-box guidance now warns that
+  when the `#9` stage reset neutralizes a production overlay/modal, it must also reset
+  the overlay's `z-index` (production often ships a very high value like `z-index:100300`,
+  which forms a stacking context that paints the whole component above `#tw-tbox` and
+  hides the blue selection frame). Add `z-index: auto !important;` in the stage reset.
+- **Icon placeholder ban**: the faithful-reproduction rule now spells out that icons
+  may be inline `<svg>` **or** a class span backed by a CSS background/mask/icon font
+  (e.g. a base64-PNG `--cat-src`), and explicitly forbids substituting an
+  emoji / unicode / plain-text stand-in for a real icon — copy the real icon element
+  and classes verbatim, since a stand-in changes both the visuals and the styleable
+  surface (and breaks the confirm output's selector match). Added a matching
+  self-check step (scan every icon position for stand-ins before opening the panel).
+
 ## [1.0.0] - 2026-06-02
 
 ### Added

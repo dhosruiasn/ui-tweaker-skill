@@ -6,7 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_No unreleased changes._
+### Added
+- Added a stale-panel snapshot rule: when source code changes but an existing
+  `ui-tweaker-*.html` still shows old UI, agents must re-sync preview DOM,
+  selectors, layers, edit targets, pseudo maps, visual rects, and stage-reset
+  fallbacks from the current source and verify with browser `getComputedStyle`.
 
 ## [1.1.0] - 2026-06-05
 

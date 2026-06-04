@@ -61,11 +61,11 @@
   .tw-left-resizer:hover::after, .tw-left-resizer.dragging::after { background:#1a73e8; }
   .tw-lay-top { flex:none; display:flex; align-items:center; gap:8px; padding:13px 14px 12px; border-bottom:1px solid #ececec; font-size:12.5px; font-weight:600; color:#1e1e1e; }
   .tw-lay-top .tw-lay-emoji { font-size:14px; }
-  .tw-lay-sec { padding:10px 8px; border-bottom:1px solid #f1f1f1; min-width:max-content; }
+  .tw-lay-sec { padding:10px 8px; border-bottom:1px solid #f1f1f1; min-width:0; }
   .tw-lay-sec:last-child { border-bottom:none; }
   .tw-lay-h { font-size:10.5px; font-weight:600; letter-spacing:.5px; color:#aaa; text-transform:uppercase; padding:2px 8px 6px; }
   .tw-lay-page { display:flex; align-items:center; gap:7px; padding:6px 8px; border-radius:6px; font-size:12px; color:#3c4043; background:#f3f3f4; cursor:default; }
-  .tw-lay-row { display:flex; align-items:center; gap:6px; padding:5px 8px; border-radius:6px; font-size:12px; color:#3c4043; cursor:pointer; white-space:nowrap; user-select:none; }
+  .tw-lay-row { display:flex; align-items:center; gap:6px; padding:5px 8px; border-radius:6px; font-size:12px; color:#3c4043; cursor:pointer; white-space:nowrap; user-select:none; min-width:0; }
   .tw-lay-row:hover { background:#f3f3f4; }
   .tw-lay-row.on { background:#e8f0fe; color:#1a73e8; }
   .tw-lay-row.on .tw-lay-ico { color:#1a73e8; }
@@ -74,8 +74,8 @@
   .tw-lay-caret.leaf { visibility:hidden; }
   .tw-lay-ico { flex:none; color:#9aa0a6; display:flex; }
   .tw-lay-ico svg { width:15px; height:15px; }
-  .tw-lay-name { overflow:visible; text-overflow:clip; }
-  .tw-lay-eye { margin-left:auto; width:20px; height:20px; border:0; border-radius:5px; background:transparent; color:#9aa0a6; cursor:pointer; display:flex; align-items:center; justify-content:center; opacity:0; }
+  .tw-lay-name { flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .tw-lay-eye { flex:none; margin-left:4px; width:20px; height:20px; border:0; border-radius:5px; background:transparent; color:#9aa0a6; cursor:pointer; display:flex; align-items:center; justify-content:center; opacity:0; }
   .tw-lay-row:hover .tw-lay-eye, .tw-lay-eye:focus-visible { opacity:1; }
   .tw-lay-eye:hover { background:#e8eaed; color:#3c4043; }
   .tw-lay-eye svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }

@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   selectors, layers, edit targets, pseudo maps, visual rects, and stage-reset
   fallbacks from the current source and verify with browser `getComputedStyle`.
 
+### Changed
+- Updated the Layers tree template so long layer names ellipsize inside the row
+  and keep right-side controls such as eye toggles visible when the left pane is
+  narrow.
+
 ## [1.1.0] - 2026-06-05
 
 ### Added

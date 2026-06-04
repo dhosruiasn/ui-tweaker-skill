@@ -7,7 +7,7 @@
     {
       "name": "ui-tweaker",
       "source": "./",
-      "description": "Visually fine-tune UI components in a Claude conversation, then write the values back into your real source code."
+      "description": "Use when a user asks to tweak UI spacing, typography, color, size, radius, position, shadows, SVG icons, or other visual details through a live control panel."
     }
   ]
 }

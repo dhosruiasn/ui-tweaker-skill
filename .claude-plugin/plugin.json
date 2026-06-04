@@ -1,7 +1,7 @@
 {
   "name": "ui-tweaker",
-  "version": "1.0.0",
-  "description": "Visually fine-tune any UI component inside a Claude conversation with sliders and a Figma/PS-style control panel, then let Claude write the adjusted values straight back into your real source code.",
+  "version": "1.1.0",
+  "description": "Use when a user asks to tweak a UI component, adjust spacing, typography, color, size, radius, position, shadows, SVG icons, or other visual details through a live control panel, then write confirmed values back to source files.",
   "author": {
     "name": "HsuanTung Kao"
   },

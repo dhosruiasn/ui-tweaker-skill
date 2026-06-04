@@ -4,9 +4,9 @@
 
 用 **AI coding assistant** 搭配設計工具風格的控制面板微調任何 UI 元件——刷數值、即時預覽、移動與縮放元素——調好按下**確認**,AI 就把數值**直接寫回你的真實原始碼**。不用再來回「大一點…不對再小一點…再圓一點」。
 
-> **狀態:** v1.0.0 · MIT 授權 · 已包裝給 Claude Code,也提供 Codex、Cursor、Windsurf 與純 skill folder 安裝用的 portable adapters。
+> **狀態:** v1.1.0 · MIT 授權 · 已包裝給 Claude Code,也提供 Codex、Cursor、Windsurf 與純 skill folder 安裝用的 portable adapters。
 
-<!-- TODO: 這裡放一張操作 GIF,比任何文字都好賣。例如 ![demo](./examples/demo.gif) -->
+<!-- TODO: 有實際素材後，這裡放一張操作 GIF。 -->
 
 ---
 
@@ -111,4 +111,4 @@ scripts/doctor
 
 ## 授權
 
-[MIT](./LICENSE) © 2026 `HsuanTung Kao`
+[MIT](./LICENSE) © 2026 HsuanTung Kao

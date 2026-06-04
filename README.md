@@ -4,10 +4,9 @@
 
 Fine-tune any UI component **with an AI coding assistant** through a design-tool-style control panel — scrub values, preview changes live, move and resize elements — then let the assistant write the adjusted values **straight back into your real source code**. No more round-trips of "make it a bit bigger… no, smaller… more rounded."
 
-> **Status:** v1.0.0 · MIT licensed · packaged for Claude Code plus portable adapters for Codex, Cursor, Windsurf, and plain skill-folder installs.
+> **Status:** v1.1.0 · MIT licensed · packaged for Claude Code plus portable adapters for Codex, Cursor, Windsurf, and plain skill-folder installs.
 
-<!-- TODO: drop a demo GIF here — it sells this tool better than any paragraph.
-     e.g. ![demo](./examples/demo.gif) -->
+<!-- TODO: drop a demo GIF here once the asset exists. -->
 
 ---
 
@@ -112,4 +111,4 @@ As shipped, the template is wired to the generic demo component in [`examples/de
 
 ## License
 
-[MIT](./LICENSE) © 2026 `HsuanTung Kao`
+[MIT](./LICENSE) © 2026 HsuanTung Kao

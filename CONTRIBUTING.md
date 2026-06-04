@@ -4,7 +4,7 @@ Thanks for your interest in improving UI Tweaker!
 
 ## Ground rules
 
-This is a Claude **skill**, not an app — the "code" is mostly instructions (`SKILL.md` /
+This is a portable AI **skill**, not an app — the "code" is mostly instructions (`SKILL.md` /
 `SKILL.zh-TW.md`) plus a frozen HTML template (`template/panel-template.html`). Two rules
 keep it coherent:
 
@@ -25,7 +25,7 @@ keep it coherent:
 
 ## Releasing (maintainers)
 
-1. Bump `version` in `.claude-plugin/plugin.json` (semver).
+1. Bump `version` in `skill.json` and `.claude-plugin/plugin.json` (semver).
 2. Move `[Unreleased]` notes to a dated version section in `CHANGELOG.md`.
 3. Tag and push: `git tag v1.x.y && git push --tags`.
 

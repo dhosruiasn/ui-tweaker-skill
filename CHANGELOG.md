@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+_No unreleased changes._
+
+## [1.1.0] - 2026-06-05
+
 ### Added
 - **Multi-state components**: Step 1 now requires confirming the target screen
   state (loading / detecting / done / empty…) and fully reproducing all of that
@@ -60,6 +64,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   toggle) plus `stroke-width`, instead of background/text/border — an SVG's tunable
   color surface is fill/stroke. Initial values read via `getComputedStyle`; emitted
   on confirm as `fill:` / `stroke:`.
+- **No-paint and SVG-safe effects**: paint-like color rows now keep a permanent
+  square-with-slash no-paint control, and inline SVG effects use `filter:
+  drop-shadow(...)` instead of `box-shadow` so icons do not gain accidental square
+  backgrounds.
+- **Filter-safe selection overlays**: SVG or filtered targets no longer receive the
+  real-element `.tw-pick` outline, preventing icon drop-shadows from visually
+  shadowing the selection frame while keeping overlay selection boxes visible.
+- **Computed gradient initialization**: gradient controls now initialize from the
+  selected element's real computed `background-image` / `background` instead of
+  generic placeholder colors, so generated panels match the visible component.
+- **Resizable Layers pane + canvas panning + layer hover frames**: the fixed panel
+  template now includes a draggable Layers-pane resize handle, horizontal/vertical
+  layer-tree scrolling, Photoshop/Figma-style `Space` + drag canvas panning while
+  zoomed, and a non-selecting blue hover overlay (`#tw-hover`) when hovering layer
+  rows so the corresponding preview element is visible before selection.
+- **Real Pages switching contract**: the skill now requires Pages rows to be actual
+  switch targets that update the preview DOM/root, Layers tree, selector maps,
+  current selection, and confirm-output context together, or to be labeled as
+  separate linked HTML files instead of decorative inactive rows.
 
 ### Changed
 - **Stage-scoped responsive preview rules**: the skill now requires default stage
@@ -117,4 +140,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   strip non-allowlisted inline styles before opening the panel.
 - Generic demo component under `examples/` so the template runs out of the box.
 
+[Unreleased]: https://github.com/dhosruiasn/ui-tweaker/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/dhosruiasn/ui-tweaker/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/dhosruiasn/ui-tweaker/releases/tag/v1.0.0

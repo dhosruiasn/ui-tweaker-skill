@@ -90,7 +90,7 @@ write_cursor_rule() {
   mkdir -p "$rule_dir"
   cat > "$rule_file" <<'RULE'
 ---
-description: Use UI Tweaker when a user wants to visually fine-tune a UI component and write the confirmed values back to source.
+description: Use UI Tweaker when a user asks to tweak UI spacing, typography, color, size, radius, position, shadows, SVG icons, or other visual details through a live control panel.
 alwaysApply: false
 ---
 
@@ -111,8 +111,9 @@ write_windsurf_rule() {
   cat > "$rule_file" <<'RULE'
 # UI Tweaker
 
-Use this rule when a user wants to visually fine-tune a UI component and write
-the confirmed values back to source.
+Use this rule when a user asks to tweak UI spacing, typography, color, size,
+radius, position, shadows, SVG icons, or other visual details through a live
+control panel.
 
 Follow the bundled skill instructions at `.windsurf/skills/ui-tweaker/SKILL.md`.
 Use the template at `.windsurf/skills/ui-tweaker/template/panel-template.html`.

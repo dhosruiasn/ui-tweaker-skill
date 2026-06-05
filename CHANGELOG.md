@@ -11,8 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ui-tweaker-*.html` still shows old UI, agents must re-sync preview DOM,
   selectors, layers, edit targets, pseudo maps, visual rects, and stage-reset
   fallbacks from the current source and verify with browser `getComputedStyle`.
-- Added a README hero asset and refreshed the opening tagline around precision
-  visual control for vibe coding.
+- Refreshed the README opening title around precision visual control for vibe
+  coding and added a PNG promo image above the status block.
 
 ### Changed
 - Updated the Layers tree template so long layer names ellipsize inside the row

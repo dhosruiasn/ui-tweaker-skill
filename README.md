@@ -1,12 +1,10 @@
-# UI Tweaker
-
-**Precision visual control for vibe coding.**
-
-![UI Tweaker hero](./assets/ui-tweaker-hero.svg)
+# UI Tweaker — Precision visual control for vibe coding.
 
 [繁體中文版 README](./README.zh-TW.md)
 
 Fine-tune any UI component **with an AI coding assistant** through a design-tool-style control panel — scrub values, preview changes live, move and resize elements — then let the assistant write the adjusted values **straight back into your real source code**. No more round-trips of "make it a bit bigger… no, smaller… more rounded."
+
+![UI Tweaker hero](./assets/ui-tweaker-hero.png)
 
 > **Status:** v1.1.0 · MIT licensed · packaged for Claude Code plus portable adapters for Codex, Cursor, Windsurf, and plain skill-folder installs.
 

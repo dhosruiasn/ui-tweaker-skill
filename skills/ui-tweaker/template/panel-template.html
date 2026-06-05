@@ -288,9 +288,19 @@
 
   /* Multi-layer shadow */
   .tw-shadow-layer { border:1px solid #ededed; border-radius:8px; padding:8px 10px 10px; margin:8px 0; background:#fafafb; }
-  .tw-shadow-head { display:flex; align-items:center; justify-content:space-between; margin:1px 0 6px; }
-  .tw-shadow-head span { font-size:11px; font-weight:600; color:#1e1e1e; }
-  .tw-shadow-del { font-size:10.5px; padding:2px 8px; border-radius:6px; border:1px solid #f0c8c4; background:#fdeeed; color:#c5221f; cursor:pointer; }
+  .tw-shadow-layer[open] { padding-bottom:10px; }
+  .tw-shadow-layer:not([open]) { padding-bottom:8px; }
+  .tw-shadow-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:1px 0 6px; cursor:pointer; list-style:none; }
+  .tw-shadow-head::-webkit-details-marker { display:none; }
+  .tw-shadow-head::before { content:'›'; color:#9aa0a6; font-size:15px; line-height:1; transform:rotate(0deg); transition:transform .12s; }
+  .tw-shadow-layer[open] .tw-shadow-head::before { transform:rotate(90deg); }
+  .tw-shadow-head span { font-size:11px; font-weight:600; color:#1e1e1e; flex:1; }
+  .tw-shadow-actions { display:flex; align-items:center; gap:5px; }
+  .tw-shadow-eye, .tw-shadow-del { width:24px; height:24px; border:1px solid #e1e1e3; border-radius:7px; background:#fff; color:#5f6368; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; }
+  .tw-shadow-eye.off { opacity:.45; }
+  .tw-shadow-del { color:#c5221f; border-color:#f0c8c4; background:#fff7f6; }
+  .tw-shadow-eye svg, .tw-shadow-del svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .tw-shadow-body.off { opacity:.46; }
   .tw-shadow-inset label { cursor:pointer; align-items:center; }
   .tw-shadow-inset input[type=checkbox]{ accent-color:#1a73e8; width:14px; height:14px; }
   .tw-shadow-empty { font-size:11px; color:#aaa; padding:4px 0 6px; }
@@ -901,7 +911,9 @@
   function normHex(h){ var n=h.replace('#',''); if(n.length===3)n=n.split('').map(function(c){return c+c;}).join(''); return '#'+n.slice(0,6).toLowerCase(); }
   function composeShadow(layers){
     if(!layers || !layers.length) return 'none';
-    return layers.map(function(l){
+    var active=layers.filter(function(l){ return !l.off; });
+    if(!active.length) return 'none';
+    return active.map(function(l){
       return (l.inset?'inset ':'')+l.x+'px '+l.y+'px '+l.blur+'px '+l.spread+'px '+hexToRgba(l.hex||'#000000', l.alpha);
     }).join(', ');
   }
@@ -914,7 +926,7 @@
     ensure(key);
     if(!state[key]._shadows){
       state[key]._shadows = parseShadowLayers(cssVal(key,'box-shadow')).map(function(l){
-        return {x:l.x,y:l.y,blur:l.blur,spread:l.spread,hex:l.hex,alpha:l.alpha,inset:l.inset};
+        return {x:l.x,y:l.y,blur:l.blur,spread:l.spread,hex:l.hex,alpha:l.alpha,inset:l.inset,off:!!l.off};
       });
     }
     return state[key]._shadows;
@@ -950,20 +962,33 @@
     b.appendChild(add);
   }
   function renderShadowLayer(key, layer, idx, body){
-    var wrap=document.createElement('div'); wrap.className='tw-shadow-layer';
-    var head=document.createElement('div'); head.className='tw-shadow-head';
+    var wrap=document.createElement('details'); wrap.className='tw-shadow-layer'; wrap.open=true;
+    var head=document.createElement('summary'); head.className='tw-shadow-head';
     var ttl=document.createElement('span'); ttl.textContent='Shadow layer '+(idx+1); head.appendChild(ttl);
-    var del=document.createElement('button'); del.className='tw-shadow-del'; del.textContent='Delete';
-    del.addEventListener('click',function(){
+    var actions=document.createElement('div'); actions.className='tw-shadow-actions';
+    var eye=document.createElement('button'); eye.type='button'; eye.className='tw-shadow-eye'+(layer.off?' off':''); eye.title=layer.off?'Show shadow':'Hide shadow';
+    eye.innerHTML=layer.off?'<svg viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 4.2A10.8 10.8 0 0 1 12 4c5 0 8.5 4 10 8a13.7 13.7 0 0 1-2.1 3.5"/><path d="M6.4 6.4A13.8 13.8 0 0 0 2 12c1.5 4 5 8 10 8a10.9 10.9 0 0 0 5.6-1.6"/></svg>':'<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>';
+    eye.addEventListener('click',function(e){
+      e.preventDefault(); e.stopPropagation();
+      ensureShadows(key)[idx].off=!ensureShadows(key)[idx].off;
+      applyEl(key); commit(); renderShadowBody(key, body);
+    });
+    actions.appendChild(eye);
+    var del=document.createElement('button'); del.type='button'; del.className='tw-shadow-del'; del.title='Delete shadow';
+    del.innerHTML='<svg viewBox="0 0 24 24"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>';
+    del.addEventListener('click',function(e){
+      e.preventDefault(); e.stopPropagation();
       ensureShadows(key).splice(idx,1); applyEl(key); commit(); renderShadowBody(key, body);
     });
-    head.appendChild(del); wrap.appendChild(head);
-    wrap.appendChild(shadowToggle(key, idx, layer));
-    wrap.appendChild(shadowSlider(key, idx, 'x','X offset',-40,40,1,layer.x));
-    wrap.appendChild(shadowSlider(key, idx, 'y','Y offset',-40,40,1,layer.y));
-    wrap.appendChild(shadowSlider(key, idx, 'blur','Blur',0,80,1,layer.blur));
-    wrap.appendChild(shadowSlider(key, idx, 'spread','Spread',-30,30,1,layer.spread));
-    wrap.appendChild(shadowColor(key, idx, layer));
+    actions.appendChild(del); head.appendChild(actions); wrap.appendChild(head);
+    var inner=document.createElement('div'); inner.className='tw-shadow-body'+(layer.off?' off':'');
+    inner.appendChild(shadowToggle(key, idx, layer));
+    inner.appendChild(shadowSlider(key, idx, 'x','X offset',-40,40,1,layer.x));
+    inner.appendChild(shadowSlider(key, idx, 'y','Y offset',-40,40,1,layer.y));
+    inner.appendChild(shadowSlider(key, idx, 'blur','Blur',0,80,1,layer.blur));
+    inner.appendChild(shadowSlider(key, idx, 'spread','Spread',-30,30,1,layer.spread));
+    inner.appendChild(shadowColor(key, idx, layer));
+    wrap.appendChild(inner);
     return wrap;
   }
   function shadowToggle(key, idx, layer){
@@ -2105,12 +2130,41 @@
   }
   var valueClipboard=null;
   function clonePlain(o){ return JSON.parse(JSON.stringify(o||{})); }
+  var FORMAT_PROPS = [
+    'font-size','font-weight','line-height','letter-spacing','font-family','color',
+    'background-color','border-color','border-top-color','border-right-color','border-bottom-color','border-left-color',
+    'border-width','border-top-width','border-right-width','border-bottom-width','border-left-width','border-style',
+    'border-radius','border-top-left-radius','border-top-right-radius','border-bottom-right-radius','border-bottom-left-radius',
+    'stroke-width'
+  ];
+  var FORMAT_STATE_KEYS = {
+    _bgHex:true,_bgA:true,_txHex:true,_bdHex:true,_bdA:true,_fillHex:true,_strokeHex:true,
+    _gradStartHex:true,_gradEndHex:true,_gradStartA:true,_gradEndA:true,_gradStartPos:true,_gradEndPos:true,_gradAngle:true,
+    _effects:true,_glassBlur:true,_glassSat:true,_glassTopA:true,_glassMidA:true,_glassBotA:true,_glassTopHi:true,_glassEdgeA:true,
+    _glassEdgeTop:true,_glassEdgeSides:true,_glassEdgeRight:true,_glassEdgeBot:true,_glassInnerA:true,_glassInnerTop:true,
+    _glassX:true,_glassBorderA:true,_glassBorderX:true,_glassBorderY:true,_shadows:true
+  };
   function styleSnapshot(key){
-    var snap=clonePlain(state[key]||{});
-    if(snap && snap._shadows) snap._shadows=clonePlain(currentLayers(key));
-    Object.keys(snap).forEach(function(k){
-      if(k==='_text' || k==='textContent' || /^_text/.test(k)) delete snap[k];
+    var snap={};
+    var existing=state[key]||{};
+    Object.keys(existing).forEach(function(k){
+      if(FORMAT_STATE_KEYS[k]) snap[k]=clonePlain(existing[k]);
     });
+    if(currentLayers(key).length) snap._shadows=clonePlain(currentLayers(key));
+    var el=editElFor(key);
+    if(!el) return snap;
+    var cs=getComputedStyle(el);
+    FORMAT_PROPS.forEach(function(prop){
+      var v=cs.getPropertyValue(prop);
+      if(v && v!=='none' && v!=='normal' && v!=='auto') snap[prop]=v.trim();
+    });
+    if(isSvgKey(key)){
+      var fill=cssVal(key,'fill'), stroke=cssVal(key,'stroke');
+      if(fill && fill!=='none') snap._fillHex=rgbToHex(fill).hex;
+      if(stroke && stroke!=='none') snap._strokeHex=rgbToHex(stroke).hex;
+      var sw=parseFloat(cssVal(key,'stroke-width'));
+      if(!isNaN(sw)) snap['stroke-width']=sw;
+    }
     return snap;
   }
   function sameKindKeys(key){
@@ -2119,7 +2173,9 @@
   }
   function pasteValuesTo(key, snap){
     if(!key || !snap) return;
-    state[key]=clonePlain(snap);
+    var next=clonePlain(state[key]||{});
+    Object.keys(snap).forEach(function(k){ next[k]=clonePlain(snap[k]); });
+    state[key]=next;
     applyEl(key);
   }
   function ensureContextMenu(){
@@ -2129,9 +2185,9 @@
     menu.id='tw-menu';
     menu.className='tw-menu';
     menu.innerHTML=
-      '<button data-act="copy"><span>Copy values</span><span>⌘C</span></button>'+
-      '<button data-act="paste"><span>Paste here</span></button>'+
-      '<button data-act="paste-kind"><span>Paste to same kind</span></button>'+
+      '<button data-act="copy"><span>Copy style</span><span>⌘C</span></button>'+
+      '<button data-act="paste"><span>Paste style here</span></button>'+
+      '<button data-act="paste-kind"><span>Paste style to same kind</span></button>'+
       '<div class="tw-menu-sep"></div>'+
       '<button data-act="deep"><span>Select deepest layer</span></button>'+
       '<button data-act="outer"><span>Select next outer layer</span></button>';

@@ -497,9 +497,23 @@
       return {hex:'#'+n.toLowerCase(),a:1};
     }
     var m = raw.match(/rgba?\(([^)]+)\)/); if(!m) return {hex:'#000000',a:1};
-    var p = m[1].split(',').map(function(s){return parseFloat(s);});
+    var body=m[1].trim(), alpha=1;
+    if(body.indexOf('/')>=0){
+      var slash=body.split('/');
+      body=slash[0].trim();
+      var aRaw=(slash[1]||'').trim();
+      alpha=parseFloat(aRaw);
+      if(aRaw.indexOf('%')>=0) alpha=alpha/100;
+    }
+    var p = (body.indexOf(',')>=0 ? body.split(',') : body.split(/\s+/)).filter(Boolean).map(function(s){
+      var pct=String(s).indexOf('%')>=0;
+      var n=parseFloat(s);
+      return pct ? n*2.55 : n;
+    });
+    if(body.indexOf(',')>=0 && p.length>3) alpha=p[3];
+    if(isNaN(alpha)) alpha=1;
     var hex = '#'+[p[0],p[1],p[2]].map(function(n){return ('0'+Math.round(n||0).toString(16)).slice(-2);}).join('');
-    return { hex:hex, a: p.length>3 ? p[3] : 1 };
+    return { hex:hex, a: alpha };
   }
   function hexToRgba(hex,a){
     if(hex==='none') return 'none';
@@ -2159,7 +2173,7 @@
       if(v && v!=='none' && v!=='normal' && v!=='auto') snap[prop]=v.trim();
     });
     if(isSvgKey(key)){
-      var fill=cssVal(key,'fill'), stroke=cssVal(key,'stroke');
+      var fill=svgSnapshotPaintValue(key,'fill'), stroke=svgSnapshotPaintValue(key,'stroke');
       if(fill && fill!=='none') snap._fillHex=rgbToHex(fill).hex;
       if(stroke && stroke!=='none') snap._strokeHex=rgbToHex(stroke).hex;
       var sw=parseFloat(cssVal(key,'stroke-width'));
@@ -2629,6 +2643,25 @@
   }
   function svgPaintNodes(el){
     return Array.prototype.slice.call(el.querySelectorAll('g, path, circle, rect, line, polyline, polygon, ellipse, use'));
+  }
+  function svgSnapshotPaintValue(key, prop){
+    var el=editElFor(key);
+    if(!el || (el.tagName||'').toLowerCase()!=='svg') return cssVal(key, prop);
+    var nodes=Array.prototype.slice.call(el.querySelectorAll('path, circle, rect, line, polyline, polygon, ellipse, use'));
+    if(!nodes.length) nodes=svgPaintNodes(el);
+    for(var i=0;i<nodes.length;i++){
+      var n=nodes[i];
+      if(prop==='fill' && n.classList && n.classList.contains('cutout')) continue;
+      var v=(getComputedStyle(n).getPropertyValue(prop) || n.getAttribute(prop) || '').trim();
+      if(!v || v==='none' || v==='transparent') continue;
+      if(v==='currentColor') v=getComputedStyle(n).getPropertyValue('color');
+      var parsed=rgbToHex(v);
+      if(parsed.none) continue;
+      return v;
+    }
+    var root=(getComputedStyle(el).getPropertyValue(prop) || el.getAttribute(prop) || '').trim();
+    if(root==='currentColor') root=getComputedStyle(el).getPropertyValue('color');
+    return root;
   }
   function restoreBaseStyle(k){
     var el=editElFor(k); if(!el) return;

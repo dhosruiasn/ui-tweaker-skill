@@ -2142,11 +2142,21 @@
       else if(e.target.closest('.tw-tbox-rot')) startRotate(e);
       else if(e.target.closest('.tw-tbox-body')) startBodyDrag(e);
     });
-    window.addEventListener('resize', function(){ updateTBox(); updateHoverBox(); positionRulers(); });
-    document.getElementById('tw-left').addEventListener('scroll', function(){ updateTBox(); updateHoverBox(); positionRulers(); }, {passive:true});
+    window.addEventListener('resize', syncOverlays);
+    document.getElementById('tw-left').addEventListener('scroll', syncOverlays, {passive:true});
   }
   var tboxRAF=0;
+  var overlayRAF=0;
   function scheduleTBox(){ if(tboxRAF) return; tboxRAF=requestAnimationFrame(function(){ tboxRAF=0; updateTBox(); updateHoverBox(); }); }
+  function syncOverlays(){
+    if(overlayRAF) return;
+    overlayRAF=requestAnimationFrame(function(){
+      overlayRAF=0;
+      updateTBox();
+      updateHoverBox();
+      positionRulers();
+    });
+  }
   function setupSelectedBoxes(){
     if(document.getElementById('tw-selected')) return;
     var box=document.createElement('div');
@@ -2315,8 +2325,7 @@
       function mv(ev){
         pane.scrollLeft=sl-(ev.clientX-sx);
         pane.scrollTop=st-(ev.clientY-sy);
-        updateTBox();
-        updateHoverBox();
+        syncOverlays();
       }
       function up(){
         document.removeEventListener('mousemove',mv);
@@ -2324,6 +2333,7 @@
         panning=false;
         pane.classList.remove('is-panning');
         if(!space) pane.classList.remove('space-pan');
+        syncOverlays();
       }
       document.addEventListener('mousemove',mv);
       document.addEventListener('mouseup',up);

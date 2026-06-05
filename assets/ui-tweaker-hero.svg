@@ -1,0 +1,135 @@
+<svg width="1920" height="920" viewBox="0 0 1920 920" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1920" y2="920" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F6FBFF"/>
+      <stop offset="1" stop-color="#EEF6FB"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="240" y1="80" x2="360" y2="230" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F9FEFF"/>
+      <stop offset="0.6" stop-color="#AFE9FF"/>
+      <stop offset="1" stop-color="#5BC4F7"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#C7F2FF"/>
+      <stop offset="1" stop-color="#53C5F8"/>
+    </linearGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#9ECDE4" flood-opacity="0.28"/>
+    </filter>
+    <filter id="panelShadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="14" stdDeviation="20" flood-color="#B6C8D6" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+
+  <rect width="1920" height="920" fill="url(#bg)"/>
+
+  <g transform="translate(222 95)" filter="url(#soft)">
+    <rect x="0" y="0" width="138" height="138" rx="36" fill="url(#glass)" stroke="#DDF5FF" stroke-width="3"/>
+    <rect x="31" y="31" width="76" height="76" rx="2" fill="none" stroke="#D9F7FF" stroke-width="4"/>
+    <rect x="25" y="25" width="16" height="16" rx="4" fill="#EAFBFF" stroke="#9FDCFA" stroke-width="2"/>
+    <rect x="97" y="25" width="16" height="16" rx="4" fill="#EAFBFF" stroke="#9FDCFA" stroke-width="2"/>
+    <rect x="25" y="97" width="16" height="16" rx="4" fill="#EAFBFF" stroke="#9FDCFA" stroke-width="2"/>
+    <rect x="97" y="97" width="16" height="16" rx="4" fill="#EAFBFF" stroke="#9FDCFA" stroke-width="2"/>
+    <path d="M58 44L94 68L75 74L66 104L58 44Z" fill="#71C8F6" stroke="#F7FCFF" stroke-width="5" stroke-linejoin="round"/>
+  </g>
+
+  <text x="222" y="330" font-family="Inter, Arial, sans-serif" font-size="90" font-weight="800" letter-spacing="-1" fill="#050505">UI Tweaker</text>
+  <text x="222" y="422" font-family="Inter, Arial, sans-serif" font-size="48" font-weight="750" fill="#15A8F0">Precision visual control</text>
+  <text x="222" y="482" font-family="Inter, Arial, sans-serif" font-size="48" font-weight="750" fill="#15A8F0">for vibe coding.</text>
+
+  <g font-family="Inter, Arial, sans-serif" font-size="30" fill="#0F0F0F">
+    <text x="240" y="610">Drag to adjust, see it live</text>
+    <text x="240" y="672">Writes back to your real code</text>
+    <text x="240" y="734">Works across AI coding tools</text>
+    <circle cx="224" cy="599" r="2.8" fill="#0F0F0F"/>
+    <circle cx="224" cy="661" r="2.8" fill="#0F0F0F"/>
+    <circle cx="224" cy="723" r="2.8" fill="#0F0F0F"/>
+  </g>
+
+  <text x="222" y="835" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700" fill="#111">Works with:</text>
+  <g transform="translate(222 858)" font-family="Inter, Arial, sans-serif" font-size="13" text-anchor="middle">
+    <rect width="54" height="54" rx="17" fill="#E8754D"/>
+    <path d="M27 12L31 24L43 14L34 27L47 27L34 31L43 43L31 34L27 47L23 34L11 43L20 31L7 27L20 24L11 14L23 24L27 12Z" fill="#FFF4E8"/>
+    <text x="27" y="80" fill="#C66B55">Claude</text>
+  </g>
+  <g transform="translate(300 858)" font-family="Inter, Arial, sans-serif" font-size="13" text-anchor="middle">
+    <rect width="54" height="54" rx="17" fill="#F9FBFF" stroke="#C9C2FF" stroke-width="2"/>
+    <rect x="14" y="13" width="28" height="28" rx="9" fill="#8175F6"/>
+    <path d="M22 27H33M29 21L35 27L29 33" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="27" y="80" fill="#786BE9">Codex</text>
+  </g>
+  <g transform="translate(378 858)" font-family="Inter, Arial, sans-serif" font-size="13" text-anchor="middle">
+    <rect width="54" height="54" rx="17" fill="#FFFFFF" stroke="#CDD2D6" stroke-width="2"/>
+    <path d="M15 17L28 10L41 17V38L28 45L15 38V17Z" fill="#1E261D"/>
+    <path d="M28 10V45M15 17L28 25L41 17" stroke="#E8EEE8" stroke-width="2"/>
+    <text x="27" y="80" fill="#333">Cursor</text>
+  </g>
+  <text x="470" y="895" font-family="Inter, Arial, sans-serif" font-size="17" fill="#111">(and more...)</text>
+
+  <g transform="translate(955 154)" filter="url(#panelShadow)">
+    <rect width="415" height="540" rx="18" fill="#FFFFFF" stroke="#E6EAF0"/>
+    <text x="28" y="42" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="700" fill="#202124">Size</text>
+    <g fill="#F7F7F8" stroke="#E6E7EA">
+      <rect x="28" y="70" width="185" height="42" rx="8"/>
+      <rect x="224" y="70" width="163" height="42" rx="8"/>
+      <rect x="28" y="124" width="185" height="42" rx="8"/>
+      <rect x="224" y="124" width="163" height="42" rx="8"/>
+    </g>
+    <text x="42" y="97" font-family="Inter, Arial, sans-serif" font-size="14" fill="#A1A4AA">W</text>
+    <text x="195" y="97" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" text-anchor="end" fill="#202124">455</text>
+    <text x="238" y="97" font-family="Inter, Arial, sans-serif" font-size="14" fill="#A1A4AA">H</text>
+    <text x="368" y="97" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" text-anchor="end" fill="#202124">716</text>
+    <line x1="28" y1="196" x2="387" y2="196" stroke="#EEF0F2"/>
+    <text x="28" y="230" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="700" fill="#202124">Radius</text>
+    <line x1="28" y1="258" x2="387" y2="258" stroke="#EEF0F2"/>
+    <text x="28" y="292" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="700" fill="#202124">Position / offset</text>
+    <g fill="#F7F7F8" stroke="#E6E7EA">
+      <rect x="110" y="318" width="44" height="44" rx="9"/>
+      <rect x="164" y="318" width="44" height="44" rx="9"/>
+      <rect x="218" y="318" width="44" height="44" rx="9"/>
+      <rect x="110" y="378" width="44" height="44" rx="9"/>
+      <rect x="164" y="378" width="44" height="44" rx="9"/>
+      <rect x="218" y="378" width="44" height="44" rx="9"/>
+      <rect x="28" y="452" width="185" height="42" rx="8" fill="#EAF2FF" stroke="#A4CAFF"/>
+      <rect x="224" y="452" width="163" height="42" rx="8" fill="#EAF2FF" stroke="#A4CAFF"/>
+    </g>
+    <text x="28" y="344" font-family="Inter, Arial, sans-serif" font-size="14" fill="#8A8D92">Box</text>
+    <text x="28" y="360" font-family="Inter, Arial, sans-serif" font-size="14" fill="#8A8D92">position</text>
+    <text x="28" y="404" font-family="Inter, Arial, sans-serif" font-size="14" fill="#8A8D92">Text in box</text>
+    <text x="42" y="479" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" fill="#1976EA">X</text>
+    <text x="195" y="479" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" text-anchor="end" fill="#1976EA">0</text>
+    <text x="238" y="479" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" fill="#1976EA">Y</text>
+    <text x="368" y="479" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" text-anchor="end" fill="#1976EA">0</text>
+  </g>
+
+  <g transform="translate(1420 150)" filter="url(#panelShadow)">
+    <rect width="400" height="690" rx="24" fill="#F8FAFC" stroke="#DCE3EC"/>
+    <rect x="18" y="63" width="364" height="600" rx="12" fill="#FFFFFF"/>
+    <g transform="translate(43 92)">
+      <circle cx="24" cy="24" r="22" fill="#E9EAEC"/>
+      <path d="M16 29c1-6 15-6 16 0M24 21a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" stroke="#16191D" stroke-width="3" stroke-linecap="round"/>
+      <text x="61" y="31" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="800" fill="#16191D">Hi, Explorer</text>
+      <circle cx="306" cy="24" r="18" fill="#ECEDEF"/>
+      <circle cx="350" cy="24" r="18" fill="#ECEDEF"/>
+    </g>
+    <g transform="translate(72 200)">
+      <g transform="translate(0 0)">
+        <path d="M20 0h70l20 14h85a14 14 0 0 1 14 14v110H0V20A20 20 0 0 1 20 0Z" fill="#79BFFF"/>
+        <rect x="-10" y="62" width="220" height="88" rx="21" fill="url(#blue)" opacity=".82"/>
+        <circle cx="164" cy="111" r="24" fill="#fff"/>
+      </g>
+      <g transform="translate(190 0)">
+        <path d="M20 0h70l20 14h85a14 14 0 0 1 14 14v110H0V20A20 20 0 0 1 20 0Z" fill="#79BFFF"/>
+        <rect x="-10" y="62" width="220" height="88" rx="21" fill="url(#blue)" opacity=".82"/>
+        <circle cx="164" cy="111" r="24" fill="#fff"/>
+      </g>
+      <text x="82" y="185" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="800" fill="#17191C">Flower</text>
+      <text x="272" y="185" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="800" fill="#17191C">Mushroom</text>
+    </g>
+    <rect x="18" y="63" width="364" height="600" rx="12" fill="none" stroke="#1876F2" stroke-width="3"/>
+    <circle cx="200" cy="63" r="6" fill="#EAF5FF" stroke="#1876F2" stroke-width="3"/>
+    <rect x="194" y="657" width="12" height="12" fill="#EAF5FF" stroke="#1876F2" stroke-width="3"/>
+    <rect x="150" y="665" width="96" height="28" rx="8" fill="#1976EA"/>
+    <text x="198" y="684" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="800" fill="#fff">455 x 716 px</text>
+  </g>
+</svg>

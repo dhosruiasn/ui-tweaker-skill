@@ -1,4 +1,8 @@
-# UI Tweaker — 可攜式 AI skill
+# UI Tweaker
+
+**精準視覺控制，為 vibe coding 而生。**
+
+![UI Tweaker hero](./assets/ui-tweaker-hero.svg)
 
 [English README](./README.md)
 

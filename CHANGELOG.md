@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ui-tweaker-*.html` still shows old UI, agents must re-sync preview DOM,
   selectors, layers, edit targets, pseudo maps, visual rects, and stage-reset
   fallbacks from the current source and verify with browser `getComputedStyle`.
+- Added a README hero asset and refreshed the opening tagline around precision
+  visual control for vibe coding.
 
 ### Changed
 - Updated the Layers tree template so long layer names ellipsize inside the row
@@ -24,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the full row width while idle.
 - Filtered click-to-drill targets to real layer keys, with `NON_PICKABLE` for
   helper keys that exist only for selectors or visual-rect plumbing.
+- Routed scroll, resize, and space-pan movement through one RAF-scheduled overlay
+  sync path so selection frames stay attached to their elements while panning.
 
 ## [1.1.0] - 2026-06-05
 

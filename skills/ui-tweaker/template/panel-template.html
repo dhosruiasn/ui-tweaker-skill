@@ -166,8 +166,8 @@
   .tw-ruler-h {
     height:24px;
     background:
-      repeating-linear-gradient(90deg, transparent 0 9px, rgba(32,33,36,.72) 9px 10px) left bottom/100% 9px no-repeat,
-      repeating-linear-gradient(90deg, transparent 0 49px, rgba(32,33,36,.9) 49px 50px) left bottom/100% 17px no-repeat,
+      repeating-linear-gradient(90deg, transparent 0 calc(var(--tw-ruler-minor, 10px) - 1px), rgba(32,33,36,.72) calc(var(--tw-ruler-minor, 10px) - 1px) var(--tw-ruler-minor, 10px)) left bottom/100% 9px no-repeat,
+      repeating-linear-gradient(90deg, transparent 0 calc(var(--tw-ruler-major, 50px) - 1px), rgba(32,33,36,.9) calc(var(--tw-ruler-major, 50px) - 1px) var(--tw-ruler-major, 50px)) left bottom/100% 17px no-repeat,
       rgba(238,238,235,.96);
     border-bottom:1px solid rgba(32,33,36,.22);
     cursor:ns-resize;
@@ -175,8 +175,8 @@
   .tw-ruler-v {
     width:24px;
     background:
-      repeating-linear-gradient(0deg, transparent 0 9px, rgba(32,33,36,.72) 9px 10px) right top/9px 100% no-repeat,
-      repeating-linear-gradient(0deg, transparent 0 49px, rgba(32,33,36,.9) 49px 50px) right top/17px 100% no-repeat,
+      repeating-linear-gradient(0deg, transparent 0 calc(var(--tw-ruler-minor, 10px) - 1px), rgba(32,33,36,.72) calc(var(--tw-ruler-minor, 10px) - 1px) var(--tw-ruler-minor, 10px)) right top/9px 100% no-repeat,
+      repeating-linear-gradient(0deg, transparent 0 calc(var(--tw-ruler-major, 50px) - 1px), rgba(32,33,36,.9) calc(var(--tw-ruler-major, 50px) - 1px) var(--tw-ruler-major, 50px)) right top/17px 100% no-repeat,
       rgba(238,238,235,.96);
     border-right:1px solid rgba(32,33,36,.22);
     cursor:ew-resize;
@@ -189,6 +189,13 @@
   .tw-ruler-guide.selected { background:rgba(134,239,172,.95); }
   .tw-ruler-readout { position:absolute; z-index:100003; display:none; padding:3px 7px; border-radius:6px; background:#1a73e8; color:#fff; font-size:11px; line-height:1; white-space:nowrap; box-shadow:0 2px 8px rgba(0,0,0,.18); pointer-events:none; }
   .tw-ruler-readout.show { display:block; }
+  .tw-menu { position:fixed; z-index:100010; min-width:178px; padding:6px; border-radius:10px; background:#202124; color:#f8fafd; box-shadow:0 12px 34px rgba(0,0,0,.28); display:none; }
+  .tw-menu.show { display:block; }
+  .tw-menu button { width:100%; display:flex; align-items:center; justify-content:space-between; gap:18px; padding:8px 10px; border:0; border-radius:7px; background:transparent; color:inherit; font:inherit; font-size:12px; text-align:left; cursor:pointer; }
+  .tw-menu button:hover { background:#1a73e8; }
+  .tw-menu button:disabled { color:#8b9098; cursor:default; }
+  .tw-menu button:disabled:hover { background:transparent; }
+  .tw-menu .tw-menu-sep { height:1px; margin:6px 2px; background:rgba(255,255,255,.14); }
 
   /* Preview element selection hint (low-noise: inner outline, does not pollute box-shadow) */
   .tw-pick { outline:2px solid rgba(26,115,232,.9); outline-offset:-2px; }
@@ -1598,6 +1605,8 @@
   function positionRulers(){
     var pane=document.getElementById('tw-left'), box=document.getElementById('tw-rulers');
     if(!box) return;
+    box.style.setProperty('--tw-ruler-minor', Math.max(4, Math.round(10*zoom))+'px');
+    box.style.setProperty('--tw-ruler-major', Math.max(12, Math.round(50*zoom))+'px');
     var h=box.querySelector('.tw-ruler-h'), v=box.querySelector('.tw-ruler-v'), c=box.querySelector('.tw-ruler-corner');
     h.style.left=(pane.scrollLeft+24)+'px';
     h.style.top=pane.scrollTop+'px';
@@ -1799,8 +1808,8 @@
     var pane=document.getElementById('tw-left'), pr=pane.getBoundingClientRect();
     rulerGuides.forEach(function(g){
       var pos=Number(g.dataset.pos)||0;
-      if(g.dataset.axis==='v') xs.push({pos:pos-pane.scrollLeft+pr.left, label:'manual guide'});
-      else ys.push({pos:pos-pane.scrollTop+pr.top, label:'manual guide'});
+      if(g.dataset.axis==='v') xs.push({pos:stageCoordToPane('v', pos)-pane.scrollLeft+pr.left, label:'manual guide'});
+      else ys.push({pos:stageCoordToPane('h', pos)-pane.scrollTop+pr.top, label:'manual guide'});
     });
     return { group:groupRect(keys), xs:xs, ys:ys };
   }
@@ -2077,17 +2086,103 @@
       pick(key,true);
       return;
     }
-    if(cur){
+    if(cur && stack[0]===cur){
       var idx=stack.indexOf(cur);
       if(idx>=0) key=stack[(idx+1)%stack.length];
     }
     pick(key,false);
   }
+  var valueClipboard=null;
+  function clonePlain(o){ return JSON.parse(JSON.stringify(o||{})); }
+  function styleSnapshot(key){
+    var snap=clonePlain(state[key]||{});
+    if(snap && snap._shadows) snap._shadows=clonePlain(currentLayers(key));
+    Object.keys(snap).forEach(function(k){
+      if(k==='_text' || k==='textContent' || /^_text/.test(k)) delete snap[k];
+    });
+    return snap;
+  }
+  function sameKindKeys(key){
+    var label=LAYER_LABEL[key];
+    return Object.keys(LAYER_LABEL).filter(function(k){ return LAYER_LABEL[k]===label && SEL[k] && !NON_PICKABLE[k]; });
+  }
+  function pasteValuesTo(key, snap){
+    if(!key || !snap) return;
+    state[key]=clonePlain(snap);
+    applyEl(key);
+  }
+  function ensureContextMenu(){
+    var menu=document.getElementById('tw-menu');
+    if(menu) return menu;
+    menu=document.createElement('div');
+    menu.id='tw-menu';
+    menu.className='tw-menu';
+    menu.innerHTML=
+      '<button data-act="copy"><span>Copy values</span><span>⌘C</span></button>'+
+      '<button data-act="paste"><span>Paste here</span></button>'+
+      '<button data-act="paste-kind"><span>Paste to same kind</span></button>'+
+      '<div class="tw-menu-sep"></div>'+
+      '<button data-act="deep"><span>Select deepest layer</span></button>'+
+      '<button data-act="outer"><span>Select next outer layer</span></button>';
+    document.body.appendChild(menu);
+    menu.addEventListener('click',function(e){
+      var btn=e.target.closest('button[data-act]');
+      if(!btn || btn.disabled) return;
+      var key=menu.dataset.key || cur;
+      var stack=(menu.dataset.stack||'').split(',').filter(Boolean);
+      if(btn.dataset.act==='copy'){
+        valueClipboard={ key:key, values:styleSnapshot(key) };
+      } else if(btn.dataset.act==='paste'){
+        pasteValuesTo(key, valueClipboard && valueClipboard.values);
+        commit(); buildPanel(); refreshSelectionUI();
+      } else if(btn.dataset.act==='paste-kind'){
+        sameKindKeys(valueClipboard && valueClipboard.key ? valueClipboard.key : key).forEach(function(k){ pasteValuesTo(k, valueClipboard && valueClipboard.values); });
+        commit(); buildPanel(); refreshSelectionUI();
+      } else if(btn.dataset.act==='deep'){
+        if(stack.length) pick(stack[0], false);
+      } else if(btn.dataset.act==='outer'){
+        if(stack.length){
+          var idx=stack.indexOf(cur);
+          pick(stack[idx>=0 ? (idx+1)%stack.length : Math.min(1, stack.length-1)], false);
+        }
+      }
+      hideContextMenu();
+    });
+    document.addEventListener('mousedown',function(e){ if(!e.target.closest('#tw-menu')) hideContextMenu(); }, true);
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape') hideContextMenu(); }, true);
+    return menu;
+  }
+  function hideContextMenu(){
+    var menu=document.getElementById('tw-menu');
+    if(menu) menu.classList.remove('show');
+  }
+  function showContextMenu(x,y,key,stack){
+    var menu=ensureContextMenu();
+    menu.dataset.key=key||'';
+    menu.dataset.stack=(stack||[]).join(',');
+    menu.querySelector('[data-act="paste"]').disabled=!valueClipboard || !key;
+    menu.querySelector('[data-act="paste-kind"]').disabled=!valueClipboard || !key;
+    menu.querySelector('[data-act="outer"]').disabled=!stack || stack.length<2;
+    menu.style.left=Math.min(x, window.innerWidth-210)+'px';
+    menu.style.top=Math.min(y, window.innerHeight-240)+'px';
+    menu.classList.add('show');
+  }
   document.getElementById('card-stage').addEventListener('click',function(e){
     e.stopPropagation();
+    hideContextMenu();
     selectRulerGuide(null);
     hideRulerReadout();
     pickAt(e.clientX, e.clientY, e.shiftKey);
+  },true);
+  document.getElementById('card-stage').addEventListener('contextmenu',function(e){
+    e.preventDefault();
+    e.stopPropagation();
+    selectRulerGuide(null);
+    var stack=clickStackAt(e.clientX, e.clientY);
+    if(!stack.length) return;
+    var key=(cur && stack.indexOf(cur)>=0) ? cur : stack[0];
+    if(key!==cur) pick(key, false);
+    showContextMenu(e.clientX, e.clientY, key, stack);
   },true);
   var toolbar=document.querySelector('.tw-toolbar');
   if(toolbar){

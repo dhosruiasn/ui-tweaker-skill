@@ -185,8 +185,8 @@
   .tw-ruler-guide { position:absolute; background:rgba(26,115,232,.55); pointer-events:auto; }
   .tw-ruler-guide.v { width:1px; top:0; cursor:ew-resize; }
   .tw-ruler-guide.h { height:1px; left:0; cursor:ns-resize; }
-  .tw-ruler-guide.dragging { background:rgba(26,115,232,.9); }
-  .tw-ruler-guide.selected { background:rgba(26,115,232,.95); }
+  .tw-ruler-guide.dragging { background:rgba(74,222,128,.9); }
+  .tw-ruler-guide.selected { background:rgba(134,239,172,.95); }
   .tw-ruler-readout { position:absolute; z-index:100003; display:none; padding:3px 7px; border-radius:6px; background:#1a73e8; color:#fff; font-size:11px; line-height:1; white-space:nowrap; box-shadow:0 2px 8px rgba(0,0,0,.18); pointer-events:none; }
   .tw-ruler-readout.show { display:block; }
 
@@ -1498,13 +1498,33 @@
     var pane=document.getElementById('tw-left'), pr=pane.getBoundingClientRect();
     return { x:e.clientX-pr.left+pane.scrollLeft, y:e.clientY-pr.top+pane.scrollTop };
   }
+  function stagePaneOrigin(){
+    var pane=document.getElementById('tw-left'), stage=document.getElementById('card-stage');
+    if(!pane || !stage) return {x:0,y:0,w:0,h:0};
+    var pr=pane.getBoundingClientRect(), sr=stage.getBoundingClientRect();
+    return {
+      x:sr.left-pr.left+pane.scrollLeft,
+      y:sr.top-pr.top+pane.scrollTop,
+      w:sr.width/zoom,
+      h:sr.height/zoom
+    };
+  }
+  function paneCoordToStage(axis, panePos){
+    var o=stagePaneOrigin();
+    return (panePos-(axis==='h'?o.y:o.x))/zoom;
+  }
+  function stageCoordToPane(axis, stagePos){
+    var o=stagePaneOrigin();
+    return (axis==='h'?o.y:o.x)+(stagePos*zoom);
+  }
   function setRulerReadout(axis, pos, label){
     var pane=document.getElementById('tw-left'), ro=document.getElementById('tw-ruler-readout');
     if(!ro) return;
     var toolbarSafeTop=pane.scrollTop+58;
+    var panePos=stageCoordToPane(axis, pos);
     ro.textContent=(axis==='h'?'Y ':'X ')+Math.round(pos)+' px'+(label?' · '+label:'');
-    ro.style.left=(axis==='h' ? pane.scrollLeft+32 : pos+8)+'px';
-    ro.style.top=(axis==='h' ? Math.max(pos+8, toolbarSafeTop) : toolbarSafeTop)+'px';
+    ro.style.left=(axis==='h' ? pane.scrollLeft+32 : panePos+8)+'px';
+    ro.style.top=(axis==='h' ? Math.max(panePos+8, toolbarSafeTop) : toolbarSafeTop)+'px';
     ro.classList.add('show');
   }
   function hideRulerReadout(){
@@ -1540,12 +1560,13 @@
   function placeManualGuide(g, pos){
     var pane=document.getElementById('tw-left'), axis=g.dataset.axis;
     g.dataset.pos=String(Math.round(pos));
+    var panePos=stageCoordToPane(axis, pos);
     if(axis==='h'){
-      g.style.top=Math.round(pos)+'px';
+      g.style.top=Math.round(panePos)+'px';
       g.style.left='0px';
       g.style.width=Math.max(pane.scrollWidth, pane.clientWidth)+'px';
     } else {
-      g.style.left=Math.round(pos)+'px';
+      g.style.left=Math.round(panePos)+'px';
       g.style.top='0px';
       g.style.height=Math.max(pane.scrollHeight, pane.clientHeight)+'px';
     }
@@ -1553,11 +1574,12 @@
   function startRulerDrag(axis, guide, e){
     if(!rulersOn) return;
     e.preventDefault(); e.stopPropagation();
-    var g=guide || createManualGuide(axis, axis==='h'?panePoint(e).y:panePoint(e).x);
+    var start=panePoint(e);
+    var g=guide || createManualGuide(axis, paneCoordToStage(axis, axis==='h'?start.y:start.x));
     selectRulerGuide(g);
     g.classList.add('dragging');
     function move(ev){
-      var p=panePoint(ev), pos=axis==='h'?p.y:p.x;
+      var p=panePoint(ev), pos=paneCoordToStage(axis, axis==='h'?p.y:p.x);
       var snap=snapRulerGuide(axis, pos, g);
       pos=snap.pos;
       placeManualGuide(g, pos);
@@ -1588,21 +1610,30 @@
     rulerGuides.forEach(function(g){ placeManualGuide(g, Number(g.dataset.pos)||0); });
   }
   function rulerSnapCandidates(axis, activeGuide){
-    var pane=document.getElementById('tw-left'), pr=pane.getBoundingClientRect(), out=[];
+    var pane=document.getElementById('tw-left'), stage=document.getElementById('card-stage'), sr=stage&&stage.getBoundingClientRect(), out=[];
+    if(!stage || !sr) return out;
     function addRect(r, label){
       if(!r || r.width<=0 || r.height<=0) return;
       if(axis==='v'){
-        out.push({pos:r.left-pr.left+pane.scrollLeft, label:label+' left'});
-        out.push({pos:r.left+r.width/2-pr.left+pane.scrollLeft, label:label+' center'});
-        out.push({pos:r.right-pr.left+pane.scrollLeft, label:label+' right'});
+        out.push({pos:(r.left-sr.left)/zoom, label:label+' left'});
+        out.push({pos:(r.left+r.width/2-sr.left)/zoom, label:label+' center'});
+        out.push({pos:(r.right-sr.left)/zoom, label:label+' right'});
       } else {
-        out.push({pos:r.top-pr.top+pane.scrollTop, label:label+' top'});
-        out.push({pos:r.top+r.height/2-pr.top+pane.scrollTop, label:label+' middle'});
-        out.push({pos:r.bottom-pr.top+pane.scrollTop, label:label+' bottom'});
+        out.push({pos:(r.top-sr.top)/zoom, label:label+' top'});
+        out.push({pos:(r.top+r.height/2-sr.top)/zoom, label:label+' middle'});
+        out.push({pos:(r.bottom-sr.top)/zoom, label:label+' bottom'});
       }
     }
-    var stage=document.getElementById('card-stage');
-    if(stage) addRect(stage.getBoundingClientRect(), 'stage');
+    var o=stagePaneOrigin();
+    if(axis==='v'){
+      out.push({pos:0, label:'stage left'});
+      out.push({pos:o.w/2, label:'stage center'});
+      out.push({pos:o.w, label:'stage right'});
+    } else {
+      out.push({pos:0, label:'stage top'});
+      out.push({pos:o.h/2, label:'stage middle'});
+      out.push({pos:o.h, label:'stage bottom'});
+    }
     Object.keys(SEL).forEach(function(k){
       if(typeof NON_PICKABLE!=='undefined' && NON_PICKABLE[k]) return;
       addRect(rectFor(k), LAYER_LABEL[k]||k);
@@ -1614,7 +1645,7 @@
     return out;
   }
   function snapRulerGuide(axis, pos, activeGuide){
-    var best=null, threshold=6;
+    var best=null, threshold=6/zoom;
     rulerSnapCandidates(axis, activeGuide).forEach(function(c){
       var d=c.pos-pos, ad=Math.abs(d);
       if(ad<=threshold && (!best || ad<best.ad)) best={pos:c.pos, ad:ad, label:c.label};

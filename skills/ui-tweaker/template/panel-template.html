@@ -65,7 +65,7 @@
   .tw-lay-sec:last-child { border-bottom:none; }
   .tw-lay-h { font-size:10.5px; font-weight:600; letter-spacing:.5px; color:#aaa; text-transform:uppercase; padding:2px 8px 6px; }
   .tw-lay-page { display:flex; align-items:center; gap:7px; padding:6px 8px; border-radius:6px; font-size:12px; color:#3c4043; background:#f3f3f4; cursor:default; }
-  .tw-lay-row { display:flex; align-items:center; gap:6px; padding:5px 8px; border-radius:6px; font-size:12px; color:#3c4043; cursor:pointer; white-space:nowrap; user-select:none; min-width:0; }
+  .tw-lay-row { position:relative; overflow:hidden; display:flex; align-items:center; gap:6px; padding:5px 8px; border-radius:6px; font-size:12px; color:#3c4043; cursor:pointer; white-space:nowrap; user-select:none; min-width:0; }
   .tw-lay-row:hover { background:#f3f3f4; }
   .tw-lay-row.on { background:#e8f0fe; color:#1a73e8; }
   .tw-lay-row.on .tw-lay-ico { color:#1a73e8; }
@@ -75,8 +75,9 @@
   .tw-lay-ico { flex:none; color:#9aa0a6; display:flex; }
   .tw-lay-ico svg { width:15px; height:15px; }
   .tw-lay-name { flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .tw-lay-eye { flex:none; margin-left:4px; width:20px; height:20px; border:0; border-radius:5px; background:transparent; color:#9aa0a6; cursor:pointer; display:flex; align-items:center; justify-content:center; opacity:0; }
-  .tw-lay-row:hover .tw-lay-eye, .tw-lay-eye:focus-visible { opacity:1; }
+  .tw-lay-eye { position:absolute; right:6px; top:50%; transform:translateY(-50%); width:20px; height:20px; border:0; border-radius:5px; background:#f3f3f4; color:#9aa0a6; cursor:pointer; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; box-shadow:-8px 0 10px #f3f3f4; }
+  .tw-lay-row.on .tw-lay-eye { background:#e8f0fe; box-shadow:-8px 0 10px #e8f0fe; }
+  .tw-lay-row:hover .tw-lay-eye, .tw-lay-eye:focus-visible { opacity:1; pointer-events:auto; }
   .tw-lay-eye:hover { background:#e8eaed; color:#3c4043; }
   .tw-lay-eye svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
   .tw-lay-children { display:block; }
@@ -434,6 +435,8 @@
   var EDIT_TARGETS = {};
   // ⟦PROJECT-SPECIFIC #5d: TEXT_TARGETS — optional key → text edit mode override. false disables; {mode:'text'|'input'|'value'|'optionSel'} overrides auto-detection.⟧
   var TEXT_TARGETS = {};
+  // ⟦PROJECT-SPECIFIC #5e: NON_PICKABLE — optional helper keys kept for selectors/visual rects but excluded from click-to-drill.⟧
+  var NON_PICKABLE = {};
   // ⟦PROJECT-SPECIFIC #6: OUT_SEL — pick key → CSS selector emitted in the confirm output⟧
   var OUT_SEL = {
     card:'.demo-card', media:'.demo-card-media', img:'.demo-card-media img',
@@ -2029,6 +2032,7 @@
   }
   function clickStackAt(x,y){
     return Object.keys(SEL).map(function(k){
+      if(NON_PICKABLE[k] || !LAYER_LABEL[k]) return null;
       var r=rectFor(k);
       if(!r || x<r.left || x>r.right || y<r.top || y>r.bottom) return null;
       return { key:k, area:r.width*r.height };

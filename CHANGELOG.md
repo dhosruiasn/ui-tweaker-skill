@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   over an active transform box still pans the zoomed preview canvas.
 - Mirrored the right-side radius fields so the value and corner icon match the
   physical corner position more clearly.
+- Changed layer visibility controls into hover overlays so long layer names keep
+  the full row width while idle.
+- Filtered click-to-drill targets to real layer keys, with `NON_PICKABLE` for
+  helper keys that exist only for selectors or visual-rect plumbing.
 
 ## [1.1.0] - 2026-06-05
 

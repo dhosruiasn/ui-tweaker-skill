@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated the Layers tree template so long layer names ellipsize inside the row
   and keep right-side controls such as eye toggles visible when the left pane is
   narrow.
+- Made spacebar canvas panning take priority over selection overlays, so dragging
+  over an active transform box still pans the zoomed preview canvas.
+- Mirrored the right-side radius fields so the value and corner icon match the
+  physical corner position more clearly.
 
 ## [1.1.0] - 2026-06-05
 

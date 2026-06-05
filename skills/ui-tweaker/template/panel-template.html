@@ -294,6 +294,8 @@
   .tw-shadow-inset label { cursor:pointer; align-items:center; }
   .tw-shadow-inset input[type=checkbox]{ accent-color:#1a73e8; width:14px; height:14px; }
   .tw-shadow-empty { font-size:11px; color:#aaa; padding:4px 0 6px; }
+  .tw-shadow-section-title { margin:9px 0 5px; color:#6b7280; font-size:12px; font-weight:700; }
+  .tw-shadow-section-title:first-child { margin-top:0; }
   .tw-empty { font-size:12px; color:#8a8f98; padding:14px 2px; }
   .tw-add-shadow { width:100%; margin-top:4px; padding:8px; font-size:11px; border:1px dashed #cfcfcf; border-radius:8px; background:#fafafb; color:#1a73e8; cursor:pointer; }
   .tw-add-shadow:hover { background:#f2f3f4; }
@@ -917,11 +919,20 @@
     }
     return state[key]._shadows;
   }
-  function shadowCat(key){
+  function shadowCat(key, title, sections){
     var d=document.createElement('details'); d.className='tw-cat';
-    var s=document.createElement('summary'); s.textContent='Shadow'; d.appendChild(s);
+    var s=document.createElement('summary'); s.textContent=title || 'Shadow'; d.appendChild(s);
     var b=document.createElement('div'); b.className='tw-cat-body';
-    renderShadowBody(key, b); d.appendChild(b); return d;
+    if(sections && sections.length){
+      sections.forEach(function(sec){
+        var ttl=document.createElement('div'); ttl.className='tw-shadow-section-title'; ttl.textContent=sec.label;
+        b.appendChild(ttl);
+        renderShadowBody(sec.key, b);
+      });
+    } else {
+      renderShadowBody(key, b);
+    }
+    d.appendChild(b); return d;
   }
   function renderShadowBody(key, b){
     b.innerHTML='';
@@ -2183,6 +2194,18 @@
     var key=(cur && stack.indexOf(cur)>=0) ? cur : stack[0];
     if(key!==cur) pick(key, false);
     showContextMenu(e.clientX, e.clientY, key, stack);
+  },true);
+  document.getElementById('tw-left').addEventListener('contextmenu',function(e){
+    if(e.target.closest('.tw-toolbar')) return;
+    if(!e.target.closest('#tw-tbox') && !e.target.closest('#tw-selected')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    selectRulerGuide(null);
+    var stack=clickStackAt(e.clientX, e.clientY);
+    var key=(stack.length && cur && stack.indexOf(cur)>=0) ? cur : (stack[0] || cur);
+    if(!key) return;
+    if(key!==cur) pick(key, false);
+    showContextMenu(e.clientX, e.clientY, key, stack.length ? stack : [key]);
   },true);
   var toolbar=document.querySelector('.tw-toolbar');
   if(toolbar){

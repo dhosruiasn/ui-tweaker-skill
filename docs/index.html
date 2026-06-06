@@ -60,6 +60,7 @@
   .head h2,.cta-section h2,.spec-row h3,.step h4,.plate-body h4,.hero-reveal .intro-text{text-wrap:balance}
   .head p,.cta-section p,.spec-row p,.step p,.intro-text,.work small,.foot p,.feat p{text-wrap:pretty}
   .keep-together{white-space:nowrap}
+  @media(max-width:760px){br.br-desk{display:none}}  /* manual line breaks only on desktop */
 
   /* mono annotation label — the "[ note ]" device */
   .note{font-family:var(--mono);font-size:.72rem;font-weight:500;letter-spacing:.02em;color:var(--blue-deep);display:inline-flex;align-items:center;gap:.5ch}
@@ -374,7 +375,7 @@
     </div>
   </div>
   <div class="hero-reveal" id="heroReveal">
-    <p class="intro-text"><span data-lang-en>A design-tool panel for <span class="keep-together">vibe coding</span>: <em>scrub real values, preview live, drag to move</em> — then hand the exact numbers to your AI to write straight into your source.</span><span data-lang-zh>為 <span class="keep-together">vibe coding</span> 而生的設計工具面板：<em>刷真實數值、即時預覽、拖曳移動</em>——再把精確數字交給 AI 直接寫回原始碼。</span></p>
+    <p class="intro-text"><span data-lang-en>A design-tool panel for <span class="keep-together">vibe coding</span>:<br class="br-desk"><em>scrub real values, preview live, drag to move</em><br class="br-desk">— then hand the exact numbers to<br class="br-desk">your AI to write straight into your source.</span><span data-lang-zh>為 <span class="keep-together">vibe coding</span> 而生的設計工具面板：<em>刷真實數值、即時預覽、拖曳移動</em>——再把精確數字交給 AI 直接寫回原始碼。</span></p>
   </div>
 </section>
 </div>
@@ -399,7 +400,7 @@
     <div class="head reveal">
       <span class="kicker" data-lang-en>The problem</span><span class="kicker" data-lang-zh>痛點</span>
       <h2><span data-lang-en>Words are a terrible design tool.</span><span data-lang-zh>文字是最差的設計工具</span></h2>
-      <p><span data-lang-en>Telling an AI "a touch more padding… no, less… rounder" burns turns guessing numbers. <span class="keep-together">UI Tweaker</span> flips it: every adjustment is a structured, round-trippable value — never a vibe.</span><span data-lang-zh>叫 AI「padding 多一點⋯不對少一點⋯再圓一點」很耗回合在猜數字。<span class="keep-together">UI Tweaker</span> 反過來：每個調整都是可回填的結構化數值——不是憑感覺。</span></p>
+      <p><span data-lang-en>Telling an AI "a touch more padding… no, less… rounder" burns turns guessing numbers.<br class="br-desk"><span class="keep-together">UI Tweaker</span> flips it: every adjustment is a structured, round-trippable value — never a vibe.</span><span data-lang-zh>叫 AI「padding 多一點⋯不對少一點⋯再圓一點」很耗回合在猜數字。<span class="keep-together">UI Tweaker</span> 反過來：每個調整都是可回填的結構化數值——不是憑感覺。</span></p>
     </div>
     <div class="studio reveal">
       <div class="studio-grid">

@@ -145,7 +145,7 @@
   .hero-reveal .intro-text{font-family:var(--display);font-weight:400;font-size:clamp(1.4rem,3vw,2.3rem);line-height:1.34;letter-spacing:-.01em;max-width:min(1040px,94vw);color:var(--ink);text-align:center}
   .hero-reveal .intro-text em{font-style:normal;font-weight:600;color:var(--blue)}
   /* hero → vermilion: ONE panel that is the seed dot sitting on the period, grows, expands full-bleed, then recedes right — a single continuous element so there is never a second dot */
-  .wipe-panel{position:absolute;inset:0;z-index:5;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;padding:0 6vw;clip-path:circle(0.9vmax at var(--wipe-origin-x,50%) var(--wipe-origin-y,50%));pointer-events:none;will-change:clip-path}
+  .wipe-panel{position:absolute;inset:0;z-index:5;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;padding:0 6vw;clip-path:circle(0 at var(--wipe-origin-x,50%) var(--wipe-origin-y,50%));pointer-events:none;will-change:clip-path}
   @media(min-width:981px){ #why>.wrap{will-change:transform} }
   .wipe-quote{position:absolute;left:clamp(-136px,-10vw,-78px);top:clamp(-104px,-9vh,-58px);width:clamp(77px,10.4vw,152px);height:auto;color:#ffc4b8;pointer-events:none;opacity:.9;z-index:0}
   .wipe-quote svg{display:block;width:100%;height:auto;overflow:visible}
@@ -1096,12 +1096,16 @@
       cta.style.transform='translate3d(0,'+(es*0.6*vh)+'px,0)'; cta.style.opacity=String(Math.max(0,1-ps*1.8));
       if(readout) readout.style.opacity=String(Math.max(0,1-ps*2.6));
       if(notes){ notes.style.transform='scale('+(1+es*0.75)+')'; notes.style.opacity=String(Math.max(0,1-ps*1.25)); }
-      if(seedChar){ seedChar.style.opacity = ps>0.12?'0':'1'; seedChar.style.transform=''; }   // the period hands off to the panel dot at the SAME spot
-      // --- PANEL — one continuous element: dot on the period → grows → full-bleed → recede right (never a second dot)
+      // the period IS the dot at rest (panel hidden below); it fades out only once the panel dot has grown over the same spot
+      if(seedChar){ seedChar.style.opacity = String(Math.max(0,Math.min(1,1-p/0.05))); seedChar.style.transform=''; }
+      // --- PANEL — at rest it is INVISIBLE so the live period is the only dot (dragging letter-spacing can't expose a 2nd dot);
+      //     on scroll it grows concentrically over the period (live-synced origin) → reads as the same dot continuing, then expands, then recedes
       if(panel){
-        if(p<A){                       // the seed dot sits on the period and grows a touch as the words scatter
-          const g=Math.min(1,Math.max(0,(p-0.05)/(A-0.05))), eg=g<.5?2*g*g:1-Math.pow(-2*g+2,2)/2;
-          panel.style.clipPath='circle('+(0.9+eg*2.6)+'vmax at var(--wipe-origin-x,50%) var(--wipe-origin-y,50%))';   // ~period size → 3.5vmax
+        if(p<A){
+          const appear=Math.min(1,p/0.05), grow=Math.min(1,Math.max(0,(p-0.05)/(A-0.05)));
+          const eg=grow<.5?2*grow*grow:1-Math.pow(-2*grow+2,2)/2;
+          const r=appear*1.1+eg*(3.5-1.1);   // 0 (hidden at rest) → ~1.1vmax (covers the period) → 3.5vmax
+          panel.style.clipPath='circle('+r+'vmax at var(--wipe-origin-x,50%) var(--wipe-origin-y,50%))';
           if(wtext){ wtext.style.opacity='0'; wtext.style.transform=''; }
         } else if(p<B){                // the SAME dot expands to full-bleed; the statement fades in
           const pe=(p-A)/(B-A), ee=pe<.5?2*pe*pe:1-Math.pow(-2*pe+2,2)/2;

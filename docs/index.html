@@ -57,7 +57,7 @@
   section{position:relative}
   .rule{height:1px;background:var(--border);border:0}
   /* line-breaking: balance headings, prettify paragraphs, and a no-wrap whitelist for terms */
-  h1.title,.head h2,.cta-section h2,.spec-row h3,.step h4,.plate-body h4,.hero-reveal .intro-text{text-wrap:balance}
+  .head h2,.cta-section h2,.spec-row h3,.step h4,.plate-body h4,.hero-reveal .intro-text{text-wrap:balance}
   .head p,.cta-section p,.spec-row p,.step p,.intro-text,.work small,.foot p,.feat p{text-wrap:pretty}
   .keep-together{white-space:nowrap}
 
@@ -684,11 +684,15 @@
     function tfm(s){ const tp=[]; if(s.x||s.y)tp.push('translate('+(s.x||0)+'px,'+(s.y||0)+'px)'); if(s.rot)tp.push('rotate('+s.rot+'deg)'); if(s.scale!==100)tp.push('scale('+(s.scale/100)+')'); return tp.join(' '); }
     // the box sits on the element's layout box and shares its transform, so it scales/rotates/moves with it
     function placeBox(){
-      const e=PICK[cur].el, s=st(cur);
-      tbox.style.left=e.offsetLeft+'px'; tbox.style.top=e.offsetTop+'px';
-      tbox.style.width=e.offsetWidth+'px'; tbox.style.height=e.offsetHeight+'px';
-      tbox.style.transform=tfm(s);
-      tbSize.textContent=Math.round(e.offsetWidth*(s.scale/100))+' × '+Math.round(e.offsetHeight*(s.scale/100))+' px';
+      const e=PICK[cur].el, s=st(cur), sc=(s.scale||100)/100;
+      // bake the element's scale into the box's width/height (NOT a transform), so the frame/handles/label stay a constant thickness
+      const w=e.offsetWidth*sc, h=e.offsetHeight*sc;
+      const cx=e.offsetLeft+e.offsetWidth/2, cy=e.offsetTop+e.offsetHeight/2;   // element layout centre (transform-origin)
+      tbox.style.left=(cx-w/2)+'px'; tbox.style.top=(cy-h/2)+'px';
+      tbox.style.width=w+'px'; tbox.style.height=h+'px';
+      const tp=[]; if(s.x||s.y) tp.push('translate('+(s.x||0)+'px,'+(s.y||0)+'px)'); if(s.rot) tp.push('rotate('+s.rot+'deg)');
+      tbox.style.transform=tp.join(' ');   // move + rotate only
+      tbSize.textContent=Math.round(w)+' × '+Math.round(h)+' px';
     }
     function updLabels(){
       el('ov-radius').textContent=val('st-radius')+' px';
@@ -1026,7 +1030,7 @@
     function visibleWord(){ for(const w of words){ if(w.offsetWidth>0) return w; } return words[0]; }
     // max letter-spacing that still fits the (centered) word inside the viewport: width = w0 + n*ls
     function maxLS(){ const w=visibleWord(); const w0=baseW.get(w)||w.offsetWidth; const n=Math.max(1,(w.textContent||'').length); return Math.max(0,Math.min(CEIL,(hero.clientWidth-EDGE-w0)/n)); }
-    function render(){ const mx=maxLS(); ls=Math.max(MIN,Math.min(mx,ls)); words.forEach(w=>{w.style.letterSpacing=ls+'px';}); if(vEl) vEl.textContent=Math.round(ls)+' px'; if(ro) ro.classList.toggle('on',hover||dragging); }
+    function render(){ const mx=maxLS(); ls=Math.max(MIN,Math.min(mx,ls)); words.forEach(w=>{w.style.letterSpacing=ls+'px'; w.style.marginRight=''; w.style.transform=ls?'translateX('+(-ls/2)+'px)':'';}); if(vEl) vEl.textContent=Math.round(ls)+' px'; if(ro) ro.classList.toggle('on',hover||dragging); }
     words.forEach(w=>{
       w.addEventListener('pointerenter',()=>{hover=true;render();});
       w.addEventListener('pointerleave',()=>{hover=false;render();});

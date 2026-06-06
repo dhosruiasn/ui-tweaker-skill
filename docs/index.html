@@ -147,7 +147,7 @@
   .title .ch.stop-lit{background:var(--blue);color:#fff}
   .title .ch.seed-source-dot{width:.16em;height:.16em;margin-left:.03em;border-radius:50%;background:var(--blue);color:transparent;line-height:.16em;vertical-align:baseline;transform-origin:center;overflow:hidden}
   h1.title{font-family:var(--display);font-weight:600;font-size:clamp(3rem,11vw,8.6rem);line-height:.94;letter-spacing:-.035em;margin:0;max-width:15ch}
-  html[data-lang="zh"] h1.title{word-break:keep-all;max-width:none}
+  html[data-lang="zh"] h1.title{word-break:keep-all;max-width:none;line-height:1.16;letter-spacing:.06em}   /* accent line gets the same resting spacing via the scrub's data-ls-base */
   h1.title .accent{color:var(--blue);font-weight:800}
   .hero-cta{display:flex;gap:14px;flex-wrap:wrap;align-items:center;justify-content:center;margin-top:40px}
   /* "Move them." is draggable — scrub its letter-spacing (echoes the word + the tool's drag-to-scrub) */
@@ -410,7 +410,7 @@
   <div class="wrap">
     <h1 class="title">
       <span data-lang-en>Stop describing pixels.<br><span class="accent js-scrub">Move them.</span></span>
-      <span data-lang-zh>別再描述像素，<br><span class="accent js-scrub">直接動手</span></span>
+      <span data-lang-zh>別再描述像素<br><span class="accent js-scrub" data-ls-base=".06">直接動手</span></span>
     </h1>
     <div class="scrub-readout" id="scrubReadout"><span class="ico">↔</span><span class="hint" data-lang-en>drag “Move them.” to space them</span><span class="hint" data-lang-zh>拖曳「直接動手」調整字距</span><span class="live"><span data-lang-en>letter-spacing</span><span data-lang-zh>字距</span>:&nbsp;<span class="v">0 px</span></span></div>
     <div class="hero-cta">
@@ -1145,13 +1145,15 @@
     const MIN=-6,K=.55,CEIL=160,EDGE=120;   // EDGE = total horizontal breathing room kept inside the viewport
     let ls=0,dragging=false,hover=false,startX=0,startLS=0;
     const baseW=new Map();
+    // resting letter-spacing (em→px) carried by the element, e.g. the zh accent (data-ls-base); en stays 0. The drag adds on top.
+    function baseLS(w){ var b=parseFloat(w&&w.dataset&&w.dataset.lsBase||0); return b?b*parseFloat(getComputedStyle(w).fontSize):0; }
     function measure(){ words.forEach(w=>{ const p=w.style.letterSpacing; w.style.letterSpacing='0px'; baseW.set(w,w.offsetWidth); w.style.letterSpacing=p; }); }
     function visibleWord(){ for(const w of words){ if(w.offsetWidth>0) return w; } return words[0]; }
-    // max letter-spacing that still fits the (centered) word inside the viewport: width = w0 + n*ls
-    function maxLS(){ const w=visibleWord(); const w0=baseW.get(w)||w.offsetWidth; const n=Math.max(1,(w.textContent||'').length); return Math.max(0,Math.min(CEIL,(hero.clientWidth-EDGE-w0)/n)); }
+    // max drag letter-spacing that still fits the (centered) word inside the viewport: width = w0 + n*(ls+base)
+    function maxLS(){ const w=visibleWord(); const w0=baseW.get(w)||w.offsetWidth; const n=Math.max(1,(w.textContent||'').length); return Math.max(0,Math.min(CEIL,(hero.clientWidth-EDGE-w0)/n-baseLS(w))); }
     function render(){
       const mx=maxLS(); ls=Math.max(MIN,Math.min(mx,ls));
-      words.forEach(w=>{ w.style.letterSpacing=ls+'px'; w.style.marginRight=''; w.style.transform=''; });
+      words.forEach(w=>{ w.style.letterSpacing=(ls+baseLS(w))+'px'; w.style.marginRight=''; w.style.transform=''; });
       // re-centre by measuring the actual ink offset vs the title centre (robust at any spacing / viewport)
       words.forEach(w=>{
         if(!w.offsetParent) return;                 // skip the hidden language
@@ -1160,7 +1162,7 @@
         var off=(f.left+l.right)/2-(tr.left+tr.width/2);
         if(Math.abs(off)>0.5) w.style.transform='translateX('+(-off)+'px)';
       });
-      if(vEl) vEl.textContent=Math.round(ls)+' px'; if(ro) ro.classList.toggle('on',hover||dragging);
+      if(vEl) vEl.textContent=Math.round(ls+baseLS(visibleWord()))+' px'; if(ro) ro.classList.toggle('on',hover||dragging);
     }
     words.forEach(w=>{
       w.addEventListener('pointerenter',()=>{hover=true;render();});

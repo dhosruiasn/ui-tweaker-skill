@@ -139,26 +139,20 @@
 
   /* ===== hero — huge type, floating bracket notes, centered CTA (Readymag-style) ===== */
   /* scroll-scrub: hero pins while its pieces part outward to reveal the intro statement */
-  .hero-stage{position:relative;height:185vh}
+  .hero-stage{position:relative;height:340vh}
   .hero{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:48px 0 58px;overflow:hidden}
   .hero-reveal{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:0 40px;opacity:0;pointer-events:none;will-change:opacity,transform}
   .hero-reveal .intro-text{font-family:var(--display);font-weight:400;font-size:clamp(1.4rem,3vw,2.3rem);line-height:1.34;letter-spacing:-.01em;max-width:min(1040px,94vw);color:var(--ink);text-align:center}
   .hero-reveal .intro-text em{font-style:normal;font-weight:600;color:var(--blue)}
-  /* hero → vermilion bridge: the final period becomes the seed dot, flies to centre, then expands into the panel */
-  .bridge-dot{position:fixed;left:0;top:0;width:22px;height:22px;border-radius:50%;background:var(--blue);opacity:0;pointer-events:none;z-index:58;will-change:transform,opacity;transform:translate3d(-9999px,-9999px,0)}
-  /* diagonal block-wipe: vermilion intro panel expands from the seed dot, then recedes to the right on scroll, revealing the page below */
-  .wipe-stage{position:relative;height:230vh;background:var(--bg)}
-  .wipe-sticky{position:sticky;top:0;height:100vh;overflow:hidden}
-  .wipe-panel{position:absolute;inset:0;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;padding:0 6vw;clip-path:circle(3.5vmax at var(--wipe-origin-x,50%) var(--wipe-origin-y,50%));will-change:clip-path}
+  /* hero → vermilion: ONE panel that is the seed dot sitting on the period, grows, expands full-bleed, then recedes right — a single continuous element so there is never a second dot */
+  .wipe-panel{position:absolute;inset:0;z-index:5;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;padding:0 6vw;clip-path:circle(0.9vmax at var(--wipe-origin-x,50%) var(--wipe-origin-y,50%));pointer-events:none;will-change:clip-path}
   @media(min-width:981px){ #why>.wrap{will-change:transform} }
   .wipe-quote{position:absolute;left:clamp(-136px,-10vw,-78px);top:clamp(-104px,-9vh,-58px);width:clamp(77px,10.4vw,152px);height:auto;color:#ffc4b8;pointer-events:none;opacity:.9;z-index:0}
   .wipe-quote svg{display:block;width:100%;height:auto;overflow:visible}
   .wipe-text{position:relative;z-index:1;font-family:var(--display);font-weight:400;font-size:clamp(1.6rem,3.6vw,2.9rem);line-height:1.32;max-width:1000px;text-align:center;opacity:0;will-change:transform,opacity}
   .wipe-text em{font-style:normal;font-weight:700;color:#f8ff6b;font-size:calc(1em + 15pt);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:6px}
   @media(max-width:980px){
-    .wipe-stage{height:auto}
-    .wipe-sticky{position:static;height:auto}
-    .wipe-panel{position:relative;clip-path:none!important;padding:72px 24px;min-height:58vh}
+    .wipe-panel{position:static;clip-path:none!important;padding:64px 24px;min-height:auto;margin-top:6vh;pointer-events:auto}
     .wipe-quote{left:0;top:-58px;width:67px;opacity:.75}
     .wipe-text{opacity:1!important;transform:none!important}
   }
@@ -186,7 +180,6 @@
   .hero-note::before{content:"{";font-size:1.7em;font-weight:400}
   .hero-note::after{content:"}";font-size:1.7em;font-weight:400}
   @media(max-width:980px){
-    .bridge-dot{display:none}
     .hero-stage{height:auto}
     .hero{position:static;height:auto;min-height:auto;padding:64px 0 46px;overflow:visible}
     .hero-notes{position:static;display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin-top:32px;overflow:visible}
@@ -445,17 +438,11 @@
       <span class="hero-note n3"><span data-lang-en>Works across AI coding tools</span><span data-lang-zh>跨各家 AI coding 工具</span></span>
     </div>
   </div>
-</section>
-  <div class="bridge-dot" id="bridgeDot" aria-hidden="true"></div>
-</div>
-
-<section class="wipe-stage" id="wipeStage">
-  <div class="wipe-sticky">
-    <div class="wipe-panel" id="wipePanel">
-      <p class="wipe-text"><span class="wipe-quote" aria-hidden="true"><svg viewBox="0 0 246 176" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M25 78L109 4" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M151 78L235 4" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="60" cy="116" r="54" fill="currentColor"/><circle cx="186" cy="116" r="54" fill="currentColor"/></svg></span><span data-lang-en>A design-tool panel for <span class="keep-together">vibe coding</span>:<br class="br-desk"><em>scrub real values, preview live, drag to move</em><br class="br-desk">— then hand the exact numbers to<br class="br-desk">your AI to write straight into your source.</span><span data-lang-zh>為 <span class="keep-together">vibe coding</span> 而生的設計工具面板：<br class="br-desk"><em>刷真實數值、即時預覽、拖曳移動</em><br class="br-desk">——再把精確數字交給 AI 直接寫回原始碼。</span></p>
-    </div>
+  <div class="wipe-panel" id="wipePanel">
+    <p class="wipe-text"><span class="wipe-quote" aria-hidden="true"><svg viewBox="0 0 246 176" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M25 78L109 4" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M151 78L235 4" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="60" cy="116" r="54" fill="currentColor"/><circle cx="186" cy="116" r="54" fill="currentColor"/></svg></span><span data-lang-en>A design-tool panel for <span class="keep-together">vibe coding</span>:<br class="br-desk"><em>scrub real values, preview live, drag to move</em><br class="br-desk">— then hand the exact numbers to<br class="br-desk">your AI to write straight into your source.</span><span data-lang-zh>為 <span class="keep-together">vibe coding</span> 而生的設計工具面板：<br class="br-desk"><em>刷真實數值、即時預覽、拖曳移動</em><br class="br-desk">——再把精確數字交給 AI 直接寫回原始碼。</span></p>
   </div>
 </section>
+</div>
 
 <section class="pad" id="why">
   <div class="wrap">
@@ -1030,7 +1017,8 @@
     const stage=document.getElementById('heroStage'); if(!stage) return;
     const hero=stage.querySelector('.hero');
     const title=hero.querySelector('.title'), cta=hero.querySelector('.hero-cta'), notes=hero.querySelector('.hero-notes');
-    const readout=document.getElementById('scrubReadout'), reveal=document.getElementById('heroReveal'), bridgeDot=document.getElementById('bridgeDot');
+    const readout=document.getElementById('scrubReadout'), reveal=document.getElementById('heroReveal');
+    const panel=document.getElementById('wipePanel'), wtext=panel?panel.querySelector('.wipe-text'):null;
     const desktop=()=>window.matchMedia('(min-width:981px)').matches;
     // split each language headline into per-letter spans (skip <br>; recurse into the accent span so it keeps its colour + scrub)
     function split(root){
@@ -1077,67 +1065,52 @@
       setTimeout(()=>{ letters.forEach((letter,i)=>setTimeout(()=>letter.classList.add('stop-lit'),i*180)); },3000);
     }
     let ticking=false;
+    // phase split across the single stage: [0,A] scatter (letters fly out, the dot sits on the period & grows),
+    // [A,B] the SAME dot expands to full-bleed (+ statement fades in), [B,1] diagonal recede right (statement slides out)
+    const A=0.38, B=0.60;
     function frame(){
       ticking=false;
-      if(!desktop()){ chs.forEach(c=>{c.style.transform='';c.style.opacity='';}); if(seedChar){seedChar.style.transform='';seedChar.style.opacity='';} if(bridgeDot){bridgeDot.style.opacity='';bridgeDot.style.transform='';} [cta,notes,readout].forEach(el=>{ if(el){el.style.transform='';el.style.opacity='';} }); if(reveal){reveal.style.opacity='';reveal.style.transform='';} return; }
+      if(!desktop()){
+        chs.forEach(c=>{c.style.transform='';c.style.opacity='';});
+        if(seedChar){seedChar.style.transform='';seedChar.style.opacity='';}
+        if(panel){panel.style.clipPath='';}
+        if(wtext){wtext.style.opacity='';wtext.style.transform='';}
+        [cta,notes,readout].forEach(el=>{ if(el){el.style.transform='';el.style.opacity='';} });
+        if(reveal){reveal.style.opacity='';reveal.style.transform='';}
+        return;
+      }
       const vh=window.innerHeight, vw=window.innerWidth, total=Math.max(1,stage.offsetHeight-vh);
       const p=Math.min(1,Math.max(0,-stage.getBoundingClientRect().top/total));
-      const e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;     // easeInOut
-      const D=Math.max(vw,vh)*1.15, op=String(Math.max(0,1-p*1.3));
-      for(const c of chs){ if(c===seedChar) continue; c.style.transform='translate3d('+(c._dx*c._dist*D*e)+'px,'+(c._dy*c._dist*D*e)+'px,0) rotate('+(c._rot*e)+'deg)'; c.style.opacity=op; }
-      if(seedChar&&bridgeDot){
-        if(seedChar._seedX===undefined) measureSeed();
-        const grow=Math.min(1,Math.max(0,(p-.08)/.72));
-        const x=seedChar._seedX;
-        const y=seedChar._seedY;
-        const targetScale=(Math.max(vw,vh)*.07)/(seedChar._seedSize||22);
-        const scale=1+grow*(targetScale-1);
-        const heroVisible=stage.getBoundingClientRect().bottom>0;
-        bridgeDot.style.transform='translate3d('+x+'px,'+y+'px,0) translate(-50%,-50%) scale('+scale+')';
-        bridgeDot.style.opacity=(p>.06&&heroVisible)?'1':'0';
-        seedChar.style.opacity=p>.06?'0':'1';
-        seedChar.style.transform='';
+      if(seedChar&&seedChar._seedX===undefined) measureSeed();
+      // --- SCATTER (drives the hero pieces parting); completes by p=A
+      const ps=Math.min(1,p/A), es=ps<.5?2*ps*ps:1-Math.pow(-2*ps+2,2)/2;
+      const D=Math.max(vw,vh)*1.15, op=String(Math.max(0,1-ps*1.3));
+      for(const c of chs){ if(c===seedChar) continue; c.style.transform='translate3d('+(c._dx*c._dist*D*es)+'px,'+(c._dy*c._dist*D*es)+'px,0) rotate('+(c._rot*es)+'deg)'; c.style.opacity=op; }
+      cta.style.transform='translate3d(0,'+(es*0.6*vh)+'px,0)'; cta.style.opacity=String(Math.max(0,1-ps*1.8));
+      if(readout) readout.style.opacity=String(Math.max(0,1-ps*2.6));
+      if(notes){ notes.style.transform='scale('+(1+es*0.75)+')'; notes.style.opacity=String(Math.max(0,1-ps*1.25)); }
+      if(seedChar){ seedChar.style.opacity = ps>0.12?'0':'1'; seedChar.style.transform=''; }   // the period hands off to the panel dot at the SAME spot
+      // --- PANEL — one continuous element: dot on the period → grows → full-bleed → recede right (never a second dot)
+      if(panel){
+        if(p<A){                       // the seed dot sits on the period and grows a touch as the words scatter
+          const g=Math.min(1,Math.max(0,(p-0.05)/(A-0.05))), eg=g<.5?2*g*g:1-Math.pow(-2*g+2,2)/2;
+          panel.style.clipPath='circle('+(0.9+eg*2.6)+'vmax at var(--wipe-origin-x,50%) var(--wipe-origin-y,50%))';   // ~period size → 3.5vmax
+          if(wtext){ wtext.style.opacity='0'; wtext.style.transform=''; }
+        } else if(p<B){                // the SAME dot expands to full-bleed; the statement fades in
+          const pe=(p-A)/(B-A), ee=pe<.5?2*pe*pe:1-Math.pow(-2*pe+2,2)/2;
+          panel.style.clipPath='circle('+(3.5+ee*82)+'vmax at var(--wipe-origin-x,50%) var(--wipe-origin-y,50%))';
+          if(wtext){ wtext.style.opacity=String(Math.min(1,pe*1.35)); wtext.style.transform=''; }
+        } else {                       // full vermilion → diagonal recede right, statement slides out with it
+          const pr=(p-B)/(1-B), S=22, tl=pr*(100+S), bl=tl-S;
+          panel.style.clipPath='polygon('+tl+'% 0, 100% 0, 100% 100%, '+bl+'% 100%)';
+          if(wtext){ wtext.style.opacity='1'; wtext.style.transform='translate3d('+(pr*72)+'vw,0,0)'; }
+        }
       }
-      cta.style.transform='translate3d(0,'+(e*0.6*vh)+'px,0)'; cta.style.opacity=String(Math.max(0,1-p*1.8));
-      if(readout) readout.style.opacity=String(Math.max(0,1-p*2.6));
-      if(notes){ notes.style.transform='scale('+(1+e*0.75)+')'; notes.style.opacity=String(Math.max(0,1-p*1.25)); }
       if(reveal){ const rp=Math.min(1,Math.max(0,(p-0.3)/0.55)); reveal.style.opacity=String(rp); reveal.style.transform='translate3d(0,'+((1-rp)*26)+'px,0)'; }
     }
     function onScroll(){ if(!ticking){ ticking=true; requestAnimationFrame(frame); } }
     window.addEventListener('scroll',onScroll,{passive:true});
     window.addEventListener('resize',()=>{ if(seedChar){seedChar._seedX=undefined;seedChar._seedY=undefined;} onScroll(); });
-    frame();
-  })();
-
-  // wipe choreography: the vermilion panel grows from the hero's seed dot (circle expand, text fades in),
-  // then recedes diagonally to the right with the text sliding out, revealing the page (Studio) below.
-  (function(){
-    var stage=document.getElementById('wipeStage'); if(!stage) return;
-    var panel=document.getElementById('wipePanel');
-    var text=panel.querySelector('.wipe-text');
-    var desktop=function(){return window.matchMedia('(min-width:981px)').matches;};
-    var EXPAND=0.34;                    // first 34% of the stage = circle expand-in; rest = diagonal recede-out
-    var ticking=false;
-    function frame(){
-      ticking=false;
-      if(!desktop()){ panel.style.clipPath=''; text.style.opacity=''; text.style.transform=''; return; }
-      var vh=window.innerHeight, total=Math.max(1,stage.offsetHeight-vh);
-      var p=Math.min(1,Math.max(0,-stage.getBoundingClientRect().top/total));
-      if(p<EXPAND){                     // circle expands from the seed dot to full-bleed; text fades in
-        var pe=p/EXPAND, ee=pe<.5?2*pe*pe:1-Math.pow(-2*pe+2,2)/2;
-        panel.style.clipPath='circle('+(3.5+ee*82)+'vmax at var(--wipe-origin-x,50%) var(--wipe-origin-y,50%))';   // start at the bridge-dot's final size for a seamless hand-off
-        text.style.opacity=String(Math.min(1,pe*1.35));
-        text.style.transform='';
-      } else {                          // full vermilion → diagonal recede right, text slides out with it
-        var pr=(p-EXPAND)/(1-EXPAND), S=22, tl=pr*(100+S), bl=tl-S;
-        panel.style.clipPath='polygon('+tl+'% 0, 100% 0, 100% 100%, '+bl+'% 100%)';
-        text.style.opacity='1';
-        text.style.transform='translate3d('+(pr*72)+'vw,0,0)';
-      }
-    }
-    function onScroll(){ if(!ticking){ ticking=true; requestAnimationFrame(frame); } }
-    window.addEventListener('scroll',onScroll,{passive:true});
-    window.addEventListener('resize',onScroll);
     frame();
   })();
 

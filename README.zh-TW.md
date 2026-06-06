@@ -4,7 +4,11 @@
 
 用 **AI coding assistant** 搭配設計工具風格的控制面板微調任何 UI 元件——刷數值、即時預覽、移動與縮放元素——調好按下**確認**,AI 就把數值**直接寫回你的真實原始碼**。不用再來回「大一點…不對再小一點…再圓一點」。
 
-![UI Tweaker hero](./assets/ui-tweaker-hero.png)
+<div align="center">
+  <a href="https://dhosruiasn.github.io/ui-tweaker-skill/">
+    <img src="./assets/ui-tweaker-gif.gif" alt="UI Tweaker - The ultimate visual tweaker for vibe coders" width="800">
+  </a>
+</div>
 
 > **狀態:** v1.1.0 · MIT 授權 · 已包裝給 Claude Code,也提供 Codex、Cursor、Windsurf 與純 skill folder 安裝用的 portable adapters。
 

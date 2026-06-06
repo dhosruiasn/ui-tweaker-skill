@@ -6,7 +6,7 @@ Fine-tune any UI component **with an AI coding assistant** through a design-tool
 
 <div align="center">
   <a href="https://dhosruiasn.github.io/ui-tweaker-skill/">
-    <img src="./ui-tweaker-hero.png" alt="UI Tweaker - The ultimate visual tweaker for vibe coders" width="800">
+    <img src="./assets/ui-tweaker-hero.png" alt="UI Tweaker - The ultimate visual tweaker for vibe coders" width="800">
   </a>
 </div>
 

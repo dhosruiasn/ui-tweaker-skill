@@ -165,9 +165,9 @@
   .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--ink)}
   @media(max-width:860px){.steps{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:480px){.steps{grid-template-columns:1fr}}
-  .step{padding:30px 26px 34px 0;border-right:1px solid var(--border);position:relative}
-  .step:last-child{border-right:none}
-  @media(max-width:860px){.step{border-right:none;border-bottom:1px solid var(--border);padding-right:20px}}
+  .step{padding:30px 28px 34px 0;position:relative}
+  .step+.step{border-left:1px solid var(--border);padding-left:28px}   /* divider on the left, with clearance so text never touches it */
+  @media(max-width:860px){.step{padding:26px 6px 28px;border-bottom:1px solid var(--border)}.step+.step{border-left:none;padding-left:6px}}
   .step .n{font-family:var(--display);font-weight:600;font-size:2.6rem;line-height:1;color:var(--blue);margin-bottom:18px;display:block}
   .step h4{font-size:1.08rem;font-weight:700;margin-bottom:9px}
   .step p{color:var(--ink-soft);font-size:.94rem}

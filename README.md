@@ -4,10 +4,9 @@
 
 Fine-tune any UI component **with an AI coding assistant** through a design-tool-style control panel — scrub values, preview changes live, move and resize elements — then let the assistant write the adjusted values **straight back into your real source code**. No more round-trips of "make it a bit bigger… no, smaller… more rounded."
 
-![UI Tweaker hero](./assets/ui-tweaker-hero.png)
 <div align="center">
   <a href="https://dhosruiasn.github.io/ui-tweaker-skill/">
-    <img src="./cover.jpg" alt="UI Tweaker - The ultimate visual tweaker for vibe coders" width="800">
+    <img src="./ui-tweaker-hero.png" alt="UI Tweaker - The ultimate visual tweaker for vibe coders" width="800">
   </a>
 </div>
 

@@ -5,9 +5,13 @@
 Fine-tune any UI component **with an AI coding assistant** through a design-tool-style control panel — scrub values, preview changes live, move and resize elements — then let the assistant write the adjusted values **straight back into your real source code**. No more round-trips of "make it a bit bigger… no, smaller… more rounded."
 
 <div align="center">
+
   <a href="https://dhosruiasn.github.io/ui-tweaker-skill/">
-    <img src="./assets/ui-tweaker-hero.png" alt="UI Tweaker - The ultimate visual tweaker for vibe coders" width="800">
+
+    <img src="./assets/ui-tweaker-gif.gif" alt="UI Tweaker - The ultimate visual tweaker for vibe coders" width="800">
+
   </a>
+
 </div>
 
 > **Status:** v1.1.0 · MIT licensed · packaged for Claude Code plus portable adapters for Codex, Cursor, Windsurf, and plain skill-folder installs.

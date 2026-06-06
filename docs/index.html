@@ -57,7 +57,7 @@
   section{position:relative}
   .rule{height:1px;background:var(--border);border:0}
   /* line-breaking: balance headings, prettify paragraphs, and a no-wrap whitelist for terms */
-  .head h2,.cta-section h2,.spec-row h3,.step h4,.plate-body h4,.hero-reveal .intro-text{text-wrap:balance}
+  .head h2,.cta-section h2,.spec-row h3,.step h4,.plate-body h4{text-wrap:balance}
   .head p,.cta-section p,.spec-row p,.step p,.intro-text,.work small,.foot p,.feat p{text-wrap:pretty}
   .keep-together{white-space:nowrap}
   @media(max-width:760px){br.br-desk{display:none}}  /* manual line breaks only on desktop */
@@ -94,7 +94,7 @@
   .hero-stage{position:relative;height:185vh}
   .hero{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:48px 0 58px;overflow:hidden}
   .hero-reveal{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:0 40px;opacity:0;pointer-events:none;will-change:opacity,transform}
-  .hero-reveal .intro-text{font-family:var(--display);font-weight:400;font-size:clamp(1.5rem,3.2vw,2.5rem);line-height:1.32;letter-spacing:-.01em;max-width:780px;color:var(--ink);text-align:center}
+  .hero-reveal .intro-text{font-family:var(--display);font-weight:400;font-size:clamp(1.4rem,3vw,2.3rem);line-height:1.34;letter-spacing:-.01em;max-width:min(1040px,94vw);color:var(--ink);text-align:center}
   .hero-reveal .intro-text em{font-style:normal;font-weight:600;color:var(--blue)}
   .hero .title,.hero .hero-cta,.hero-notes{will-change:transform,opacity}
   .title .word{display:inline-block}
@@ -150,6 +150,7 @@
   .head h2{font-family:var(--display);font-weight:600;font-size:clamp(2.1rem,4.4vw,3.4rem);line-height:1.04;letter-spacing:-.02em;margin-bottom:18px}
   .head p{color:var(--ink-soft);font-size:1.08rem;max-width:620px}
   html[data-lang="zh"] .head h2{word-break:keep-all}
+  #why .head p{max-width:920px}   /* wide enough that each sentence fits one line on desktop → 2 lines */
 
   /* ===== features = spec sheet ===== */
   .spec{border-top:1px solid var(--ink)}
@@ -685,14 +686,13 @@
     function tfm(s){ const tp=[]; if(s.x||s.y)tp.push('translate('+(s.x||0)+'px,'+(s.y||0)+'px)'); if(s.rot)tp.push('rotate('+s.rot+'deg)'); if(s.scale!==100)tp.push('scale('+(s.scale/100)+')'); return tp.join(' '); }
     // the box sits on the element's layout box and shares its transform, so it scales/rotates/moves with it
     function placeBox(){
-      const e=PICK[cur].el, s=st(cur), sc=(s.scale||100)/100;
-      // bake the element's scale into the box's width/height (NOT a transform), so the frame/handles/label stay a constant thickness
-      const w=e.offsetWidth*sc, h=e.offsetHeight*sc;
-      const cx=e.offsetLeft+e.offsetWidth/2, cy=e.offsetTop+e.offsetHeight/2;   // element layout centre (transform-origin)
-      tbox.style.left=(cx-w/2)+'px'; tbox.style.top=(cy-h/2)+'px';
+      // measure the element's RENDERED rect (includes its own + every ancestor transform), convert to cardWrap-local (÷ view zoom)
+      const e=PICK[cur].el, z=zoom||1;
+      const cr=cardWrap.getBoundingClientRect(), er=e.getBoundingClientRect();
+      const w=er.width/z, h=er.height/z;
+      tbox.style.left=((er.left-cr.left)/z)+'px'; tbox.style.top=((er.top-cr.top)/z)+'px';
       tbox.style.width=w+'px'; tbox.style.height=h+'px';
-      const tp=[]; if(s.x||s.y) tp.push('translate('+(s.x||0)+'px,'+(s.y||0)+'px)'); if(s.rot) tp.push('rotate('+s.rot+'deg)');
-      tbox.style.transform=tp.join(' ');   // move + rotate only
+      tbox.style.transform='';   // box carries no transform → frame / handles / label stay a constant thickness
       tbSize.textContent=Math.round(w)+' × '+Math.round(h)+' px';
     }
     function updLabels(){
@@ -1031,7 +1031,19 @@
     function visibleWord(){ for(const w of words){ if(w.offsetWidth>0) return w; } return words[0]; }
     // max letter-spacing that still fits the (centered) word inside the viewport: width = w0 + n*ls
     function maxLS(){ const w=visibleWord(); const w0=baseW.get(w)||w.offsetWidth; const n=Math.max(1,(w.textContent||'').length); return Math.max(0,Math.min(CEIL,(hero.clientWidth-EDGE-w0)/n)); }
-    function render(){ const mx=maxLS(); ls=Math.max(MIN,Math.min(mx,ls)); words.forEach(w=>{w.style.letterSpacing=ls+'px'; w.style.marginRight=''; w.style.transform=ls?'translateX('+(-ls/2)+'px)':'';}); if(vEl) vEl.textContent=Math.round(ls)+' px'; if(ro) ro.classList.toggle('on',hover||dragging); }
+    function render(){
+      const mx=maxLS(); ls=Math.max(MIN,Math.min(mx,ls));
+      words.forEach(w=>{ w.style.letterSpacing=ls+'px'; w.style.marginRight=''; w.style.transform=''; });
+      // re-centre by measuring the actual ink offset vs the title centre (robust at any spacing / viewport)
+      words.forEach(w=>{
+        if(!w.offsetParent) return;                 // skip the hidden language
+        var chs=w.querySelectorAll('.ch'), t=w.closest('.title'); if(!chs.length||!t) return;
+        var tr=t.getBoundingClientRect(), f=chs[0].getBoundingClientRect(), l=chs[chs.length-1].getBoundingClientRect();
+        var off=(f.left+l.right)/2-(tr.left+tr.width/2);
+        if(Math.abs(off)>0.5) w.style.transform='translateX('+(-off)+'px)';
+      });
+      if(vEl) vEl.textContent=Math.round(ls)+' px'; if(ro) ro.classList.toggle('on',hover||dragging);
+    }
     words.forEach(w=>{
       w.addEventListener('pointerenter',()=>{hover=true;render();});
       w.addEventListener('pointerleave',()=>{hover=false;render();});

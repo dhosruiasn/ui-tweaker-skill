@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UI Tweaker — Precision visual control for vibe coding</title>
+<meta name="description" content="Fine-tune any UI component with a design-tool-style control panel, then let your AI assistant write the values back into your real source code.">
+<meta property="og:title" content="UI Tweaker — Precision visual control for vibe coding">
+<meta property="og:description" content="Visually fine-tune UI components, then hand the exact values to your AI to apply to real code.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700&family=Chiron+Hei+HK:ital,wght@0,200..900;1,200..900&family=Chocolate+Classical+Sans&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&family=TASA+Explorer:wght@400..800&family=TASA+Orbiter:wght@400..800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f4efe3;--bg-2:#efe9da;
+    --ink:#191512;--ink-soft:#5a5249;--ink-faint:#928a7c;
+    /* accent kept under the old --blue token names so the demo + JS re-theme automatically */
+    --blue:#e4431e;--blue-deep:#bc3315;--blue-glow:rgba(228,67,30,.16);
+    --card:#fbf8f0;--card-solid:#fffdf6;
+    --border:rgba(25,21,18,.14);--border-strong:rgba(25,21,18,.28);
+    --shadow-soft:0 1px 2px rgba(25,21,18,.05);
+    --shadow-lift:0 1px 0 rgba(25,21,18,.06),0 18px 40px rgba(25,21,18,.10);
+    --band:#191512;--band-fg:#f4efe3;
+    --radius-pill:999px;--radius-lg:10px;--radius-md:7px;
+    --mono:'TASA Orbiter','Chiron Hei HK','Chocolate Classical Sans',system-ui,sans-serif;
+    --display:'TASA Orbiter','Chiron Hei HK','Chocolate Classical Sans',system-ui,sans-serif;
+    --sans:'TASA Explorer','Chiron Hei HK','Chocolate Classical Sans',system-ui,sans-serif;
+    --code:'JetBrains Mono',ui-monospace,monospace;
+    --grain:.05;
+  }
+  html[data-theme="dark"]{
+    --bg:#16130f;--bg-2:#1b1712;
+    --ink:#f2ecdd;--ink-soft:#b4ab99;--ink-faint:#7d7567;
+    --blue:#ff5a34;--blue-deep:#ff7a55;--blue-glow:rgba(255,90,52,.20);
+    --card:#211c16;--card-solid:#26201a;
+    --border:rgba(242,236,221,.15);--border-strong:rgba(242,236,221,.30);
+    --shadow-soft:0 1px 2px rgba(0,0,0,.4);
+    --shadow-lift:0 1px 0 rgba(0,0,0,.4),0 24px 60px rgba(0,0,0,.6);
+    --band:#cf3a18;--band-fg:#fff;
+    --grain:.07;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:var(--sans);color:var(--ink);background:var(--bg);
+    min-height:100vh;-webkit-font-smoothing:antialiased;line-height:1.55;overflow-x:hidden;
+    transition:background .4s ease,color .3s ease;
+  }
+  /* paper grain — subtle print texture instead of flat fill */
+  body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:120;opacity:var(--grain);mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:180px}
+  html[data-theme="dark"] body::after{mix-blend-mode:soft-light}
+  ::selection{background:var(--blue);color:#fff}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 32px}
+  @media(max-width:600px){.wrap{padding:0 20px}}
+  section{position:relative}
+  .rule{height:1px;background:var(--border);border:0}
+
+  /* mono annotation label — the "[ note ]" device */
+  .note{font-family:var(--mono);font-size:.72rem;font-weight:500;letter-spacing:.02em;color:var(--blue-deep);display:inline-flex;align-items:center;gap:.5ch}
+  .note::before{content:"[";opacity:.6}
+  .note::after{content:"]";opacity:.6}
+
+  /* ===== nav ===== */
+  nav{position:sticky;top:0;z-index:60;background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+  .nav-in{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:14px;height:70px}
+  .brand{display:flex;align-items:center;gap:10px;justify-self:start;font-family:var(--display);font-weight:600;font-size:1.18rem;letter-spacing:-.01em;color:var(--ink)}
+  .brand .logo{width:30px;height:30px;display:grid;place-items:center;border:1.5px solid var(--ink);color:var(--blue);flex:none}
+  .brand .logo svg{width:17px;height:17px}
+  /* independent pill nav (Readymag-style) */
+  .nav-links{display:flex;gap:8px;justify-self:center}
+  .nav-links a{font-family:var(--sans);font-weight:500;color:var(--ink);text-decoration:none;font-size:.9rem;padding:8px 17px;border-radius:var(--radius-pill);background:var(--card);border:1px solid var(--border);transition:.18s}
+  .nav-links a:hover{border-color:var(--ink);color:var(--blue-deep)}
+  .nav-tools{display:flex;align-items:center;gap:8px;justify-self:end}
+  .icon-btn{height:38px;border:1px solid var(--border);background:var(--card);color:var(--ink);font-family:var(--sans);font-weight:600;font-size:.85rem;cursor:pointer;display:inline-flex;align-items:center;gap:7px;padding:0 16px;transition:.18s;border-radius:var(--radius-pill)}
+  .icon-btn:hover{border-color:var(--ink);background:var(--ink);color:var(--bg)}
+  .icon-btn.sq{width:38px;padding:0;justify-content:center}
+  @media(max-width:760px){.nav-links{display:none}.nav-in{grid-template-columns:1fr auto}}
+
+  /* ===== buttons ===== */
+  .btn-primary{font-family:var(--sans);font-weight:700;font-size:.98rem;color:#fff;cursor:pointer;padding:14px 26px;border:none;border-radius:var(--radius-md);background:var(--blue);text-decoration:none;display:inline-flex;align-items:center;gap:9px;transition:transform .18s,background .18s;box-shadow:var(--shadow-soft)}
+  .btn-primary:hover{background:var(--blue-deep);transform:translateY(-2px)}
+  .btn-ghost{font-family:var(--sans);font-weight:600;font-size:.98rem;color:var(--ink);text-decoration:none;padding:14px 22px;border-radius:var(--radius-md);border:1px solid var(--border-strong);background:transparent;display:inline-flex;align-items:center;gap:9px;transition:.18s}
+  .btn-ghost:hover{border-color:var(--ink);background:var(--ink);color:var(--bg)}
+
+  /* ===== hero — huge type, floating bracket notes, centered CTA (Readymag-style) ===== */
+  /* scroll-scrub: hero pins while its pieces part outward to reveal the intro statement */
+  .hero-stage{position:relative;height:185vh}
+  .hero{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:48px 0 58px;overflow:hidden}
+  .hero-reveal{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:0 40px;opacity:0;pointer-events:none;will-change:opacity,transform}
+  .hero-reveal .intro-text{font-family:var(--display);font-weight:400;font-size:clamp(1.5rem,3.2vw,2.5rem);line-height:1.32;letter-spacing:-.01em;max-width:780px;color:var(--ink);text-align:center}
+  .hero-reveal .intro-text em{font-style:normal;font-weight:600;color:var(--blue)}
+  .hero .title,.hero .hero-cta,.hero-notes{will-change:transform,opacity}
+  .title .ch{display:inline-block;will-change:transform,opacity}
+  h1.title{font-family:var(--display);font-weight:600;font-size:clamp(3rem,11vw,8.6rem);line-height:.94;letter-spacing:-.035em;margin:0;max-width:15ch}
+  html[data-lang="zh"] h1.title{word-break:keep-all;max-width:none}
+  h1.title .accent{color:var(--blue);font-weight:800}
+  .hero-cta{display:flex;gap:14px;flex-wrap:wrap;align-items:center;justify-content:center;margin-top:40px}
+  /* "Move them." is draggable — scrub its letter-spacing (echoes the word + the tool's drag-to-scrub) */
+  .js-scrub{cursor:ew-resize;display:inline-block;white-space:nowrap;letter-spacing:0;touch-action:none;-webkit-user-select:none;user-select:none}
+  .scrub-readout{margin-top:22px;font-family:var(--mono);font-size:.82rem;color:var(--ink-faint);display:flex;align-items:center;justify-content:center;gap:8px;min-height:1.2em;transition:color .2s}
+  .scrub-readout.on{color:var(--blue-deep)}
+  .scrub-readout .ico{font-size:1.05em}
+  .scrub-readout .live{display:none}
+  .scrub-readout.on .hint{display:none}
+  .scrub-readout.on .live{display:inline}
+  .scrub-readout .v{font-weight:600}
+  /* floating bracket annotations */
+  .hero-notes{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+  .hero-note{position:absolute;left:0;top:0;display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-weight:600;font-size:1.25rem;line-height:1;color:var(--blue-deep);white-space:nowrap;will-change:transform}
+  .hero-note::before{content:"{";font-size:1.7em;font-weight:400}
+  .hero-note::after{content:"}";font-size:1.7em;font-weight:400}
+  @media(max-width:980px){
+    .hero-stage{height:auto}
+    .hero{position:static;height:auto;min-height:auto;padding:64px 0 46px;overflow:visible}
+    .hero-notes{position:static;display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin-top:32px;overflow:visible}
+    .hero-note{position:relative;left:auto;top:auto;transform:none!important;font-size:1rem}
+    .hero-reveal{position:static;opacity:1!important;transform:none!important;pointer-events:auto;padding:30px 20px 4px}
+  }
+  /* ===== intro statement (reveals on scroll) ===== */
+  .intro{padding:24px 0 40px}
+  .intro-text{font-family:var(--display);font-weight:400;font-size:clamp(1.5rem,3.2vw,2.4rem);line-height:1.32;letter-spacing:-.01em;max-width:760px;color:var(--ink)}
+  html[data-lang="zh"] .intro-text{word-break:keep-all}
+  .intro-text em{font-style:normal;font-weight:600;color:var(--blue)}
+
+  /* demo plate */
+  .plate{margin-top:46px;border:1px solid var(--ink);background:var(--card-solid);position:relative;box-shadow:8px 8px 0 color-mix(in srgb,var(--ink) 12%,transparent)}
+  .plate-bar{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:.74rem;color:var(--ink-faint)}
+  .plate-bar .rec{width:8px;height:8px;border-radius:50%;background:var(--blue);flex:none}
+  .plate-bar .grow{margin-left:auto}
+  .plate-body{aspect-ratio:16/9;display:grid;place-items:center;text-align:center;padding:34px;position:relative;
+    background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:34px 34px;background-position:center}
+  .plate-play{width:72px;height:72px;border-radius:50%;display:grid;place-items:center;margin:0 auto 20px;border:1.5px solid var(--blue);color:var(--blue);background:var(--card-solid)}
+  .plate-play svg{width:24px;height:24px;margin-left:4px}
+  .plate-body h4{font-family:var(--display);font-size:1.5rem;font-weight:600;margin-bottom:8px}
+  .plate-body p{color:var(--ink-soft);font-size:.95rem;max-width:400px;margin:0 auto}
+
+  /* ===== section heads ===== */
+  .pad{padding:96px 0}
+  .head{margin-bottom:54px}
+  .head .kicker{font-family:var(--mono);font-size:.76rem;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--blue-deep);margin-bottom:20px;display:flex;align-items:center;gap:10px}
+  .head .kicker::before{content:"";width:28px;height:1px;background:var(--blue);display:inline-block}
+  .head h2{font-family:var(--display);font-weight:600;font-size:clamp(2.1rem,4.4vw,3.4rem);line-height:1.04;letter-spacing:-.02em;margin-bottom:18px}
+  .head p{color:var(--ink-soft);font-size:1.08rem;max-width:620px}
+  html[data-lang="zh"] .head h2{word-break:keep-all}
+
+  /* ===== features = spec sheet ===== */
+  .spec{border-top:1px solid var(--ink)}
+  .spec-row{display:grid;grid-template-columns:58px minmax(0,260px) 1fr;gap:28px;padding:30px 4px;border-bottom:1px solid var(--border);align-items:baseline;transition:background .2s}
+  .spec-row:hover{background:color-mix(in srgb,var(--blue) 4%,transparent)}
+  .spec-row .idx{font-family:var(--mono);font-size:.8rem;color:var(--blue)}
+  .spec-row h3{font-family:var(--sans);font-size:1.32rem;font-weight:700;letter-spacing:-.01em;line-height:1.15}
+  .spec-row p{color:var(--ink-soft);font-size:1rem}
+  @media(max-width:760px){.spec-row{grid-template-columns:42px 1fr;gap:6px 16px}.spec-row p{grid-column:2}}
+
+  /* ===== how = numbered editorial steps ===== */
+  .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--ink)}
+  @media(max-width:860px){.steps{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:480px){.steps{grid-template-columns:1fr}}
+  .step{padding:30px 26px 34px 0;border-right:1px solid var(--border);position:relative}
+  .step:last-child{border-right:none}
+  @media(max-width:860px){.step{border-right:none;border-bottom:1px solid var(--border);padding-right:20px}}
+  .step .n{font-family:var(--display);font-weight:600;font-size:2.6rem;line-height:1;color:var(--blue);margin-bottom:18px;display:block}
+  .step h4{font-size:1.08rem;font-weight:700;margin-bottom:9px}
+  .step p{color:var(--ink-soft);font-size:.94rem}
+
+  /* ===== install ===== */
+  .install-wrap{display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:start}
+  @media(max-width:840px){.install-wrap{grid-template-columns:1fr}}
+  .tabs{display:flex;gap:0;margin-bottom:20px;border-bottom:1px solid var(--border)}
+  .tab{font-family:var(--mono);font-size:.8rem;cursor:pointer;padding:10px 16px;border:none;background:transparent;color:var(--ink-faint);border-bottom:2px solid transparent;margin-bottom:-1px;transition:.18s}
+  .tab:hover{color:var(--ink)}
+  .tab.on{color:var(--blue-deep);border-bottom-color:var(--blue)}
+  .code-card{border:1px solid var(--ink);background:var(--card-solid);overflow:hidden;box-shadow:6px 6px 0 color-mix(in srgb,var(--ink) 12%,transparent)}
+  .code-top{display:flex;align-items:center;justify-content:space-between;padding:11px 15px;border-bottom:1px solid var(--border)}
+  .code-top .label{font-family:var(--mono);font-size:.74rem;color:var(--ink-faint)}
+  .copy-btn{font-family:var(--mono);font-size:.74rem;cursor:pointer;color:var(--blue-deep);background:transparent;border:1px solid var(--border-strong);padding:5px 11px;border-radius:var(--radius-md);display:inline-flex;align-items:center;gap:6px;transition:.18s}
+  .copy-btn:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .copy-btn.done{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .code-body{padding:20px;font-family:var(--code);font-size:.86rem;line-height:1.95;overflow-x:auto;color:var(--ink)}
+  .code-body .c-cmd{color:var(--blue);font-weight:600}
+  .targets{padding-top:4px}
+  .targets h4{font-family:var(--mono);font-size:.76rem;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);margin-bottom:18px}
+  .works{display:flex;flex-direction:column}
+  .work{display:flex;align-items:center;gap:14px;font-size:.95rem;padding:13px 0;border-bottom:1px solid var(--border)}
+  .work:last-child{border-bottom:none}
+  .work .badge{width:36px;height:36px;border-radius:var(--radius-md);display:grid;place-items:center;font-family:var(--mono);font-weight:600;font-size:.8rem;color:#fff;flex:none}
+  .work strong{font-weight:700}
+  .work small{color:var(--ink-faint);display:block;font-size:.78rem;font-family:var(--mono)}
+
+  /* ===== CTA band (the one deep section) ===== */
+  .cta-section{background:var(--band);color:var(--band-fg);padding:96px 0;position:relative;overflow:hidden}
+  .cta-inner{max-width:780px}
+  .cta-section .kicker{font-family:var(--mono);font-size:.76rem;letter-spacing:.06em;text-transform:uppercase;opacity:.7;margin-bottom:22px;display:flex;align-items:center;gap:10px}
+  .cta-section .kicker::before{content:"";width:28px;height:1px;background:currentColor;display:inline-block}
+  .cta-section h2{font-family:var(--display);font-weight:600;font-size:clamp(2.2rem,5vw,4rem);line-height:1.02;letter-spacing:-.02em;margin-bottom:20px}
+  .cta-section h2 em{font-style:normal;font-weight:800;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:6px}
+  .cta-section p{font-size:1.12rem;opacity:.86;max-width:540px;margin-bottom:34px}
+  html[data-lang="zh"] .cta-section h2{word-break:keep-all}
+  .btn-band{background:var(--band-fg);color:var(--band);font-family:var(--sans);font-weight:700;font-size:.98rem;text-decoration:none;padding:14px 28px;border-radius:var(--radius-md);display:inline-flex;align-items:center;gap:9px;transition:transform .18s}
+  .btn-band:hover{transform:translateY(-2px)}
+  .pills{display:flex;gap:22px;margin-top:30px;flex-wrap:wrap}
+  .pill{font-family:var(--mono);font-size:.8rem;opacity:.82;display:inline-flex;align-items:center;gap:7px}
+  /* zh CTA centred */
+  html[data-lang="zh"] .cta-inner{margin-left:auto;margin-right:auto;text-align:center}
+  html[data-lang="zh"] .cta-section .kicker{justify-content:center}
+  html[data-lang="zh"] .cta-section .pills{justify-content:center}
+
+  /* ===== footer ===== */
+  footer{padding:54px 0 64px;border-top:1px solid var(--border)}
+  .foot{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
+  .foot .brand{font-family:var(--display);font-weight:600;font-size:1.1rem;align-items:center}
+  .foot-links{display:flex;gap:18px;flex-wrap:wrap;margin:14px 0}
+  .foot-links a{font-family:var(--mono);font-size:.78rem;text-transform:lowercase;color:var(--ink-soft);text-decoration:none}
+  .foot-links a:hover{color:var(--blue-deep)}
+  .foot p{color:var(--ink-faint);font-size:.82rem;font-family:var(--mono)}
+  .foot p a{color:var(--ink-soft);text-decoration:none}
+  .foot p a:hover{color:var(--blue-deep)}
+
+  /* ===== reveal ===== */
+  .reveal{opacity:0;transform:translateY(20px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+
+  /* ===================================================================
+     live interactive demo — three-pane studio (re-themed via tokens)
+     =================================================================== */
+  .studio{border:1px solid var(--ink);background:var(--card-solid);box-shadow:var(--shadow-lift);overflow:hidden;border-radius:var(--radius-lg)}
+  .studio-grid{display:grid;grid-template-columns:176px 1fr 300px}
+  @media(max-width:760px){.studio-grid{grid-template-columns:1fr}}
+  .studio-layers{border-right:1px solid var(--border);background:color-mix(in srgb,var(--bg) 50%,var(--card-solid));display:flex;flex-direction:column;min-width:0}
+  @media(max-width:760px){.studio-layers{display:none}}
+  .studio-lay-sec{padding:11px 9px;border-bottom:1px solid var(--border)}
+  .studio-lay-sec:last-child{border-bottom:none}
+  .studio-lay-h{font-family:var(--mono);font-size:.6rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-faint);padding:0 6px 7px}
+  .studio-page{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:6px;font-size:.78rem;color:var(--ink-soft);background:color-mix(in srgb,var(--blue) 8%,transparent)}
+  .studio-row{display:flex;align-items:center;gap:5px;padding:5px 6px;border-radius:6px;font-size:.78rem;color:var(--ink-soft);white-space:nowrap;cursor:pointer}
+  .studio-row:hover:not(.on){background:color-mix(in srgb,var(--blue) 7%,transparent)}
+  .studio-row.on{background:color-mix(in srgb,var(--blue) 13%,transparent);color:var(--blue-deep);font-weight:600}
+  .studio-row .car{width:11px;flex:none;font-size:.62rem;text-align:center;color:var(--ink-faint)}
+  .studio-row .car.leaf{visibility:hidden}
+  .studio-row .ico{flex:none;display:flex;color:var(--ink-faint)}
+  .studio-row.on .ico{color:var(--blue)}
+  .studio-row .ico svg{width:13px;height:13px}
+  .studio-row .ico.tnode{font-family:var(--display);font-weight:600;font-size:.78rem;width:13px;text-align:center;line-height:1}
+  .studio-lay-name{overflow:hidden;text-overflow:ellipsis}
+  .studio-canvas{position:relative;display:flex;flex-direction:column;min-width:0;background:var(--bg)}
+  .studio-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;border-bottom:1px solid var(--border)}
+  .studio-seg{display:flex;border:1px solid var(--border-strong);border-radius:7px;overflow:hidden;background:var(--card-solid)}
+  .studio-seg button{border:0;background:transparent;padding:5px 8px;color:var(--ink-faint);cursor:pointer;display:flex;transition:.15s}
+  .studio-seg button.on{background:var(--blue);color:#fff}
+  .studio-seg button:hover:not(.on){color:var(--ink)}
+  .studio-seg button svg,.studio-tools button svg,.studio-zoom button svg{width:15px;height:15px}
+  .studio-tools{display:flex;gap:5px}
+  .studio-tools button,.studio-zoom button{width:28px;height:28px;border-radius:7px;border:1px solid var(--border-strong);background:var(--card-solid);color:var(--ink-faint);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s}
+  .studio-tools button:hover,.studio-zoom button:hover{border-color:var(--blue);color:var(--blue)}
+  .studio-tools button:disabled{opacity:.4;cursor:default;border-color:var(--border-strong);color:var(--ink-faint)}
+  .studio-tools button.on{background:var(--blue);border-color:var(--blue);color:#fff}
+  .studio-zoom{display:flex;align-items:center;gap:5px}
+  .studio-zoom .z{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint);min-width:38px;text-align:center;cursor:pointer}
+  .studio-stage{flex:1;display:grid;place-items:center;padding:50px 30px;min-height:300px;position:relative;overflow:hidden}
+  .studio-rulers{position:absolute;inset:0;pointer-events:none;display:none;z-index:3}
+  .studio.show-rulers .studio-rulers{display:block}
+  .studio-rulers .rc{position:absolute;left:0;top:0;width:16px;height:16px;background:var(--card-solid);border-right:1px solid var(--border-strong);border-bottom:1px solid var(--border-strong)}
+  .studio-rulers .rh{position:absolute;left:16px;right:0;top:0;height:16px;border-bottom:1px solid var(--border-strong);background:repeating-linear-gradient(90deg,color-mix(in srgb,var(--ink-faint) 50%,transparent) 0 1px,transparent 1px 10px) bottom/100% 6px no-repeat,var(--card-solid)}
+  .studio-rulers .rv{position:absolute;top:16px;bottom:0;left:0;width:16px;border-right:1px solid var(--border-strong);background:repeating-linear-gradient(0deg,color-mix(in srgb,var(--ink-faint) 50%,transparent) 0 1px,transparent 1px 10px) right/6px 100% no-repeat,var(--card-solid)}
+  .studio-card-wrap{position:relative;transform-origin:center center;transition:transform .08s}
+  .folder-card{width:208px;box-sizing:border-box;background:var(--card-solid);border:1px solid var(--border-strong);display:flex;flex-direction:column;transition:border-radius .08s,padding .08s,box-shadow .08s,gap .08s}
+  .folder-card .fc-thumb{height:92px;border-radius:14px;background:linear-gradient(150deg,#f6cdbd,#ef8a63);position:relative;overflow:hidden;flex:none}
+  .folder-card .fc-thumb::after{content:"";position:absolute;left:14px;bottom:-22px;width:84px;height:84px;border-radius:50%;background:radial-gradient(circle at 38% 34%,rgba(255,255,255,.6),transparent 60%)}
+  .folder-card .fc-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .folder-card .fc-title{font-family:var(--sans);font-weight:700;font-size:.96rem;color:var(--ink)}
+  .folder-card .fc-badge{font-family:var(--mono);font-size:.66rem;font-weight:600;color:var(--blue-deep);background:color-mix(in srgb,var(--blue) 15%,transparent);padding:2px 8px;border-radius:var(--radius-pill)}
+  .folder-card .fc-icon{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--blue);color:#fff;align-self:flex-end}
+  .folder-card .fc-icon svg{width:18px;height:18px}
+  /* click-to-select affordances in the preview */
+  .folder-card,.folder-card .fc-thumb,.folder-card .fc-title,.folder-card .fc-badge,.folder-card .fc-icon{cursor:move;touch-action:none}
+  .folder-card .fc-thumb:hover,.folder-card .fc-title:hover,.folder-card .fc-badge:hover,.folder-card .fc-icon:hover{outline:1.5px dashed color-mix(in srgb,var(--blue) 55%,transparent);outline-offset:2px}
+  .folder-card [contenteditable]{outline:2px solid var(--blue);outline-offset:3px;cursor:text;border-radius:3px}
+  .studio-tbox{position:absolute;left:0;top:0;pointer-events:none;transform-origin:center center}
+  .studio-tbox .tb-frame{position:absolute;inset:-1px;border:1.5px solid var(--blue);box-sizing:border-box}
+  .studio-tbox .tb-h{position:absolute;width:11px;height:11px;background:var(--card-solid);border:1.5px solid var(--blue);border-radius:2px;box-sizing:border-box;pointer-events:auto;touch-action:none}
+  .tb-h.nw{left:-5px;top:-5px}.tb-h.n{left:50%;top:-5px;margin-left:-4.5px}.tb-h.ne{right:-5px;top:-5px}
+  .tb-h.e{right:-5px;top:50%;margin-top:-4.5px}.tb-h.se{right:-5px;bottom:-5px}.tb-h.s{left:50%;bottom:-5px;margin-left:-4.5px}
+  .tb-h.sw{left:-5px;bottom:-5px}.tb-h.w{left:-5px;top:50%;margin-top:-4.5px}
+  .studio-tbox .tb-rotline{position:absolute;left:50%;top:-16px;width:1.5px;height:16px;margin-left:-.75px;background:var(--blue)}
+  .studio-tbox .tb-rot{position:absolute;left:50%;top:-28px;width:14px;height:14px;margin-left:-7px;border:1.5px solid var(--blue);border-radius:50%;background:var(--card-solid);box-sizing:border-box;pointer-events:auto;touch-action:none;cursor:grab}
+  .studio-tbox .tb-rot:active{cursor:grabbing}
+  .studio-tbox .tb-size{position:absolute;left:50%;top:100%;transform:translate(-50%,9px);background:var(--blue);color:#fff;font-family:var(--mono);font-size:.64rem;font-weight:600;padding:3px 8px;border-radius:5px;white-space:nowrap}
+  .studio-panel{border-left:1px solid var(--border);background:var(--card-solid);display:flex;flex-direction:column;min-width:0}
+  .studio-panel-h{padding:12px 14px;border-bottom:1px solid var(--border);font-weight:700;font-size:.84rem;color:var(--ink);display:flex;align-items:baseline;gap:8px}
+  .studio-panel-h small{font-weight:400;color:var(--ink-faint);font-size:.68rem;font-family:var(--mono)}
+  .studio-cats{flex:1;overflow:auto;max-height:430px}
+  .studio-cat{border-bottom:1px solid var(--border)}
+  .studio-cat:last-child{border-bottom:none}
+  .studio-cat>summary{list-style:none;cursor:pointer;padding:11px 14px;font-size:.81rem;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:8px;user-select:none}
+  .studio-cat>summary:hover{color:var(--blue)}
+  .studio-cat>summary::-webkit-details-marker{display:none}
+  .studio-cat>summary::before{content:'›';color:var(--ink-faint);font-size:1rem;line-height:1;width:9px;text-align:center;transition:transform .15s}
+  .studio-cat[open]>summary::before{transform:rotate(90deg)}
+  .studio-cat-body{padding:2px 14px 14px}
+  .studio-ctrl{margin:11px 0}
+  .studio-ctrl label{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:.72rem;color:var(--ink-soft);margin-bottom:6px;gap:8px}
+  .studio-ctrl label .v{color:var(--blue-deep);font-weight:600;background:color-mix(in srgb,var(--blue) 11%,transparent);border:1px solid color-mix(in srgb,var(--blue) 24%,transparent);border-radius:5px;padding:1px 7px;min-width:48px;text-align:right}
+  .studio-ctrl input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:4px;border-radius:var(--radius-pill);background:color-mix(in srgb,var(--blue) 18%,transparent);outline:none;cursor:pointer;accent-color:var(--blue)}
+  .studio-ctrl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;background:var(--card-solid);border:2px solid var(--blue);cursor:pointer;transition:transform .12s}
+  .studio-ctrl input[type=range]::-webkit-slider-thumb:active{transform:scale(1.2)}
+  .studio-ctrl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--card-solid);border:2px solid var(--blue);cursor:pointer}
+  .studio-hint{font-size:.74rem;color:var(--ink-faint);line-height:1.6;padding:2px 0 2px}
+  .studio-select{width:100%;font-family:var(--mono);font-size:.76rem;padding:8px 10px;margin:2px 0 8px;border:1px solid var(--border-strong);border-radius:7px;background:var(--card-solid);color:var(--ink);cursor:pointer}
+  .studio-select:hover{border-color:var(--blue)}
+  .studio-crow{display:flex;align-items:center;gap:10px;margin:10px 0}
+  .studio-crow .studio-clbl{font-family:var(--mono);font-size:.72rem;color:var(--ink-soft);width:46px;flex:none}
+  .studio-crow input[type=color]{flex:1;height:30px;border:1px solid var(--border-strong);border-radius:7px;background:var(--card-solid);cursor:pointer;padding:2px}
+  .studio-add{margin-top:8px;width:100%;padding:7px;font-size:.72rem;border:1px dashed var(--border-strong);border-radius:6px;background:transparent;color:var(--blue-deep);cursor:default;font-family:var(--mono)}
+  .studio-footer{padding:12px 14px;border-top:1px solid var(--border);background:color-mix(in srgb,var(--bg) 40%,var(--card-solid))}
+  .studio-summary{font-family:var(--code);font-size:.7rem;color:var(--ink-faint);background:color-mix(in srgb,var(--blue) 5%,transparent);border:1px solid var(--border);border-radius:6px;padding:8px 10px;margin-bottom:10px;white-space:pre-wrap;max-height:78px;overflow:auto}
+  .studio-confirm{width:100%;padding:11px;border:none;border-radius:var(--radius-md);background:var(--blue);color:#fff;font-family:var(--sans);font-weight:700;font-size:.92rem;cursor:pointer;transition:background .15s}
+  .studio-confirm:hover{background:var(--blue-deep)}
+  .studio-out{margin-top:18px;border:1px solid var(--ink);background:var(--card-solid);overflow:hidden;display:none;border-radius:var(--radius-md)}
+  .studio-out.show{display:block}
+  .studio-out-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;border-bottom:1px solid var(--border)}
+  .studio-out-top .label{font-family:var(--mono);font-size:.74rem;color:var(--blue-deep)}
+  .studio-out pre{margin:0;padding:16px;font-family:var(--code);font-size:.78rem;line-height:1.7;color:var(--ink);overflow-x:auto;white-space:pre}
+  .studio-note{font-size:.92rem;color:var(--ink-soft);margin-top:18px;display:flex;align-items:center;gap:8px;font-family:var(--mono)}
+  .studio-note svg{flex:none}
+
+  /* language toggle — :not() raises specificity so it also wins over display rules */
+  html:not([data-lang="zh"]) [data-lang-zh]{display:none}
+  html[data-lang="zh"] [data-lang-en]{display:none}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav-in">
+    <div class="brand">
+      <span class="logo"><svg viewBox="0 0 24 24" fill="none"><path d="M4 4h4M4 4v4M20 4h-4M20 4v4M4 20h4M4 20v-4M20 20h-4M20 20v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9 8l7 4-7 4V8z" fill="currentColor"/></svg></span>
+      UI Tweaker
+    </div>
+    <div class="nav-links">
+      <a href="#why" data-lang-en>Why</a><a href="#why" data-lang-zh>為什麼</a>
+      <a href="#features" data-lang-en>Features</a><a href="#features" data-lang-zh>功能</a>
+      <a href="#how" data-lang-en>How</a><a href="#how" data-lang-zh>運作方式</a>
+      <a href="#install" data-lang-en>Install</a><a href="#install" data-lang-zh>安裝</a>
+    </div>
+    <div class="nav-tools">
+      <button class="icon-btn" id="langBtn">中文</button>
+      <button class="icon-btn sq" id="themeBtn" aria-label="theme"><svg id="themeIcon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+      <a class="icon-btn sq" href="https://github.com/dhosruiasn/ui-tweaker" aria-label="GitHub" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.5 2 2 6.6 2 12.3c0 4.5 2.9 8.4 6.8 9.7.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.4-3.4-1.4-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.6 2.4 1.1 3 .9.1-.7.4-1.1.6-1.4-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.7 1a9.3 9.3 0 0 1 5 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.3 4.7-4.6 5 .4.3.7.9.7 1.9v2.8c0 .3.2.6.7.5 4-1.3 6.8-5.2 6.8-9.7C22 6.6 17.5 2 12 2z"/></svg></a>
+    </div>
+  </div>
+</nav>
+
+<div class="hero-stage" id="heroStage">
+<section class="hero">
+  <div class="wrap">
+    <h1 class="title">
+      <span data-lang-en>Stop describing pixels.<br><span class="accent js-scrub">Move them.</span></span>
+      <span data-lang-zh>別再描述像素，<br><span class="accent js-scrub">直接動手</span></span>
+    </h1>
+    <div class="scrub-readout" id="scrubReadout"><span class="ico">↔</span><span class="hint" data-lang-en>drag “Move them.” to space them</span><span class="hint" data-lang-zh>拖曳「直接動手」調整字距</span><span class="live"><span data-lang-en>letter-spacing</span><span data-lang-zh>字距</span>:&nbsp;<span class="v">0 px</span></span></div>
+    <div class="hero-cta">
+      <a class="btn-primary" href="#install"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span data-lang-en>Get started</span><span data-lang-zh>開始使用</span></a>
+      <a class="btn-ghost" href="#why"><span data-lang-en>Try the demo</span><span data-lang-zh>玩玩看 demo</span><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    </div>
+    <div class="hero-notes">
+      <span class="hero-note n1"><span data-lang-en>Drag to adjust, see it live</span><span data-lang-zh>拖一下，即時看到變化</span></span>
+      <span class="hero-note n2"><span data-lang-en>Writes back to your real code</span><span data-lang-zh>寫回你的真實程式碼</span></span>
+      <span class="hero-note n3"><span data-lang-en>Works across AI coding tools</span><span data-lang-zh>跨各家 AI coding 工具</span></span>
+    </div>
+  </div>
+  <div class="hero-reveal" id="heroReveal">
+    <p class="intro-text"><span data-lang-en>A design-tool panel for vibe coding: <em>scrub real values, preview live, drag to move</em> — then hand the exact numbers to your AI to write straight into your source.</span><span data-lang-zh>為 vibe coding 而生的設計工具面板：<em>刷真實數值、即時預覽、拖曳移動</em>——再把精確數字交給 AI 直接寫回原始碼。</span></p>
+  </div>
+</section>
+</div>
+
+<section class="intro">
+  <div class="wrap">
+    <div class="plate reveal">
+      <div class="plate-bar"><span class="rec"></span><span data-lang-en>ui-tweaker — live demo</span><span data-lang-zh>ui-tweaker — 即時示範</span><span class="grow"></span><span data-lang-en>▶ play</span><span data-lang-zh>▶ 播放</span></div>
+      <div class="plate-body">
+        <div>
+          <div class="plate-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div>
+          <h4><span data-lang-en>Demo reel lands here</span><span data-lang-zh>示範影片會放這裡</span></h4>
+          <p><span data-lang-en>Tweak visually → copy values → AI applies them to your real CSS.</span><span data-lang-zh>視覺調整 → 複製數值 → AI 套用到你的真實 CSS。</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="pad" id="why">
+  <div class="wrap">
+    <div class="head reveal">
+      <span class="kicker" data-lang-en>The problem</span><span class="kicker" data-lang-zh>痛點</span>
+      <h2><span data-lang-en>Words are a terrible design tool.</span><span data-lang-zh>文字是最差的設計工具</span></h2>
+      <p><span data-lang-en>Telling an AI "a touch more padding… no, less… rounder" burns turns guessing numbers. UI Tweaker flips it: every adjustment is a structured, round-trippable value — never a vibe.</span><span data-lang-zh>叫 AI「padding 多一點⋯不對少一點⋯再圓一點」很耗回合在猜數字。UI Tweaker 反過來：每個調整都是可回填的結構化數值——不是憑感覺。</span></p>
+    </div>
+    <div class="studio reveal">
+      <div class="studio-grid">
+
+        <!-- LEFT: pages + layers tree -->
+        <div class="studio-layers">
+          <div class="studio-lay-sec">
+            <div class="studio-lay-h">Pages</div>
+            <div class="studio-page"><span class="ico" style="display:flex;color:var(--ink-faint)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg></span>Home</div>
+          </div>
+          <div class="studio-lay-sec">
+            <div class="studio-lay-h">Layers</div>
+            <div class="studio-row"><span class="car">›</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg></span><span class="studio-lay-name">Home screen</span></div>
+            <div class="studio-row on" data-target="#folderCard" style="padding-left:18px"><span class="car">⌄</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg></span><span class="studio-lay-name">Folder card</span></div>
+            <div class="studio-row" data-target=".fc-thumb" style="padding-left:36px"><span class="car leaf">›</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M5 17l4-4 3 3 3-4 4 5"/><circle cx="8.5" cy="9.5" r="1.4" fill="currentColor" stroke="none"/></svg></span><span class="studio-lay-name">Thumbnail</span></div>
+            <div class="studio-row" data-target=".fc-title" style="padding-left:36px"><span class="car leaf">›</span><span class="ico tnode">T</span><span class="studio-lay-name">Title</span></div>
+            <div class="studio-row" data-target=".fc-badge" style="padding-left:36px"><span class="car leaf">›</span><span class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg></span><span class="studio-lay-name">Count</span></div>
+            <div class="studio-row" data-target=".fc-icon" style="padding-left:36px"><span class="car leaf">›</span><span class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg></span><span class="studio-lay-name">Action icon</span></div>
+          </div>
+        </div>
+
+        <!-- CENTER: toolbar + live preview -->
+        <div class="studio-canvas">
+          <div class="studio-bar">
+            <div class="studio-seg" id="st-seg">
+              <button data-dev="narrow" title="Narrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="18" rx="1"/></svg></button>
+              <button data-dev="mobile" class="on" title="Mobile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg></button>
+              <button data-dev="wide" title="Desktop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/></svg></button>
+            </div>
+            <div class="studio-tools">
+              <button id="st-undo" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-1"/></svg></button>
+              <button id="st-redo" title="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h1"/></svg></button>
+              <button id="st-reset" title="Reset"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>
+              <button id="st-ruler" title="Rulers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.4 2.4 0 0 1 0-3.4l2.6-2.6a2.4 2.4 0 0 1 3.4 0z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/></svg></button>
+            </div>
+            <div class="studio-zoom">
+              <button id="st-zoomout" title="Zoom out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="20" y1="20" x2="16.5" y2="16.5"/></svg></button>
+              <span class="z" id="st-zoomval" title="Reset zoom">100%</span>
+              <button id="st-zoomin" title="Zoom in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="20" y1="20" x2="16.5" y2="16.5"/></svg></button>
+            </div>
+          </div>
+          <div class="studio-stage">
+            <div class="studio-rulers" aria-hidden="true"><span class="rc"></span><span class="rh"></span><span class="rv"></span></div>
+            <div class="studio-card-wrap" id="cardWrap">
+              <div class="folder-card" id="folderCard">
+                <div class="fc-thumb"></div>
+                <div class="fc-row"><span class="fc-title">Flower</span><span class="fc-badge">415</span></div>
+                <span class="fc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 9c0-2.5-1.5-4-3-4s-2.5 2-1 4M12 15c0 2.5 1.5 4 3 4s2.5-2 1-4M9 12c-2.5 0-4 1.5-4 3s2 2.5 4 1M15 12c2.5 0 4-1.5 4-3s-2-2.5-4-1"/></svg></span>
+              </div>
+              <div class="studio-tbox" id="studioTbox" aria-hidden="true">
+                <div class="tb-frame"></div>
+                <span class="tb-rotline"></span><span class="tb-rot"></span>
+                <span class="tb-h nw"></span><span class="tb-h n"></span><span class="tb-h ne"></span>
+                <span class="tb-h e"></span><span class="tb-h se"></span><span class="tb-h s"></span>
+                <span class="tb-h sw"></span><span class="tb-h w"></span>
+                <span class="tb-size" id="tbSize">208 × 196 px</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: control panel -->
+        <div class="studio-panel">
+          <div class="studio-panel-h"><span id="studioCurName">Folder card</span> <small data-lang-en>live from the real stylesheet</small><small data-lang-zh>讀取自真實樣式表</small></div>
+          <div class="studio-cats">
+            <details class="studio-cat" open><summary><span data-lang-en>Typography</span><span data-lang-zh>字型</span></summary><div class="studio-cat-body">
+              <select class="studio-select" id="st-font">
+                <option value="">Default font</option>
+                <option value="'Bricolage Grotesque',sans-serif">Bricolage Grotesque</option>
+                <option value="'Instrument Serif',serif">Instrument Serif</option>
+                <option value="'TASA Orbiter',sans-serif">TASA Orbiter</option>
+                <option value="'JetBrains Mono',monospace">JetBrains Mono</option>
+              </select>
+              <p class="studio-hint" data-lang-en>Try an open-source font on the selected text.</p><p class="studio-hint" data-lang-zh>替選取的文字試套開源字體。</p>
+            </div></details>
+            <details class="studio-cat" open><summary><span data-lang-en>Spacing</span><span data-lang-zh>間距</span></summary><div class="studio-cat-body">
+              <div class="studio-ctrl"><label>padding<span class="v" id="ov-pad">22 px</span></label><input type="range" id="st-pad" min="0" max="40" value="22" step="1"></div>
+              <div class="studio-ctrl"><label>gap<span class="v" id="ov-gap">12 px</span></label><input type="range" id="st-gap" min="0" max="28" value="12" step="1"></div>
+            </div></details>
+            <details class="studio-cat" open><summary><span data-lang-en>Size</span><span data-lang-zh>尺寸</span></summary><div class="studio-cat-body">
+              <div class="studio-ctrl"><label>scale<span class="v" id="ov-scale">100 %</span></label><input type="range" id="st-scale" min="50" max="200" value="100" step="1"></div>
+            </div></details>
+            <details class="studio-cat" open><summary><span data-lang-en>Radius</span><span data-lang-zh>圓角</span></summary><div class="studio-cat-body">
+              <div class="studio-ctrl"><label>radius<span class="v" id="ov-radius">18 px</span></label><input type="range" id="st-radius" min="0" max="40" value="18" step="1"></div>
+            </div></details>
+            <details class="studio-cat"><summary><span data-lang-en>Position / offset</span><span data-lang-zh>位置偏移</span></summary><div class="studio-cat-body">
+              <div class="studio-ctrl"><label>offset x<span class="v" id="ov-x">0 px</span></label><input type="range" id="st-x" min="-120" max="120" value="0" step="1"></div>
+              <div class="studio-ctrl"><label>offset y<span class="v" id="ov-y">0 px</span></label><input type="range" id="st-y" min="-120" max="120" value="0" step="1"></div>
+            </div></details>
+            <details class="studio-cat" open><summary><span data-lang-en>Shadow</span><span data-lang-zh>陰影</span></summary><div class="studio-cat-body">
+              <div class="studio-ctrl"><label>blur<span class="v" id="ov-shadow">22 px</span></label><input type="range" id="st-shadow" min="0" max="44" value="22" step="1"></div>
+            </div></details>
+            <details class="studio-cat"><summary><span data-lang-en>Effects</span><span data-lang-zh>效果</span></summary><div class="studio-cat-body"><p class="studio-hint" data-lang-en>No effects yet</p><p class="studio-hint" data-lang-zh>尚無效果</p><button class="studio-add" type="button"><span data-lang-en>+ Add effect</span><span data-lang-zh>+ 新增效果</span></button></div></details>
+            <details class="studio-cat"><summary><span data-lang-en>Frosted glass</span><span data-lang-zh>磨砂玻璃</span></summary><div class="studio-cat-body"><p class="studio-hint" data-lang-en>In the real tool: backdrop blur, saturation, tint.</p><p class="studio-hint" data-lang-zh>在真實工具中可調：背景模糊、飽和度、染色。</p></div></details>
+            <details class="studio-cat"><summary><span data-lang-en>Color</span><span data-lang-zh>顏色</span></summary><div class="studio-cat-body">
+              <div class="studio-crow"><span class="studio-clbl" data-lang-en>text</span><span class="studio-clbl" data-lang-zh>文字</span><input type="color" id="st-tcolor" value="#191512"></div>
+              <div class="studio-crow"><span class="studio-clbl" data-lang-en>fill</span><span class="studio-clbl" data-lang-zh>填色</span><input type="color" id="st-fcolor" value="#ffffff"></div>
+            </div></details>
+          </div>
+        </div>
+
+      </div>
+      <div class="studio-footer">
+        <div class="studio-summary" id="studioSummary">No changes yet</div>
+        <button class="studio-confirm" id="studioConfirm" type="button"><span data-lang-en>Confirm &amp; update code</span><span data-lang-zh>確認並更新程式碼</span></button>
+      </div>
+    </div>
+
+    <div class="studio-out" id="studioOut">
+      <div class="studio-out-top">
+        <span class="label">[UI Tweaker Confirm]</span>
+        <button class="copy-btn" id="studioCopy"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span id="studioCopyTxt" data-copy-en="Copy" data-copy-zh="複製">Copy</span></button>
+      </div>
+      <pre id="studioOutPre"></pre>
+    </div>
+
+    <p class="studio-note reveal"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="var(--blue)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg><span data-lang-en>Drag any slider on the right — the card updates live. Hit Confirm to see what your AI receives.</span><span data-lang-zh>拉右側任一滑桿——卡片即時更新。按確認，看 AI 會收到的數值。</span></p>
+  </div>
+</section>
+
+<section class="pad" id="features">
+  <div class="wrap">
+    <div class="head reveal">
+      <span class="kicker" data-lang-en>Features</span><span class="kicker" data-lang-zh>功能</span>
+      <h2><span data-lang-en>A real design tool, wired to your code.</span><span data-lang-zh>真正的設計工具，接上你的程式碼</span></h2>
+    </div>
+    <div class="spec">
+      <div class="spec-row reveal"><span class="idx">01</span><h3><span data-lang-en>Real styles, not guesses</span><span data-lang-zh>真實樣式，不用猜</span></h3><p><span data-lang-en>The preview links your project's real CSS and reads initial values via getComputedStyle — what you see matches production.</span><span data-lang-zh>預覽連結你專案的真實 CSS，用 getComputedStyle 讀初始值——所見即上線結果。</span></p></div>
+      <div class="spec-row reveal"><span class="idx">02</span><h3><span data-lang-en>Eight control categories</span><span data-lang-zh>八大控制分類</span></h3><p><span data-lang-en>Typography, spacing, size, radius, position/offset, shadow, frosted glass, color — each fully scrubbable.</span><span data-lang-zh>字型、間距、尺寸、圓角、位置偏移、陰影、磨砂玻璃、顏色——每項都能拖曳微調。</span></p></div>
+      <div class="spec-row reveal"><span class="idx">03</span><h3><span data-lang-en>Figma / PS interactions</span><span data-lang-zh>Figma／PS 操作</span></h3><p><span data-lang-en>Type-able number boxes, drag-to-scrub, linked corner radii, icon alignment, undo/redo with shortcuts.</span><span data-lang-zh>可打字數字框、拖曳刷值、圓角四角連動、圖示對齊、undo/redo 快捷鍵。</span></p></div>
+      <div class="spec-row reveal"><span class="idx">04</span><h3><span data-lang-en>The transform box</span><span data-lang-zh>變形框</span></h3><p><span data-lang-en>Select any element for an 8-handle box: corners scale proportionally, edges resize, drag to move, rotate, live px label.</span><span data-lang-zh>選任何元素都給 8 手把框：角等比縮放、邊改寬高、拖移、旋轉、即時 px 標籤。</span></p></div>
+      <div class="spec-row reveal"><span class="idx">05</span><h3><span data-lang-en>Writes back to source</span><span data-lang-zh>寫回原始碼</span></h3><p><span data-lang-en>On Confirm, copy the structured values to your AI — it locates the selectors, edits the real files, and verifies.</span><span data-lang-zh>按確認後，把結構化數值複製給 AI——它找到 selector、改真實檔案、再驗證。</span></p></div>
+      <div class="spec-row reveal"><span class="idx">06</span><h3><span data-lang-en>Works across AI tools</span><span data-lang-zh>跨 AI 工具</span></h3><p><span data-lang-en>Packaged as a Claude Code plugin, with portable adapters for Codex, Cursor, Windsurf, and plain skill folders.</span><span data-lang-zh>包裝成 Claude Code plugin，並提供 Codex、Cursor、Windsurf 與純 skill folder 的可攜 adapter。</span></p></div>
+    </div>
+  </div>
+</section>
+
+<section class="pad" id="how">
+  <div class="wrap">
+    <div class="head reveal">
+      <span class="kicker" data-lang-en>How it works</span><span class="kicker" data-lang-zh>運作方式</span>
+      <h2><span data-lang-en>From "feels off" to fixed code, in four.</span><span data-lang-zh>從「怪怪的」到改好程式碼，四步</span></h2>
+    </div>
+    <div class="steps">
+      <div class="step reveal"><span class="n">1</span><h4><span data-lang-en>Just ask</span><span data-lang-zh>直接開口</span></h4><p><span data-lang-en>"Help me tweak the card." Your AI opens the panel rendered from your real stylesheet.</span><span data-lang-zh>「幫我調整卡片。」AI 用你真實樣式表開出面板。</span></p></div>
+      <div class="step reveal"><span class="n">2</span><h4><span data-lang-en>Adjust visually</span><span data-lang-zh>視覺調整</span></h4><p><span data-lang-en>Scrub sliders, drag the transform box, watch the live preview update instantly.</span><span data-lang-zh>刷滑桿、拖變形框，即時預覽馬上跟著變。</span></p></div>
+      <div class="step reveal"><span class="n">3</span><h4><span data-lang-en>Confirm &amp; copy</span><span data-lang-zh>確認並複製</span></h4><p><span data-lang-en>Hit Confirm — the panel emits a clean, structured block of values and selectors.</span><span data-lang-zh>按確認——面板吐出乾淨的結構化數值與 selector。</span></p></div>
+      <div class="step reveal"><span class="n">4</span><h4><span data-lang-en>AI applies it</span><span data-lang-zh>AI 套用</span></h4><p><span data-lang-en>Paste to your AI. It edits the real files and verifies — your preview reloads, done.</span><span data-lang-zh>貼給 AI，它改真實檔案並驗證——預覽自動更新，完成。</span></p></div>
+    </div>
+  </div>
+</section>
+
+<section class="pad" id="install">
+  <div class="wrap">
+    <div class="head reveal">
+      <span class="kicker" data-lang-en>Install</span><span class="kicker" data-lang-zh>安裝</span>
+      <h2><span data-lang-en>Two lines for Claude Code.</span><span data-lang-zh>Claude Code 兩行搞定</span></h2>
+      <p><span data-lang-en>Or use the portable adapters for any other AI coding tool.</span><span data-lang-zh>其他 AI coding 工具則用可攜 adapter。</span></p>
+    </div>
+    <div class="install-wrap">
+      <div class="reveal">
+        <div class="tabs">
+          <button class="tab on" data-tab="claude">Claude Code</button>
+          <button class="tab" data-tab="codex">Codex</button>
+          <button class="tab" data-tab="cursor">Cursor</button>
+          <button class="tab" data-tab="windsurf">Windsurf</button>
+        </div>
+        <div class="code-card">
+          <div class="code-top"><span class="label" id="codeLabel">marketplace + install</span><button class="copy-btn" id="copyBtn"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span id="copyTxt" data-copy-en="Copy" data-copy-zh="複製">Copy</span></button></div>
+          <div class="code-body" id="codeBody"></div>
+        </div>
+      </div>
+      <div class="targets reveal">
+        <h4><span data-lang-en>Works with</span><span data-lang-zh>支援工具</span></h4>
+        <div class="works">
+          <div class="work"><span class="badge" style="background:#d97757">CC</span><div><strong>Claude Code</strong><small data-lang-en>Native plugin · auto-updatable</small><small data-lang-zh>原生 plugin · 可自動更新</small></div></div>
+          <div class="work"><span class="badge" style="background:#6b5fd0">Cx</span><div><strong>Codex</strong><small data-lang-en>Skill folder install</small><small data-lang-zh>skill folder 安裝</small></div></div>
+          <div class="work"><span class="badge" style="background:#2b2b2b">Cu</span><div><strong>Cursor</strong><small data-lang-en>Project rule + skill folder</small><small data-lang-zh>專案規則 + skill folder</small></div></div>
+          <div class="work"><span class="badge" style="background:#0e8f91">Ws</span><div><strong>Windsurf</strong><small data-lang-en>Project rule + skill folder</small><small data-lang-zh>專案規則 + skill folder</small></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section reveal">
+  <div class="wrap cta-inner">
+    <span class="kicker" data-lang-en>Open source · MIT</span><span class="kicker" data-lang-zh>開源 · MIT</span>
+    <h2><span data-lang-en>Made by a designer who got tired of <em>guessing</em>.</span><span data-lang-zh>一個受夠了<em>用猜的</em>設計師做的工具</span></h2>
+    <p><span data-lang-en>UI Tweaker is MIT-licensed and free. Star it, fork it, or open an issue — feedback makes it sharper.</span><span data-lang-zh>UI Tweaker 採 MIT 授權、完全免費。給星、fork、或開 issue——回饋讓它更銳利。</span></p>
+    <a class="btn-band" href="https://github.com/dhosruiasn/ui-tweaker" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.5 2 2 6.6 2 12.3c0 4.5 2.9 8.4 6.8 9.7.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.4-3.4-1.4-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.6 2.4 1.1 3 .9.1-.7.4-1.1.6-1.4-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.7 1a9.3 9.3 0 0 1 5 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.3 4.7-4.6 5 .4.3.7.9.7 1.9v2.8c0 .3.2.6.7.5 4-1.3 6.8-5.2 6.8-9.7C22 6.6 17.5 2 12 2z"/></svg><span data-lang-en>View on GitHub</span><span data-lang-zh>到 GitHub 看看</span></a>
+    <div class="pills"><span class="pill" data-lang-en>✓ Open source</span><span class="pill" data-lang-zh>✓ 開源</span><span class="pill">✓ MIT</span><span class="pill" data-lang-en>✓ Portable</span><span class="pill" data-lang-zh>✓ 可攜</span></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <div>
+      <div class="brand"><span class="logo" style="border:1.5px solid currentColor;width:26px;height:26px;display:inline-grid;place-items:center;color:var(--blue)"><svg viewBox="0 0 24 24" width="15" height="15" fill="none"><path d="M4 4h4M4 4v4M20 4h-4M20 4v4M4 20h4M4 20v-4M20 20h-4M20 20v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9 8l7 4-7 4V8z" fill="currentColor"/></svg></span>UI Tweaker</div>
+      <div class="foot-links">
+        <a href="#why" data-lang-en>why</a><a href="#why" data-lang-zh>為什麼</a>
+        <a href="#features" data-lang-en>features</a><a href="#features" data-lang-zh>功能</a>
+        <a href="#how" data-lang-en>how</a><a href="#how" data-lang-zh>運作方式</a>
+        <a href="#install" data-lang-en>install</a><a href="#install" data-lang-zh>安裝</a>
+        <a href="https://github.com/dhosruiasn/ui-tweaker" target="_blank" rel="noopener">github</a>
+      </div>
+    </div>
+    <p>MIT © 2026 HsuanTung Kao · <a href="https://github.com/dhosruiasn/ui-tweaker" target="_blank" rel="noopener">github.com/dhosruiasn/ui-tweaker</a></p>
+  </div>
+</footer>
+
+<script>
+  const snippets={
+    claude:{label:"marketplace + install",lines:['/plugin marketplace add dhosruiasn/ui-tweaker','/plugin install ui-tweaker']},
+    codex:{label:"clone + install",lines:['git clone https://github.com/dhosruiasn/ui-tweaker.git','cd ui-tweaker','scripts/install --target codex']},
+    cursor:{label:"clone + install",lines:['git clone https://github.com/dhosruiasn/ui-tweaker.git','cd ui-tweaker','scripts/install --target cursor --dest /path/to/project']},
+    windsurf:{label:"clone + install",lines:['git clone https://github.com/dhosruiasn/ui-tweaker.git','cd ui-tweaker','scripts/install --target windsurf --dest /path/to/project']}
+  };
+  let curTab='claude';
+  const codeBody=document.getElementById('codeBody');
+  const codeLabel=document.getElementById('codeLabel');
+  function renderCode(){
+    const s=snippets[curTab];
+    codeLabel.textContent=s.label;
+    codeBody.innerHTML=s.lines.map(l=>'<div><span class="c-cmd">$</span> '+l.replace(/</g,'&lt;')+'</div>').join('');
+  }
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.addEventListener('click',()=>{
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+      t.classList.add('on');curTab=t.dataset.tab;renderCode();
+    });
+  });
+  renderCode();
+
+  // live interactive studio demo — click the canvas OR a layer to select; sliders edit ONLY the selected element
+  (function(){
+    const el=id=>document.getElementById(id);
+    const card=el('folderCard'), cardWrap=el('cardWrap'), tbox=el('studioTbox'), tbSize=el('tbSize');
+    const summary=el('studioSummary'), out=el('studioOut'), outPre=el('studioOutPre');
+    if(!card) return;
+    const studio=card.closest('.studio'), curName=el('studioCurName');
+    const ids=['st-radius','st-pad','st-gap','st-shadow','st-scale','st-x','st-y'];
+    const PROP={'st-radius':'radius','st-pad':'pad','st-gap':'gap','st-shadow':'shadow','st-scale':'scale','st-x':'x','st-y':'y'};
+    const DEV={narrow:168,mobile:208,wide:264};
+    // pickable elements — key matches each layer's data-target; out = selector emitted in the confirm block
+    const PICK={
+      '#folderCard':{el:card, out:'.folder-card'},
+      '.fc-thumb':{el:card.querySelector('.fc-thumb'), out:'.folder-card .fc-thumb'},
+      '.fc-title':{el:card.querySelector('.fc-title'), out:'.folder-card .fc-title'},
+      '.fc-badge':{el:card.querySelector('.fc-badge'), out:'.folder-card .fc-badge'},
+      '.fc-icon':{el:card.querySelector('.fc-icon'), out:'.folder-card .fc-icon'}
+    };
+    const DEF_CARD={radius:18,pad:22,gap:12,shadow:22,scale:100,x:0,y:0,rot:0};
+    const state={}; let cur='#folderCard', zoom=1, history=[], hidx=-1;
+
+    const val=id=>Math.round(parseFloat(el(id).value)||0);
+    const clampSlider=(id,v)=>Math.max(+el(id).min,Math.min(+el(id).max,v));
+    const alphaStr=b=>Math.min(b/100+.08,.5).toFixed(2).replace(/^0/,'');
+    const shadowFor=b=>'0 '+Math.round(b/2)+'px '+b+'px rgba(228,67,30,'+alphaStr(b)+')';
+
+    function defFor(t){
+      if(t==='#folderCard') return Object.assign({},DEF_CARD);
+      const e=PICK[t].el, cs=getComputedStyle(e), rs=cs.borderTopLeftRadius;
+      const radius=rs.indexOf('%')>=0 ? Math.round(e.offsetWidth*parseFloat(rs)/100) : (Math.round(parseFloat(rs))||0);
+      return {radius:radius, pad:Math.round(parseFloat(cs.paddingLeft))||0, gap:Math.round(parseFloat(cs.gap))||0, shadow:0, scale:100, x:0, y:0, rot:0};
+    }
+    function st(t){ if(!state[t]) state[t]=defFor(t); return state[t]; }
+    function labelFor(t){ const r=document.querySelector('.studio-layers .studio-row[data-target="'+t+'"]'); return r?r.querySelector('.studio-lay-name').textContent:'Folder card'; }
+
+    function applyEl(t){
+      const e=PICK[t].el, s=st(t);
+      e.style.borderRadius=s.radius+'px';
+      e.style.padding=s.pad+'px';
+      e.style.gap=s.gap+'px';
+      e.style.boxShadow=s.shadow>0?shadowFor(s.shadow):'none';
+      e.style.transform=tfm(s);
+      e.style.fontFamily=s.font||'';
+      e.style.color=s.tcolor||'';
+      e.style.background=s.fcolor||'';
+    }
+    // combined transform string for an element's state (shared by the element + its transform box)
+    function tfm(s){ const tp=[]; if(s.x||s.y)tp.push('translate('+(s.x||0)+'px,'+(s.y||0)+'px)'); if(s.rot)tp.push('rotate('+s.rot+'deg)'); if(s.scale!==100)tp.push('scale('+(s.scale/100)+')'); return tp.join(' '); }
+    // the box sits on the element's layout box and shares its transform, so it scales/rotates/moves with it
+    function placeBox(){
+      const e=PICK[cur].el, s=st(cur);
+      tbox.style.left=e.offsetLeft+'px'; tbox.style.top=e.offsetTop+'px';
+      tbox.style.width=e.offsetWidth+'px'; tbox.style.height=e.offsetHeight+'px';
+      tbox.style.transform=tfm(s);
+      tbSize.textContent=Math.round(e.offsetWidth*(s.scale/100))+' × '+Math.round(e.offsetHeight*(s.scale/100))+' px';
+    }
+    function updLabels(){
+      el('ov-radius').textContent=val('st-radius')+' px';
+      el('ov-pad').textContent=val('st-pad')+' px';
+      el('ov-gap').textContent=val('st-gap')+' px';
+      el('ov-shadow').textContent=val('st-shadow')+' px';
+      el('ov-scale').textContent=val('st-scale')+' %';
+      el('ov-x').textContent=val('st-x')+' px';
+      el('ov-y').textContent=val('st-y')+' px';
+    }
+    function rgbToHex(c){ const m=(c||'').match(/\d+/g); if(!m) return '#000000'; return '#'+m.slice(0,3).map(n=>(+n).toString(16).padStart(2,'0')).join(''); }
+    function loadSliders(){
+      const s=st(cur);
+      el('st-radius').value=clampSlider('st-radius',s.radius);
+      el('st-pad').value=clampSlider('st-pad',s.pad);
+      el('st-gap').value=clampSlider('st-gap',s.gap);
+      el('st-shadow').value=clampSlider('st-shadow',s.shadow);
+      el('st-scale').value=clampSlider('st-scale',s.scale);
+      el('st-x').value=clampSlider('st-x',s.x||0);
+      el('st-y').value=clampSlider('st-y',s.y||0);
+      updLabels();
+      el('st-font').value=s.font||'';
+      const cs=getComputedStyle(PICK[cur].el);
+      el('st-tcolor').value=s.tcolor||rgbToHex(cs.color);
+      el('st-fcolor').value=s.fcolor||rgbToHex(cs.backgroundColor);
+    }
+    function cssLines(t){
+      const s=st(t), L=['border-radius: '+s.radius+'px;','padding: '+s.pad+'px;','gap: '+s.gap+'px;','box-shadow: '+(s.shadow>0?shadowFor(s.shadow):'none')+';'];
+      const tx=tfm(s); if(tx) L.push('transform: '+tx+';');
+      if(s.font) L.push('font-family: '+s.font+';');
+      if(s.tcolor) L.push('color: '+s.tcolor+';');
+      if(s.fcolor) L.push('background: '+s.fcolor+';');
+      return L;
+    }
+    function renderOut(){
+      outPre.textContent='[UI Tweaker Confirm]\nComponent: Pikmin Home #screen-home > '+PICK[cur].out+'\nSource: pikmin-react/src/styles.css\n\n'+PICK[cur].out+' {\n'+cssLines(cur).map(l=>'  '+l).join('\n')+'\n}';
+    }
+    function renderSummary(){
+      const zh=document.documentElement.getAttribute('data-lang')==='zh';
+      const s=st(cur), d=defFor(cur), c=[];
+      if(s.radius!==d.radius) c.push('border-radius: '+s.radius+'px');
+      if(s.pad!==d.pad) c.push('padding: '+s.pad+'px');
+      if(s.gap!==d.gap) c.push('gap: '+s.gap+'px');
+      if(s.shadow!==d.shadow) c.push('box-shadow: '+(s.shadow>0?shadowFor(s.shadow):'none'));
+      if((s.x||0)!==0||(s.y||0)!==0) c.push('offset: '+(s.x||0)+'px, '+(s.y||0)+'px');
+      if(s.scale!==d.scale) c.push('scale: '+(s.scale/100));
+      if(s.rot) c.push('rotate: '+s.rot+'°');
+      if(s.font) c.push('font-family: '+s.font.replace(/'/g,'').split(',')[0]);
+      if(s.tcolor) c.push('color: '+s.tcolor);
+      if(s.fcolor) c.push('fill: '+s.fcolor);
+      summary.textContent=c.length?(labelFor(cur)+' ·\n'+c.join('\n')):(zh?'尚無變更':'No changes yet');
+    }
+    function refresh(){ placeBox(); renderSummary(); if(out.classList.contains('show')) renderOut(); }
+
+    function select(t){
+      if(!PICK[t]) t='#folderCard';
+      cur=t;
+      document.querySelectorAll('.studio-layers .studio-row').forEach(r=>r.classList.toggle('on',r.getAttribute('data-target')===t));
+      if(curName) curName.textContent=labelFor(t);
+      st(t); loadSliders(); refresh();
+    }
+
+    // sliders edit ONLY the current element
+    ids.forEach(id=>{
+      el(id).addEventListener('input',()=>{ st(cur)[PROP[id]]=val(id); applyEl(cur); updLabels(); refresh(); });
+      el(id).addEventListener('change',pushHistory);
+    });
+    // Typography: try an open-source font on the selected element (dropdown)
+    el('st-font').addEventListener('change',()=>{ st(cur).font=el('st-font').value; applyEl(cur); refresh(); pushHistory(); });
+    // Color: text + fill on the selected element
+    el('st-tcolor').addEventListener('input',()=>{ st(cur).tcolor=el('st-tcolor').value; applyEl(cur); refresh(); });
+    el('st-tcolor').addEventListener('change',pushHistory);
+    el('st-fcolor').addEventListener('input',()=>{ st(cur).fcolor=el('st-fcolor').value; applyEl(cur); refresh(); });
+    el('st-fcolor').addEventListener('change',pushHistory);
+
+    // ---- undo / redo (snapshot of the whole per-element state) ----
+    function snapshot(){ return JSON.stringify({s:state,c:cur}); }
+    function syncHist(){ el('st-undo').disabled=hidx<=0; el('st-redo').disabled=hidx>=history.length-1; }
+    function pushHistory(){ const s=snapshot(); if(history[hidx]===s)return; history=history.slice(0,hidx+1); history.push(s); hidx=history.length-1; syncHist(); }
+    function clearInline(){ Object.keys(PICK).forEach(t=>{ const e=PICK[t].el; e.style.borderRadius='';e.style.padding='';e.style.gap='';e.style.boxShadow='';e.style.transform='';e.style.fontFamily='';e.style.color='';e.style.background=''; }); }
+    function restore(snap){ const o=JSON.parse(snap); clearInline(); Object.keys(state).forEach(k=>delete state[k]); Object.assign(state,o.s); Object.keys(PICK).forEach(t=>{ if(state[t]) applyEl(t); }); select(o.c); }
+
+    el('st-undo').addEventListener('click',()=>{ if(hidx>0){hidx--;restore(history[hidx]);syncHist();} });
+    el('st-redo').addEventListener('click',()=>{ if(hidx<history.length-1){hidx++;restore(history[hidx]);syncHist();} });
+    el('st-reset').addEventListener('click',()=>{
+      clearInline(); Object.keys(state).forEach(k=>delete state[k]);
+      zoom=1; cardWrap.style.transform=''; setZoomLabel(); setDevice('mobile');
+      state['#folderCard']=Object.assign({},DEF_CARD); applyEl('#folderCard');
+      select('#folderCard'); pushHistory();
+    });
+    el('st-ruler').addEventListener('click',function(){ this.classList.toggle('on'); studio.classList.toggle('show-rulers'); });
+
+    function setDevice(d){ document.querySelectorAll('#st-seg button').forEach(b=>b.classList.toggle('on',b.dataset.dev===d)); card.style.width=DEV[d]+'px'; refresh(); }
+    document.querySelectorAll('#st-seg button').forEach(b=>b.addEventListener('click',()=>setDevice(b.dataset.dev)));
+
+    function setZoomLabel(){ el('st-zoomval').textContent=Math.round(zoom*100)+'%'; }
+    function applyZoom(){ cardWrap.style.transform=zoom!==1?'scale('+zoom+')':''; setZoomLabel(); placeBox(); }
+    el('st-zoomout').addEventListener('click',()=>{ zoom=Math.max(.5,Math.round((zoom-.1)*10)/10); applyZoom(); });
+    el('st-zoomin').addEventListener('click',()=>{ zoom=Math.min(1.6,Math.round((zoom+.1)*10)/10); applyZoom(); });
+    el('st-zoomval').addEventListener('click',()=>{ zoom=1; applyZoom(); });
+
+    // select by clicking a layer row
+    document.querySelectorAll('.studio-layers .studio-row').forEach(row=>{ const t=row.getAttribute('data-target'); row.addEventListener('click',()=>{ if(t) select(t); }); });
+
+    // ---- direct manipulation in the canvas: click to select, drag to move, handles to resize/rotate ----
+    let drag=null;
+    function elCenter(){ const r=PICK[cur].el.getBoundingClientRect(); return {x:r.left+r.width/2,y:r.top+r.height/2}; }
+    function syncDragSliders(){ el('st-scale').value=clampSlider('st-scale',st(cur).scale); el('st-x').value=clampSlider('st-x',st(cur).x||0); el('st-y').value=clampSlider('st-y',st(cur).y||0); updLabels(); }
+    // click-to-drill + drag-to-move on each pickable element (children stop bubbling so the card doesn't grab it)
+    Object.keys(PICK).forEach(t=>{
+      PICK[t].el.addEventListener('pointerdown',e=>{
+        if(e.target.isContentEditable) return;        // let text editing use the pointer
+        if(t!=='#folderCard') e.stopPropagation();
+        if(cur!==t) select(t);
+        const s=st(cur);
+        drag={mode:'move',px:e.clientX,py:e.clientY,bx:s.x||0,by:s.y||0,moved:false};
+      });
+    });
+    // resize (uniform scale from centre) via the 8 handles
+    tbox.querySelectorAll('.tb-h').forEach(h=>h.addEventListener('pointerdown',e=>{
+      e.stopPropagation(); e.preventDefault(); const s=st(cur),c=elCenter();
+      drag={mode:'scale',cx:c.x,cy:c.y,d0:Math.hypot(e.clientX-c.x,e.clientY-c.y)||1,base:s.scale,moved:true};
+      try{h.setPointerCapture(e.pointerId);}catch(_){ }
+    }));
+    // rotate via the rotate handle
+    const rotH=tbox.querySelector('.tb-rot');
+    if(rotH) rotH.addEventListener('pointerdown',e=>{
+      e.stopPropagation(); e.preventDefault(); const s=st(cur),c=elCenter();
+      drag={mode:'rotate',cx:c.x,cy:c.y,a0:Math.atan2(e.clientY-c.y,e.clientX-c.x),base:s.rot||0,moved:true};
+      try{rotH.setPointerCapture(e.pointerId);}catch(_){ }
+    });
+    window.addEventListener('pointermove',e=>{
+      if(!drag) return; const s=st(cur), z=zoom||1;
+      if(drag.mode==='move'){
+        if(!drag.moved && Math.abs(e.clientX-drag.px)+Math.abs(e.clientY-drag.py)<3) return;
+        drag.moved=true; e.preventDefault();
+        s.x=Math.max(-120,Math.min(120,Math.round(drag.bx+(e.clientX-drag.px)/z)));
+        s.y=Math.max(-120,Math.min(120,Math.round(drag.by+(e.clientY-drag.py)/z)));
+      } else if(drag.mode==='scale'){
+        s.scale=Math.max(50,Math.min(200,Math.round(drag.base*Math.hypot(e.clientX-drag.cx,e.clientY-drag.cy)/drag.d0)));
+      } else if(drag.mode==='rotate'){
+        s.rot=Math.round(drag.base+(Math.atan2(e.clientY-drag.cy,e.clientX-drag.cx)-drag.a0)*180/Math.PI);
+      }
+      applyEl(cur); syncDragSliders(); placeBox(); renderSummary(); if(out.classList.contains('show')) renderOut();
+    });
+    window.addEventListener('pointerup',()=>{ if(drag){ const moved=drag.moved; drag=null; if(moved) pushHistory(); } });
+
+    // double-click a text node to edit it inline
+    ['.fc-title','.fc-badge'].forEach(t=>{
+      const e=PICK[t].el;
+      e.addEventListener('dblclick',ev=>{ ev.stopPropagation(); select(t); e.setAttribute('contenteditable','true'); e.focus();
+        const r=document.createRange(); r.selectNodeContents(e); const s=getSelection(); s.removeAllRanges(); s.addRange(r); });
+      e.addEventListener('input',()=>{ if(e.isContentEditable) placeBox(); });
+      e.addEventListener('blur',()=>{ e.removeAttribute('contenteditable'); placeBox(); });
+      e.addEventListener('keydown',ev=>{ if(ev.key==='Enter'){ ev.preventDefault(); e.blur(); } });
+    });
+
+    // confirm + copy
+    el('studioConfirm').addEventListener('click',()=>{ renderOut(); out.classList.add('show'); out.scrollIntoView({behavior:'smooth',block:'nearest'}); });
+    const sCopy=el('studioCopy'), sCopyTxt=el('studioCopyTxt');
+    sCopy.addEventListener('click',()=>{ navigator.clipboard.writeText(outPre.textContent).then(()=>{ sCopy.classList.add('done'); const zh=document.documentElement.getAttribute('data-lang')==='zh'; const prev=sCopyTxt.textContent; sCopyTxt.textContent=zh?'已複製':'Copied'; setTimeout(()=>{sCopy.classList.remove('done');sCopyTxt.textContent=prev;},1600); }); });
+    el('langBtn').addEventListener('click',renderSummary);
+    window.addEventListener('resize',()=>{ clearTimeout(window.__stz); window.__stz=setTimeout(placeBox,160); });
+
+    // init: card shows its signature look; everything else stays live from the stylesheet until edited
+    state['#folderCard']=Object.assign({},DEF_CARD); applyEl('#folderCard');
+    select('#folderCard'); setZoomLabel(); pushHistory();
+  })();
+  const copyBtn=document.getElementById('copyBtn');
+  copyBtn.addEventListener('click',()=>{
+    const text=snippets[curTab].lines.join('\n');
+    navigator.clipboard.writeText(text).then(()=>{
+      copyBtn.classList.add('done');
+      const txt=document.getElementById('copyTxt');
+      const prev=txt.textContent;
+      txt.textContent=document.documentElement.getAttribute('data-lang')==='zh'?'已複製':'Copied';
+      setTimeout(()=>{copyBtn.classList.remove('done');txt.textContent=prev;},1600);
+    });
+  });
+  const langBtn=document.getElementById('langBtn');
+  function applyLang(l){
+    document.documentElement.setAttribute('data-lang',l);
+    document.documentElement.setAttribute('lang',l==='zh'?'zh-Hant':'en');
+    langBtn.textContent=l==='zh'?'EN':'中文';
+    const txt=document.getElementById('copyTxt');
+    txt.textContent=txt.getAttribute(l==='zh'?'data-copy-zh':'data-copy-en');
+  }
+  langBtn.addEventListener('click',()=>{
+    const cur=document.documentElement.getAttribute('data-lang')||'en';
+    applyLang(cur==='zh'?'en':'zh');
+  });
+  const themeBtn=document.getElementById('themeBtn');
+  const themeIcon=document.getElementById('themeIcon');
+  const sun='<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+  const moon='<path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/>';
+  function applyTheme(t){
+    document.documentElement.setAttribute('data-theme',t);
+    themeIcon.innerHTML=t==='dark'?moon:sun;
+  }
+  themeBtn.addEventListener('click',()=>{
+    const cur=document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light';
+    applyTheme(cur==='dark'?'light':'dark');
+  });
+  applyTheme(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  applyLang('en');
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12});
+  document.querySelectorAll('.reveal').forEach((el,i)=>{el.style.transitionDelay=(Math.min(i,6)*60)+'ms';io.observe(el);});
+
+  // hero bracket notes — DVD-screensaver bounce (diagonal motion, edge bounce, recolor on hit)
+  (function(){
+    const wrap=document.querySelector('.hero-notes');
+    const notes=wrap?Array.prototype.slice.call(wrap.querySelectorAll('.hero-note')):[];
+    if(!wrap||!notes.length) return;
+    // high-contrast saturated palette — readable on both the warm-paper light bg and the dark bg
+    const COLORS=['#e4431e','#ff7a00','#1f9d3a','#0a8f9c','#2563ff','#7a2ff5','#d61f7a','#c81d4e'];
+    const isDesktop=()=>window.matchMedia('(min-width:981px)').matches;
+    const rand=(a,b)=>a+Math.random()*(b-a);
+    const pick=cur=>{let c;do{c=COLORS[(Math.random()*COLORS.length)|0];}while(c===cur);return c;};
+    const items=notes.map((el,i)=>({el,x:0,y:0,vx:0,vy:0,color:COLORS[i%COLORS.length]}));
+    let raf=0,last=0,running=false;
+    function place(){
+      const W=wrap.clientWidth,H=wrap.clientHeight;
+      items.forEach((it,i)=>{
+        const w=it.el.offsetWidth,h=it.el.offsetHeight;
+        it.x=rand(0,Math.max(0,W-w));
+        it.y=rand(0,Math.max(0,H-h));
+        const sp=rand(55,80);                          // px / sec
+        let ax=rand(.5,1)*(Math.random()<.5?-1:1), ay=rand(.5,1)*(Math.random()<.5?-1:1);
+        const m=Math.hypot(ax,ay)||1; it.vx=ax/m*sp; it.vy=ay/m*sp;   // diagonal, normalised
+        it.color=COLORS[i%COLORS.length]; it.el.style.color=it.color;
+        it.el.style.transform='translate3d('+it.x+'px,'+it.y+'px,0)';
+      });
+    }
+    function frame(t){
+      if(!running) return;
+      if(!last) last=t;
+      const dt=Math.min(.05,(t-last)/1000); last=t;
+      const W=wrap.clientWidth,H=wrap.clientHeight;
+      for(const it of items){
+        const w=it.el.offsetWidth,h=it.el.offsetHeight,mx=Math.max(0,W-w),my=Math.max(0,H-h);
+        it.x+=it.vx*dt; it.y+=it.vy*dt;
+        let hit=false;
+        if(it.x<=0){it.x=0;it.vx=Math.abs(it.vx);hit=true;}
+        else if(it.x>=mx){it.x=mx;it.vx=-Math.abs(it.vx);hit=true;}
+        if(it.y<=0){it.y=0;it.vy=Math.abs(it.vy);hit=true;}
+        else if(it.y>=my){it.y=my;it.vy=-Math.abs(it.vy);hit=true;}
+        if(hit){it.color=pick(it.color);it.el.style.color=it.color;}
+        it.el.style.transform='translate3d('+it.x+'px,'+it.y+'px,0)';
+      }
+      raf=requestAnimationFrame(frame);
+    }
+    function start(){ if(running||!isDesktop())return; running=true; last=0; raf=requestAnimationFrame(frame); }
+    function stop(){ running=false; if(raf)cancelAnimationFrame(raf); raf=0; }
+    function reset(){ stop(); if(isDesktop()){ place(); start(); } else { notes.forEach(n=>{n.style.transform='';n.style.color='';}); } }
+    function onResize(){
+      if(!isDesktop()){ stop(); notes.forEach(n=>{n.style.transform='';n.style.color='';}); return; }
+      if(!running){ reset(); return; }                 // returned from mobile → re-seed
+      const W=wrap.clientWidth,H=wrap.clientHeight;     // keep motion, just clamp inside new bounds
+      items.forEach(it=>{ const w=it.el.offsetWidth,h=it.el.offsetHeight;
+        it.x=Math.min(Math.max(0,it.x),Math.max(0,W-w)); it.y=Math.min(Math.max(0,it.y),Math.max(0,H-h));
+        it.el.style.transform='translate3d('+it.x+'px,'+it.y+'px,0)'; });
+    }
+    // pause when the hero is scrolled out of view (perf)
+    new IntersectionObserver(es=>{es.forEach(e=>{ if(e.isIntersecting) start(); else stop(); });},{threshold:0}).observe(wrap);
+    let rt; window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(onResize,160);});
+    reset();
+    if(document.fonts&&document.fonts.ready) document.fonts.ready.then(reset);
+    window.addEventListener('load',reset);
+  })();
+
+  // scroll-scrub: hero pins; the headline scatters letter-by-letter outward while the intro statement is revealed
+  (function(){
+    const stage=document.getElementById('heroStage'); if(!stage) return;
+    const hero=stage.querySelector('.hero');
+    const title=hero.querySelector('.title'), cta=hero.querySelector('.hero-cta'), notes=hero.querySelector('.hero-notes');
+    const readout=document.getElementById('scrubReadout'), reveal=document.getElementById('heroReveal');
+    const desktop=()=>window.matchMedia('(min-width:981px)').matches;
+    // split each language headline into per-letter spans (skip <br>; recurse into the accent span so it keeps its colour + scrub)
+    function split(root){
+      if(root.dataset.split) return; root.dataset.split='1';
+      (function walk(node){
+        Array.prototype.slice.call(node.childNodes).forEach(n=>{
+          if(n.nodeType===3){
+            const frag=document.createDocumentFragment();
+            n.textContent.split('').forEach(c=>{
+              if(c===' '||c===' '){ frag.appendChild(document.createTextNode(c)); return; }
+              const s=document.createElement('span'); s.className='ch'; s.textContent=c;
+              const a=Math.random()*Math.PI*2;
+              s._dx=Math.cos(a); s._dy=Math.sin(a); s._dist=0.5+Math.random()*0.95; s._rot=(Math.random()-.5)*170;
+              frag.appendChild(s);
+            });
+            node.replaceChild(frag,n);
+          } else if(n.nodeType===1 && n.tagName!=='BR'){ walk(n); }
+        });
+      })(root);
+    }
+    title.querySelectorAll('[data-lang-en],[data-lang-zh]').forEach(split);
+    const chs=Array.prototype.slice.call(title.querySelectorAll('.ch'));
+    let ticking=false;
+    function frame(){
+      ticking=false;
+      if(!desktop()){ chs.forEach(c=>{c.style.transform='';c.style.opacity='';}); [cta,notes,readout].forEach(el=>{ if(el){el.style.transform='';el.style.opacity='';} }); if(reveal){reveal.style.opacity='';reveal.style.transform='';} return; }
+      const vh=window.innerHeight, vw=window.innerWidth, total=Math.max(1,stage.offsetHeight-vh);
+      const p=Math.min(1,Math.max(0,-stage.getBoundingClientRect().top/total));
+      const e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;     // easeInOut
+      const D=Math.max(vw,vh)*1.15, op=String(Math.max(0,1-p*1.3));
+      for(const c of chs){ c.style.transform='translate3d('+(c._dx*c._dist*D*e)+'px,'+(c._dy*c._dist*D*e)+'px,0) rotate('+(c._rot*e)+'deg)'; c.style.opacity=op; }
+      cta.style.transform='translate3d(0,'+(e*0.6*vh)+'px,0)'; cta.style.opacity=String(Math.max(0,1-p*1.8));
+      if(readout) readout.style.opacity=String(Math.max(0,1-p*2.6));
+      if(notes){ notes.style.transform='scale('+(1+e*0.75)+')'; notes.style.opacity=String(Math.max(0,1-p*1.25)); }
+      if(reveal){ const rp=Math.min(1,Math.max(0,(p-0.3)/0.55)); reveal.style.opacity=String(rp); reveal.style.transform='translate3d(0,'+((1-rp)*26)+'px,0)'; }
+    }
+    function onScroll(){ if(!ticking){ ticking=true; requestAnimationFrame(frame); } }
+    window.addEventListener('scroll',onScroll,{passive:true});
+    window.addEventListener('resize',onScroll);
+    frame();
+  })();
+
+  // "Move them." / "直接動手" — drag horizontally to scrub its letter-spacing (the word does what it says)
+  (function(){
+    const words=Array.prototype.slice.call(document.querySelectorAll('.js-scrub'));
+    const ro=document.getElementById('scrubReadout');
+    const vEl=ro?ro.querySelector('.v'):null;
+    const hero=document.querySelector('.hero');
+    if(!words.length||!hero) return;
+    const MIN=-6,K=.55,CEIL=160,EDGE=120;   // EDGE = total horizontal breathing room kept inside the viewport
+    let ls=0,dragging=false,hover=false,startX=0,startLS=0;
+    const baseW=new Map();
+    function measure(){ words.forEach(w=>{ const p=w.style.letterSpacing; w.style.letterSpacing='0px'; baseW.set(w,w.offsetWidth); w.style.letterSpacing=p; }); }
+    function visibleWord(){ for(const w of words){ if(w.offsetWidth>0) return w; } return words[0]; }
+    // max letter-spacing that still fits the (centered) word inside the viewport: width = w0 + n*ls
+    function maxLS(){ const w=visibleWord(); const w0=baseW.get(w)||w.offsetWidth; const n=Math.max(1,(w.textContent||'').length); return Math.max(0,Math.min(CEIL,(hero.clientWidth-EDGE-w0)/n)); }
+    function render(){ const mx=maxLS(); ls=Math.max(MIN,Math.min(mx,ls)); words.forEach(w=>{w.style.letterSpacing=ls+'px';}); if(vEl) vEl.textContent=Math.round(ls)+' px'; if(ro) ro.classList.toggle('on',hover||dragging); }
+    words.forEach(w=>{
+      w.addEventListener('pointerenter',()=>{hover=true;render();});
+      w.addEventListener('pointerleave',()=>{hover=false;render();});
+      w.addEventListener('pointerdown',e=>{dragging=true;startX=e.clientX;startLS=ls;try{w.setPointerCapture(e.pointerId);}catch(_){ } e.preventDefault();render();});
+      w.addEventListener('dblclick',()=>{ls=0;render();});
+    });
+    window.addEventListener('pointermove',e=>{ if(!dragging)return; ls=Math.max(MIN,Math.min(maxLS(),startLS+(e.clientX-startX)*K)); render(); });
+    window.addEventListener('pointerup',()=>{ if(dragging){dragging=false;render();} });
+    let rt2; window.addEventListener('resize',()=>{clearTimeout(rt2);rt2=setTimeout(()=>{measure();render();},160);});
+    const lb=document.getElementById('langBtn'); if(lb) lb.addEventListener('click',()=>setTimeout(()=>{measure();render();},0));
+    measure(); render();
+    if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>{measure();render();});
+    window.addEventListener('load',()=>{measure();render();});
+  })();
+</script>
+</body>
+</html>

@@ -92,6 +92,7 @@
   .hero-reveal .intro-text{font-family:var(--display);font-weight:400;font-size:clamp(1.5rem,3.2vw,2.5rem);line-height:1.32;letter-spacing:-.01em;max-width:780px;color:var(--ink);text-align:center}
   .hero-reveal .intro-text em{font-style:normal;font-weight:600;color:var(--blue)}
   .hero .title,.hero .hero-cta,.hero-notes{will-change:transform,opacity}
+  .title .word{display:inline-block}
   .title .ch{display:inline-block;will-change:transform,opacity}
   h1.title{font-family:var(--display);font-weight:600;font-size:clamp(3rem,11vw,8.6rem);line-height:.94;letter-spacing:-.035em;margin:0;max-width:15ch}
   html[data-lang="zh"] h1.title{word-break:keep-all;max-width:none}
@@ -202,10 +203,8 @@
   .btn-band:hover{transform:translateY(-2px)}
   .pills{display:flex;gap:22px;margin-top:30px;flex-wrap:wrap}
   .pill{font-family:var(--mono);font-size:.8rem;opacity:.82;display:inline-flex;align-items:center;gap:7px}
-  /* zh CTA centred */
-  html[data-lang="zh"] .cta-inner{margin-left:auto;margin-right:auto;text-align:center}
-  html[data-lang="zh"] .cta-section .kicker{justify-content:center}
-  html[data-lang="zh"] .cta-section .pills{justify-content:center}
+  /* zh CTA: centre the whole group as a block; keep its text left-aligned */
+  html[data-lang="zh"] .cta-inner{margin-left:auto;margin-right:auto}
 
   /* ===== footer ===== */
   footer{padding:54px 0 64px;border-top:1px solid var(--border)}
@@ -970,12 +969,17 @@
         Array.prototype.slice.call(node.childNodes).forEach(n=>{
           if(n.nodeType===3){
             const frag=document.createDocumentFragment();
-            n.textContent.split('').forEach(c=>{
-              if(c===' '||c===' '){ frag.appendChild(document.createTextNode(c)); return; }
-              const s=document.createElement('span'); s.className='ch'; s.textContent=c;
-              const a=Math.random()*Math.PI*2;
-              s._dx=Math.cos(a); s._dy=Math.sin(a); s._dist=0.5+Math.random()*0.95; s._rot=(Math.random()-.5)*170;
-              frag.appendChild(s);
+            n.textContent.split(/(\s+)/).forEach(function(tok){
+              if(tok==='') return;
+              if(/^\s+$/.test(tok)){ frag.appendChild(document.createTextNode(tok)); return; }
+              var word=document.createElement('span'); word.className='word';
+              tok.split('').forEach(function(c){
+                var s=document.createElement('span'); s.className='ch'; s.textContent=c;
+                var a=Math.random()*Math.PI*2;
+                s._dx=Math.cos(a); s._dy=Math.sin(a); s._dist=0.5+Math.random()*0.95; s._rot=(Math.random()-.5)*170;
+                word.appendChild(s);
+              });
+              frag.appendChild(word);
             });
             node.replaceChild(frag,n);
           } else if(n.nodeType===1 && n.tagName!=='BR'){ walk(n); }

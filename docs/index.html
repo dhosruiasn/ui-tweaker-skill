@@ -81,41 +81,23 @@
     min-height:50px;border:2px solid var(--ink);border-radius:var(--radius-pill);
     background:transparent;color:var(--ink);font-family:var(--sans);font-weight:700;
     line-height:1;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;
-    transition:color .18s ease,border-color .18s ease,transform .18s ease;
+    transition:background .18s ease,color .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease;
   }
   .nav-links a{font-size:1.08rem;padding:0 30px;min-width:108px}
-  .nav-links a::before,
-  .icon-btn::before{
-    content:"";position:absolute;inset:-4px -6px;z-index:-1;opacity:0;
-    background:var(--blue);
-    border-radius:43% 57% 49% 51% / 58% 42% 56% 44%;
-    transform:rotate(3deg) scale(.92);
-    transition:opacity .18s ease,transform .18s ease,border-radius .18s ease;
-  }
+  /* hover: the pill fills solid with a small lift + hard offset shadow (clean pill, not a blob) */
   .nav-links a:hover,
   .nav-links a:focus-visible,
   .icon-btn:hover,
   .icon-btn:focus-visible{
-    border-color:transparent;color:#fff;transform:rotate(2deg);
+    background:var(--blue);border-color:var(--blue);color:#fff;
+    transform:translate(-1px,-2px) rotate(-1.5deg);
+    box-shadow:3px 4px 0 var(--blue-deep);
     outline:none;
-  }
-  .nav-links a:hover::before,
-  .nav-links a:focus-visible::before,
-  .icon-btn:hover::before,
-  .icon-btn:focus-visible::before{
-    opacity:1;transform:rotate(3deg) scale(1);
-    border-radius:36% 64% 41% 59% / 61% 38% 62% 39%;
   }
   .nav-links a:nth-child(2n):hover,
   .nav-links a:nth-child(2n):focus-visible,
   .icon-btn:nth-child(2n):hover,
-  .icon-btn:nth-child(2n):focus-visible{transform:rotate(-2deg)}
-  .nav-links a:nth-child(2n)::before,
-  .icon-btn:nth-child(2n)::before{transform:rotate(-3deg) scale(.92)}
-  .nav-links a:nth-child(2n):hover::before,
-  .nav-links a:nth-child(2n):focus-visible::before,
-  .icon-btn:nth-child(2n):hover::before,
-  .icon-btn:nth-child(2n):focus-visible::before{transform:rotate(-3deg) scale(1)}
+  .icon-btn:nth-child(2n):focus-visible{ transform:translate(-1px,-2px) rotate(1.5deg) }
   .nav-tools{display:flex;align-items:center;gap:16px;justify-self:end}
   .icon-btn{height:50px;min-width:84px;padding:0 22px;font-size:1.05rem;cursor:pointer}
   .icon-btn.sq{width:50px;min-width:50px;padding:0}

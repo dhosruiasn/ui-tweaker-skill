@@ -41,7 +41,8 @@
     --grain:.07;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  html{scroll-behavior:smooth}
+  /* nav/anchor clicks JUMP straight to the section (no smooth-scroll whipping through the pinned hero motion); offset for the sticky nav */
+  html{scroll-padding-top:96px}
   body{
     font-family:var(--sans);color:var(--ink);background:var(--bg);
     min-height:100vh;-webkit-font-smoothing:antialiased;line-height:1.55;overflow-x:hidden;
@@ -1126,9 +1127,9 @@
       var e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;           // easeInOut
       inner.style.transform='translate3d('+((1-e)*-46)+'vw,0,0)';
     }
-    function onScroll(){ if(!ticking){ ticking=true; requestAnimationFrame(frame); } }
-    window.addEventListener('scroll',onScroll,{passive:true});
-    window.addEventListener('resize',onScroll);
+    // run synchronously on scroll so an instant nav-jump to #why corrects the transform before paint (no off-left flash)
+    window.addEventListener('scroll',frame,{passive:true});
+    window.addEventListener('resize',frame);
     frame();
   })();
 

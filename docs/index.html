@@ -56,6 +56,10 @@
   @media(max-width:600px){.wrap{padding:0 20px}}
   section{position:relative}
   .rule{height:1px;background:var(--border);border:0}
+  /* line-breaking: balance headings, prettify paragraphs, and a no-wrap whitelist for terms */
+  h1.title,.head h2,.cta-section h2,.spec-row h3,.step h4,.plate-body h4,.hero-reveal .intro-text{text-wrap:balance}
+  .head p,.cta-section p,.spec-row p,.step p,.intro-text,.work small,.foot p,.feat p{text-wrap:pretty}
+  .keep-together{white-space:nowrap}
 
   /* mono annotation label — the "[ note ]" device */
   .note{font-family:var(--mono);font-size:.72rem;font-weight:500;letter-spacing:.02em;color:var(--blue-deep);display:inline-flex;align-items:center;gap:.5ch}
@@ -198,7 +202,7 @@
   .cta-section h2{font-family:var(--display);font-weight:600;font-size:clamp(2.2rem,5vw,4rem);line-height:1.02;letter-spacing:-.02em;margin-bottom:20px}
   .cta-section h2 em{font-style:normal;font-weight:800;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:6px}
   .cta-section p{font-size:1.12rem;opacity:.86;max-width:540px;margin-bottom:34px}
-  html[data-lang="zh"] .cta-section h2{word-break:keep-all}
+  html[data-lang="zh"] .cta-section h2{word-break:normal;line-break:loose}
   .btn-band{background:var(--band-fg);color:var(--band);font-family:var(--sans);font-weight:700;font-size:.98rem;text-decoration:none;padding:14px 28px;border-radius:var(--radius-md);display:inline-flex;align-items:center;gap:9px;transition:transform .18s}
   .btn-band:hover{transform:translateY(-2px)}
   .pills{display:flex;gap:22px;margin-top:30px;flex-wrap:wrap}
@@ -370,7 +374,7 @@
     </div>
   </div>
   <div class="hero-reveal" id="heroReveal">
-    <p class="intro-text"><span data-lang-en>A design-tool panel for vibe coding: <em>scrub real values, preview live, drag to move</em> — then hand the exact numbers to your AI to write straight into your source.</span><span data-lang-zh>為 vibe coding 而生的設計工具面板：<em>刷真實數值、即時預覽、拖曳移動</em>——再把精確數字交給 AI 直接寫回原始碼。</span></p>
+    <p class="intro-text"><span data-lang-en>A design-tool panel for <span class="keep-together">vibe coding</span>: <em>scrub real values, preview live, drag to move</em> — then hand the exact numbers to your AI to write straight into your source.</span><span data-lang-zh>為 <span class="keep-together">vibe coding</span> 而生的設計工具面板：<em>刷真實數值、即時預覽、拖曳移動</em>——再把精確數字交給 AI 直接寫回原始碼。</span></p>
   </div>
 </section>
 </div>
@@ -395,7 +399,7 @@
     <div class="head reveal">
       <span class="kicker" data-lang-en>The problem</span><span class="kicker" data-lang-zh>痛點</span>
       <h2><span data-lang-en>Words are a terrible design tool.</span><span data-lang-zh>文字是最差的設計工具</span></h2>
-      <p><span data-lang-en>Telling an AI "a touch more padding… no, less… rounder" burns turns guessing numbers. UI Tweaker flips it: every adjustment is a structured, round-trippable value — never a vibe.</span><span data-lang-zh>叫 AI「padding 多一點⋯不對少一點⋯再圓一點」很耗回合在猜數字。UI Tweaker 反過來：每個調整都是可回填的結構化數值——不是憑感覺。</span></p>
+      <p><span data-lang-en>Telling an AI "a touch more padding… no, less… rounder" burns turns guessing numbers. <span class="keep-together">UI Tweaker</span> flips it: every adjustment is a structured, round-trippable value — never a vibe.</span><span data-lang-zh>叫 AI「padding 多一點⋯不對少一點⋯再圓一點」很耗回合在猜數字。<span class="keep-together">UI Tweaker</span> 反過來：每個調整都是可回填的結構化數值——不是憑感覺。</span></p>
     </div>
     <div class="studio reveal">
       <div class="studio-grid">
@@ -528,7 +532,7 @@
       <div class="spec-row reveal"><span class="idx">03</span><h3><span data-lang-en>Figma / PS interactions</span><span data-lang-zh>Figma／PS 操作</span></h3><p><span data-lang-en>Type-able number boxes, drag-to-scrub, linked corner radii, icon alignment, undo/redo with shortcuts.</span><span data-lang-zh>可打字數字框、拖曳刷值、圓角四角連動、圖示對齊、undo/redo 快捷鍵。</span></p></div>
       <div class="spec-row reveal"><span class="idx">04</span><h3><span data-lang-en>The transform box</span><span data-lang-zh>變形框</span></h3><p><span data-lang-en>Select any element for an 8-handle box: corners scale proportionally, edges resize, drag to move, rotate, live px label.</span><span data-lang-zh>選任何元素都給 8 手把框：角等比縮放、邊改寬高、拖移、旋轉、即時 px 標籤。</span></p></div>
       <div class="spec-row reveal"><span class="idx">05</span><h3><span data-lang-en>Writes back to source</span><span data-lang-zh>寫回原始碼</span></h3><p><span data-lang-en>On Confirm, copy the structured values to your AI — it locates the selectors, edits the real files, and verifies.</span><span data-lang-zh>按確認後，把結構化數值複製給 AI——它找到 selector、改真實檔案、再驗證。</span></p></div>
-      <div class="spec-row reveal"><span class="idx">06</span><h3><span data-lang-en>Works across AI tools</span><span data-lang-zh>跨 AI 工具</span></h3><p><span data-lang-en>Packaged as a Claude Code plugin, with portable adapters for Codex, Cursor, Windsurf, and plain skill folders.</span><span data-lang-zh>包裝成 Claude Code plugin，並提供 Codex、Cursor、Windsurf 與純 skill folder 的可攜 adapter。</span></p></div>
+      <div class="spec-row reveal"><span class="idx">06</span><h3><span data-lang-en>Works across AI tools</span><span data-lang-zh>跨 AI 工具</span></h3><p><span data-lang-en>Packaged as a <span class="keep-together">Claude Code</span> plugin, with portable adapters for Codex, Cursor, Windsurf, and plain skill folders.</span><span data-lang-zh>包裝成 <span class="keep-together">Claude Code</span> plugin，並提供 Codex、Cursor、Windsurf 與純 skill folder 的可攜 adapter。</span></p></div>
     </div>
   </div>
 </section>
@@ -585,7 +589,7 @@
   <div class="wrap cta-inner">
     <span class="kicker" data-lang-en>Open source · MIT</span><span class="kicker" data-lang-zh>開源 · MIT</span>
     <h2><span data-lang-en>Made by a designer who got tired of <em>guessing</em>.</span><span data-lang-zh>一個受夠了<em>用猜的</em>設計師做的工具</span></h2>
-    <p><span data-lang-en>UI Tweaker is MIT-licensed and free. Star it, fork it, or open an issue — feedback makes it sharper.</span><span data-lang-zh>UI Tweaker 採 MIT 授權、完全免費。給星、fork、或開 issue——回饋讓它更銳利。</span></p>
+    <p><span data-lang-en><span class="keep-together">UI Tweaker</span> is <span class="keep-together">MIT</span>-licensed and free. Star it, <span class="keep-together">fork</span> it, or open an <span class="keep-together">issue</span> — feedback makes it sharper.</span><span data-lang-zh><span class="keep-together">UI Tweaker</span> 採 <span class="keep-together">MIT</span> 授權、<span class="keep-together">完全免費</span>。給星、<span class="keep-together">fork</span>、或開 <span class="keep-together">issue</span>——<span class="keep-together">回饋</span>讓它更銳利。</span></p>
     <a class="btn-band" href="https://github.com/dhosruiasn/ui-tweaker" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.5 2 2 6.6 2 12.3c0 4.5 2.9 8.4 6.8 9.7.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.4-3.4-1.4-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.6 2.4 1.1 3 .9.1-.7.4-1.1.6-1.4-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.7 1a9.3 9.3 0 0 1 5 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.3 4.7-4.6 5 .4.3.7.9.7 1.9v2.8c0 .3.2.6.7.5 4-1.3 6.8-5.2 6.8-9.7C22 6.6 17.5 2 12 2z"/></svg><span data-lang-en>View on GitHub</span><span data-lang-zh>到 GitHub 看看</span></a>
     <div class="pills"><span class="pill" data-lang-en>✓ Open source</span><span class="pill" data-lang-zh>✓ 開源</span><span class="pill">✓ MIT</span><span class="pill" data-lang-en>✓ Portable</span><span class="pill" data-lang-zh>✓ 可攜</span></div>
   </div>

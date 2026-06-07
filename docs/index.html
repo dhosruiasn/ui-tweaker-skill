@@ -198,7 +198,7 @@
   .head .kicker::before{content:"";width:28px;height:1px;background:var(--blue);display:inline-block}
   .head h2{font-family:var(--display);font-weight:600;font-size:clamp(2.1rem,4.4vw,3.4rem);line-height:1.04;letter-spacing:-.02em;margin-bottom:18px}
   .head p{color:var(--ink-soft);font-size:1.08rem;max-width:620px}
-  html[data-lang="zh"] .head h2{word-break:keep-all}
+  html[data-lang="zh"] .head h2{word-break:keep-all}   /* wide: one line; narrow: break only at the <wbr> after the comma (clean, not mid-phrase) */
   #why .head p{max-width:920px}   /* wide enough that each sentence fits one line on desktop → 2 lines */
 
   /* ===== features = spec sheet ===== */
@@ -560,7 +560,7 @@
   <div class="wrap">
     <div class="head reveal">
       <span class="kicker" data-lang-en>Features</span><span class="kicker" data-lang-zh>功能</span>
-      <h2><span data-lang-en>A real design tool, wired to your code.</span><span data-lang-zh>真正的設計工具，接上你的程式碼</span></h2>
+      <h2><span data-lang-en>A real design tool, wired to your code.</span><span data-lang-zh>真正的設計工具，<wbr>接上你的程式碼</span></h2>
     </div>
     <div class="spec">
       <div class="spec-row reveal"><span class="idx">01</span><h3><span data-lang-en>Real styles, not guesses</span><span data-lang-zh>真實樣式，不用猜</span></h3><p><span data-lang-en>The preview links your project's real CSS and reads initial values via getComputedStyle — what you see matches production.</span><span data-lang-zh>預覽連結你專案的真實 CSS，用 getComputedStyle 讀初始值——所見即上線結果。</span></p></div>

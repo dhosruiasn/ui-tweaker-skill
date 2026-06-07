@@ -1031,11 +1031,8 @@
         // collision with the title's LETTERS → spray particles (cooldown-gated so a crossing leaves a trail of bursts)
         var nl=it.x,nt=it.y,nr=it.x+w,nb=it.y+h, over=false;
         for(var li=0;li<letterRects.length;li++){ var L=letterRects[li]; if(nl<L.r&&nr>L.l&&nt<L.b&&nb>L.t){ over=true; break; } }
-        if(over){
-          if(!it.inTitle){ it.inTitle=true; hit=true; }           // first contact also swaps style
-          if(t-it.lastBurst>300){ burst(it.x+w/2,it.y+h/2,it.color); it.lastBurst=t; }
-        } else it.inTitle=false;
-        if(hit){ it.color=pick(it.color); it.el.style.color=it.color; it.font=pickFont(it.font); it.size=rand(0.85,2.7); applyStyle(it); }
+        if(over && t-it.lastBurst>300){ burst(it.x+w/2,it.y+h/2,it.color); it.lastBurst=t; }   // title hit → particles only (no style change)
+        if(hit){ it.color=pick(it.color); it.el.style.color=it.color; it.font=pickFont(it.font); it.size=rand(0.85,2.7); applyStyle(it); }   // style swaps on EDGE bounce only
         it.el.style.transform='translate3d('+it.x+'px,'+it.y+'px,0)';
       }
       drawParts(dt);

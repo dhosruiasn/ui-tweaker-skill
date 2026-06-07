@@ -11,8 +11,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700&family=Chiron+Hei+HK:ital,wght@0,200..900;1,200..900&family=Chocolate+Classical+Sans&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&family=TASA+Explorer:wght@400..800&family=TASA+Orbiter:wght@400..800&display=swap" rel="stylesheet">
-<!-- legible display faces the floating bracket notes cycle through on each edge-bounce -->
+<!-- legible display faces the floating bracket notes cycle through on each edge-bounce / title hit -->
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Space+Grotesk:wght@400..700&family=Syne:wght@500..800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400..700&family=Sora:wght@400..700&family=Outfit:wght@400..700&family=Unbounded:wght@400..700&family=Big+Shoulders+Display:wght@400..700&family=Familjen+Grotesk:wght@400..700&family=Newsreader:opsz,wght@6..72,400..600&family=Spectral:wght@400;600&family=Epilogue:wght@400..700&family=Hanken+Grotesk:wght@400..700&display=swap" rel="stylesheet">
 <style>
   :root{
     --nav-h:86px;   /* sticky nav height — used to keep the intro text centred in the area BELOW the nav */
@@ -164,6 +165,7 @@
   .scrub-readout .v{font-weight:600}
   /* floating bracket annotations */
   .hero-notes{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+  .note-fx{position:absolute;left:0;top:0;pointer-events:none;z-index:0}   /* particle burst layer (behind the bracket notes) */
   .hero-note{position:absolute;left:0;top:0;display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-weight:600;font-size:1.25rem;line-height:1;color:var(--blue-deep);white-space:nowrap;will-change:transform}
   .hero-note::before{content:"{";font-size:1.7em;font-weight:400}
   .hero-note::after{content:"}";font-size:1.7em;font-weight:400}
@@ -951,16 +953,53 @@
       {f:"'Space Grotesk',sans-serif",w:600},
       {f:"'Syne',sans-serif",w:700},
       {f:"'Fraunces',serif",w:600},
-      {f:"'DM Serif Display',serif",w:400}
+      {f:"'DM Serif Display',serif",w:400},
+      {f:"'Archivo',sans-serif",w:700},
+      {f:"'Sora',sans-serif",w:600},
+      {f:"'Outfit',sans-serif",w:600},
+      {f:"'Unbounded',sans-serif",w:600},
+      {f:"'Big Shoulders Display',sans-serif",w:700},
+      {f:"'Familjen Grotesk',sans-serif",w:600},
+      {f:"'Newsreader',serif",w:500},
+      {f:"'Spectral',serif",w:600},
+      {f:"'Epilogue',sans-serif",w:600},
+      {f:"'Hanken Grotesk',sans-serif",w:700},
+      {f:"'Bricolage Grotesque',sans-serif",w:700},
+      {f:"'Instrument Serif',serif",w:400}
     ];
     const isDesktop=()=>window.matchMedia('(min-width:981px)').matches;
     const rand=(a,b)=>a+Math.random()*(b-a);
     const pick=cur=>{let c;do{c=COLORS[(Math.random()*COLORS.length)|0];}while(c===cur);return c;};
     const pickFont=cur=>{let x;do{x=FONTS[(Math.random()*FONTS.length)|0];}while(x===cur&&FONTS.length>1);return x;};
     function applyStyle(it){ it.el.style.fontFamily=it.font.f; it.el.style.fontWeight=it.font.w; it.el.style.fontSize=it.size.toFixed(2)+'rem'; }
-    const items=notes.map((el,i)=>({el,x:0,y:0,vx:0,vy:0,color:COLORS[i%COLORS.length],font:FONTS[i%FONTS.length],size:1.25}));
+    const items=notes.map((el,i)=>({el,x:0,y:0,vx:0,vy:0,color:COLORS[i%COLORS.length],font:FONTS[i%FONTS.length],size:1.25,inTitle:false,lastBurst:0}));
+    // ---- particle-burst layer: when a note hits the main title's LETTERS, spray small dots that linger 5–10s then fade
+    const title=document.querySelector('.hero .title');
+    let letterRects=[];   // title glyph boxes in wrap-local coords (cached; letters are static at rest)
+    function computeLetterRects(){ letterRects=[]; if(!title) return; var wr=wrap.getBoundingClientRect(); title.querySelectorAll('.ch').forEach(function(c){ if(!c.offsetParent) return; var r=c.getBoundingClientRect(); if(r.width<1||r.height<1) return; letterRects.push({l:r.left-wr.left,t:r.top-wr.top,r:r.right-wr.left,b:r.bottom-wr.top}); }); }
+    const cv=document.createElement('canvas'); cv.className='note-fx'; wrap.insertBefore(cv,wrap.firstChild);
+    const ctx=cv.getContext('2d');
+    let cw=0,ch=0;
+    function sizeCanvas(){ var dpr=Math.min(2,window.devicePixelRatio||1); cw=wrap.clientWidth; ch=wrap.clientHeight; cv.width=Math.round(cw*dpr); cv.height=Math.round(ch*dpr); cv.style.width=cw+'px'; cv.style.height=ch+'px'; ctx.setTransform(dpr,0,0,dpr,0,0); }
+    const parts=[];
+    function burst(px,py,color){
+      const n=12+(Math.random()*10|0);
+      for(let k=0;k<n;k++){ const a=Math.random()*Math.PI*2, sp=rand(25,130); parts.push({x:px,y:py,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,age:0,life:rand(5,10),size:rand(1.5,4),color:color}); }
+      if(parts.length>450) parts.splice(0,parts.length-450);   // cap
+    }
+    function drawParts(dt){
+      if(!cw) return; ctx.clearRect(0,0,cw,ch);
+      for(let k=parts.length-1;k>=0;k--){ var p=parts[k]; p.age+=dt; if(p.age>=p.life){ parts.splice(k,1); continue; }
+        p.x+=p.vx*dt; p.y+=p.vy*dt; var fr=Math.pow(0.03,dt); p.vx*=fr; p.vy*=fr;             // quick spread → settle, then hold
+        var t=p.age/p.life, a=t<0.6?1:1-(t-0.6)/0.4;                                          // hold full, fade over the last 40%
+        ctx.globalAlpha=a<0?0:a; ctx.fillStyle=p.color; ctx.fillRect(p.x,p.y,p.size,p.size);  // tiny square dots
+      }
+      ctx.globalAlpha=1;
+    }
+    function clearParts(){ parts.length=0; if(cw) ctx.clearRect(0,0,cw,ch); }
     let raf=0,last=0,running=false;
     function place(){
+      sizeCanvas(); clearParts(); computeLetterRects();
       const W=wrap.clientWidth,H=wrap.clientHeight;
       items.forEach((it,i)=>{
         const w=it.el.offsetWidth,h=it.el.offsetHeight;
@@ -970,7 +1009,8 @@
         let ax=rand(.5,1)*(Math.random()<.5?-1:1), ay=rand(.5,1)*(Math.random()<.5?-1:1);
         const m=Math.hypot(ax,ay)||1; it.vx=ax/m*sp; it.vy=ay/m*sp;   // diagonal, normalised
         it.color=COLORS[i%COLORS.length]; it.el.style.color=it.color;
-        it.font=FONTS[i%FONTS.length]; it.size=rand(1.05,1.5); applyStyle(it);
+        it.font=FONTS[i%FONTS.length]; it.size=rand(0.9,2.4); applyStyle(it);   // wide size spread
+        it.inTitle=true;                               // suppress a burst on (re)placement
         it.el.style.transform='translate3d('+it.x+'px,'+it.y+'px,0)';
       });
     }
@@ -979,6 +1019,7 @@
       if(!last) last=t;
       const dt=Math.min(.05,(t-last)/1000); last=t;
       const W=wrap.clientWidth,H=wrap.clientHeight;
+      if(!letterRects.length) computeLetterRects();     // lazy: letters are split by a later script; populate once they exist
       for(const it of items){
         const w=it.el.offsetWidth,h=it.el.offsetHeight,mx=Math.max(0,W-w),my=Math.max(0,H-h);
         it.x+=it.vx*dt; it.y+=it.vy*dt;
@@ -987,17 +1028,26 @@
         else if(it.x>=mx){it.x=mx;it.vx=-Math.abs(it.vx);hit=true;}
         if(it.y<=0){it.y=0;it.vy=Math.abs(it.vy);hit=true;}
         else if(it.y>=my){it.y=my;it.vy=-Math.abs(it.vy);hit=true;}
-        if(hit){ it.color=pick(it.color); it.el.style.color=it.color; it.font=pickFont(it.font); it.size=rand(1.0,1.7); applyStyle(it); }
+        // collision with the title's LETTERS → spray particles (cooldown-gated so a crossing leaves a trail of bursts)
+        var nl=it.x,nt=it.y,nr=it.x+w,nb=it.y+h, over=false;
+        for(var li=0;li<letterRects.length;li++){ var L=letterRects[li]; if(nl<L.r&&nr>L.l&&nt<L.b&&nb>L.t){ over=true; break; } }
+        if(over){
+          if(!it.inTitle){ it.inTitle=true; hit=true; }           // first contact also swaps style
+          if(t-it.lastBurst>300){ burst(it.x+w/2,it.y+h/2,it.color); it.lastBurst=t; }
+        } else it.inTitle=false;
+        if(hit){ it.color=pick(it.color); it.el.style.color=it.color; it.font=pickFont(it.font); it.size=rand(0.85,2.7); applyStyle(it); }
         it.el.style.transform='translate3d('+it.x+'px,'+it.y+'px,0)';
       }
+      drawParts(dt);
       raf=requestAnimationFrame(frame);
     }
     function start(){ if(running||!isDesktop())return; running=true; last=0; raf=requestAnimationFrame(frame); }
     function stop(){ running=false; if(raf)cancelAnimationFrame(raf); raf=0; }
-    function reset(){ stop(); if(isDesktop()){ place(); start(); } else { notes.forEach(n=>{n.style.transform='';n.style.color='';n.style.fontFamily='';n.style.fontWeight='';n.style.fontSize='';}); } }
+    function reset(){ stop(); if(isDesktop()){ place(); start(); } else { clearParts(); notes.forEach(n=>{n.style.transform='';n.style.color='';n.style.fontFamily='';n.style.fontWeight='';n.style.fontSize='';}); } }
     function onResize(){
-      if(!isDesktop()){ stop(); notes.forEach(n=>{n.style.transform='';n.style.color='';n.style.fontFamily='';n.style.fontWeight='';n.style.fontSize='';}); return; }
+      if(!isDesktop()){ stop(); clearParts(); notes.forEach(n=>{n.style.transform='';n.style.color='';n.style.fontFamily='';n.style.fontWeight='';n.style.fontSize='';}); return; }
       if(!running){ reset(); return; }                 // returned from mobile → re-seed
+      sizeCanvas(); computeLetterRects();              // canvas + letter boxes track the new hero size
       const W=wrap.clientWidth,H=wrap.clientHeight;     // keep motion, just clamp inside new bounds
       items.forEach(it=>{ const w=it.el.offsetWidth,h=it.el.offsetHeight;
         it.x=Math.min(Math.max(0,it.x),Math.max(0,W-w)); it.y=Math.min(Math.max(0,it.y),Math.max(0,H-h));

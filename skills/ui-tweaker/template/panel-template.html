@@ -277,6 +277,19 @@
   .tw-field.center .tw-field-inp { color:#1a73e8; font-weight:600; }
   .tw-field-ico svg { display:block; }
 
+  /* Layout logic controls */
+  .tw-size-axis { display:flex; flex-direction:column; gap:6px; min-width:0; }
+  .tw-seg-row { margin:9px 0; display:grid; grid-template-columns:74px minmax(0,1fr); gap:8px; align-items:center; }
+  .tw-seg-label { font-size:11px; color:#666; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .tw-mini-seg { display:flex; min-width:0; border:1px solid #e4e4e6; border-radius:8px; overflow:hidden; background:#fff; }
+  .tw-mini-seg button { flex:1 1 0; min-width:0; height:28px; padding:0 6px; border:0; border-right:1px solid #eeeeef; background:#fff; color:#5f6368; font-size:10.5px; cursor:pointer; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .tw-mini-seg button:last-child { border-right:0; }
+  .tw-mini-seg button:hover { background:#f4f4f5; }
+  .tw-mini-seg button.on { background:#e8f0fe; color:#1a73e8; font-weight:600; }
+  .tw-size-axis .tw-seg-row { grid-template-columns:1fr; gap:4px; margin:0; }
+  .tw-size-axis .tw-seg-label { display:none; }
+  .tw-size-axis .tw-mini-seg button { font-size:10px; padding:0 4px; }
+
   /* PS-style radius: 2x2 corners + center link */
   .tw-radius { margin:10px 0 2px; }
   .tw-radius-grid { position:relative; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:26px; row-gap:8px; }
@@ -715,20 +728,21 @@
       fieldGrid(2,[
         numBox('margin-top','Top',-40,60,1,'px', parseFloat(cssVal(key,'margin-top'))),
         numBox('margin-bottom','Bottom',-40,60,1,'px', parseFloat(cssVal(key,'margin-bottom')))
-      ]),
-      fieldGrid(1,[ numBox('gap','Child gap',0,40,1,'px', parseFloat(cssVal(key,'gap'))||0) ])
+      ])
     ]));
 
     cats.push(cat('Size', (key==='card'||key==='media'||key==='img'||key==='badgeIcon'), [
       fieldGrid(2,[
-        numBox('width','W',80,440,1,'px', parseFloat(cssVal(key,'width'))),
-        numBox('height','H',20,400,1,'px', parseFloat(cssVal(key,'height')))
+        sizeAxisControl(key,'width','Width'),
+        sizeAxisControl(key,'height','Height')
       ]),
       fieldGrid(2,[
         numBox('max-width','Max width',80,520,1,'px', parseFloat(cssVal(key,'max-width'))||0),
         numBox('_sclPct','Scale %',30,300,1,'%', scalePct(key))
       ])
     ]));
+
+    cats.push(cat('Layout', layoutRelevant(key), layoutRows(key)));
 
     cats.push(cat('Radius', (key==='card'||key==='media'||key==='btn'||key==='badge'), [
       radiusControl(key)
@@ -1165,6 +1179,119 @@
     if(snap && v===0) f.classList.add('center');
     return f;
   }
+  function segControl(prop,label,items,init,extraClass){
+    var row=document.createElement('div'); row.className='tw-seg-row'+(extraClass?' '+extraClass:'');
+    row.dataset.row=prop; row.dataset.kind='seg';
+    var lab=document.createElement('div'); lab.className='tw-seg-label'; lab.textContent=label;
+    var group=document.createElement('div'); group.className='tw-mini-seg';
+    items.forEach(function(it){
+      var b=document.createElement('button'); b.type='button';
+      b.dataset.value=it[0]; b.textContent=it[1];
+      if(it[0]===init) b.className='on';
+      group.appendChild(b);
+    });
+    row.appendChild(lab); row.appendChild(group);
+    return row;
+  }
+  function sizeAxisControl(key, prop, label){
+    var wrap=document.createElement('div'); wrap.className='tw-size-axis';
+    var mode=sizeModeFor(key, prop);
+    wrap.appendChild(segControl(prop+'-mode', label, [
+      ['fixed','Fixed'], ['fill','Fill'], ['hug','Hug'], ['auto','Auto']
+    ], mode, 'tw-size-mode'));
+    var n=parseFloat(cssVal(key, prop));
+    if(isNaN(n)){
+      var r=rectFor(key);
+      n=prop==='height' ? (r?r.height/zoom:20) : (r?r.width/zoom:80);
+    }
+    wrap.appendChild(numBox(prop, prop==='width'?'W':'H', prop==='height'?8:8, prop==='height'?2000:2000, 1, 'px', n));
+    return wrap;
+  }
+  function sizeModeFor(key, prop){
+    var s=state[key]||{}, marker='_'+prop+'Mode';
+    if(s[marker]) return s[marker];
+    var v=(prop in s) ? String(s[prop]).trim() : '';
+    if(v==='auto') return 'auto';
+    if(v==='100%' || v==='stretch') return 'fill';
+    if(v==='max-content' || v==='fit-content' || v==='min-content') return 'hug';
+    return 'fixed';
+  }
+  function parentFlexInfo(el){
+    var p=el && el.parentElement;
+    if(!p) return {isFlex:false, dir:'row'};
+    var cs=getComputedStyle(p);
+    return {isFlex:(cs.display||'').indexOf('flex')>-1, dir:cs.flexDirection||'row'};
+  }
+  function sizeAxisIsMain(el, prop){
+    var fx=parentFlexInfo(el);
+    if(!fx.isFlex) return false;
+    var col=fx.dir.indexOf('column')>-1;
+    return (prop==='width' && !col) || (prop==='height' && col);
+  }
+  function clearSizeModeProps(st, prop){
+    if(prop==='width' && st._widthMode==='fill'){
+      if(st._heightMode!=='fill') delete st.flex;
+      if(st._heightMode!=='fill') delete st['align-self'];
+    }
+    if(prop==='height' && st._heightMode==='fill'){
+      if(st._widthMode!=='fill') delete st.flex;
+      if(st._widthMode!=='fill') delete st['align-self'];
+    }
+  }
+  function applySizeMode(prop, mode){
+    controlKeys().forEach(function(k){
+      var el=editElFor(k); ensure(k);
+      var st=state[k], marker='_'+prop+'Mode';
+      clearSizeModeProps(st, prop);
+      st[marker]=mode;
+      if(mode==='fixed'){
+        var r=rectFor(k), val=prop==='height' ? (r?r.height/zoom:parseFloat(cssVal(k,prop))) : (r?r.width/zoom:parseFloat(cssVal(k,prop)));
+        st[prop]=Math.max(1, Math.round(val||1))+'px';
+      } else if(mode==='fill'){
+        if(sizeAxisIsMain(el, prop)){
+          delete st[prop];
+          st.flex='1 1 0';
+        } else {
+          var fx=parentFlexInfo(el);
+          if(fx.isFlex){
+            st[prop]='auto';
+            st['align-self']='stretch';
+          } else {
+            st[prop]='100%';
+          }
+        }
+      } else if(mode==='hug'){
+        st[prop]='max-content';
+        if(parentFlexInfo(el).isFlex) st.flex='0 0 auto';
+      } else {
+        st[prop]='auto';
+      }
+      applyEl(k);
+    });
+    commit();
+    buildPanel();
+  }
+  function layoutRelevant(key){
+    var el=editElFor(key); if(!el) return false;
+    var cs=getComputedStyle(el);
+    return (el.children && el.children.length>0) || (cs.display||'').indexOf('flex')>-1;
+  }
+  function layoutRows(key){
+    var cs=gcs(key), display=(cssVal(key,'display')||'block').trim();
+    if(display.indexOf('inline-flex')>-1) display='inline-flex';
+    else if(display.indexOf('flex')>-1) display='flex';
+    else display='block';
+    var wrap=(cssVal(key,'flex-wrap')||'nowrap').trim();
+    wrap=(wrap==='wrap' || wrap==='wrap-reverse') ? 'wrap' : 'nowrap';
+    return [
+      segControl('display','Display', [['block','Block'],['flex','Flex'],['inline-flex','Inline']], display),
+      segControl('flex-direction','Direction', [['row','Row'],['column','Column']], (cssVal(key,'flex-direction')||'row').indexOf('column')>-1?'column':'row'),
+      segControl('flex-wrap','Wrap', [['nowrap','No'],['wrap','Wrap']], wrap),
+      fieldGrid(1,[ numBox('gap','Gap',0,120,1,'px', parseFloat(cssVal(key,'gap'))||0) ]),
+      segControl('align-items','Align', [['flex-start','Start'],['center','Center'],['flex-end','End'],['stretch','Stretch']], cssVal(key,'align-items')||cs.alignItems||'stretch'),
+      segControl('justify-content','Justify', [['flex-start','Start'],['center','Center'],['flex-end','End'],['space-between','Between']], cssVal(key,'justify-content')||cs.justifyContent||'flex-start')
+    ];
+  }
   function fieldGrid(cols, fields){
     var g=document.createElement('div'); g.className='tw-grid';
     g.style.gridTemplateColumns='repeat('+cols+',minmax(0,1fr))';
@@ -1257,6 +1384,10 @@
   function applyNum(prop,v,unit){
     controlKeys().forEach(function(k){
       ensure(k);
+      if(prop==='width' || prop==='height'){
+        clearSizeModeProps(state[k], prop);
+        state[k]['_'+prop+'Mode']='fixed';
+      }
       if(prop==='_sclPct'){ state[k]._scl=Math.round(v)/100; }
       else if(prop.charAt(0)==='_'){ state[k][prop]=v; }
       else if(prop==='backdrop-filter'){ state[k][prop]='blur('+v+'px)'; state[k]['-webkit-backdrop-filter']='blur('+v+'px)'; }
@@ -1360,6 +1491,41 @@
         } else if(e.key==='Enter'){ e.preventDefault(); inp.blur(); }
       });
       attachScrub(f, inp, min, max, step, function(){ apply(false); }, function(){ apply(true); });
+    });
+    document.querySelectorAll('.tw-seg-row[data-kind=seg]').forEach(function(row){
+      var prop=row.dataset.row;
+      row.querySelectorAll('button').forEach(function(btn){
+        btn.addEventListener('click',function(){
+          var val=btn.dataset.value;
+          if(prop==='width-mode'){ applySizeMode('width', val); return; }
+          if(prop==='height-mode'){ applySizeMode('height', val); return; }
+          var promotedFlex=false;
+          controlKeys().forEach(function(k){
+            ensure(k);
+            if(prop==='display' && val==='block'){
+              state[k][prop]=val;
+              delete state[k]['flex-direction'];
+              delete state[k]['flex-wrap'];
+              delete state[k]['align-items'];
+              delete state[k]['justify-content'];
+            } else {
+              if(prop!=='display' && ['flex-direction','flex-wrap','align-items','justify-content'].indexOf(prop)>-1){
+                var d=cssVal(k,'display') || '';
+                if(d.indexOf('flex')<0){ state[k].display='flex'; promotedFlex=true; }
+              }
+              state[k][prop]=val;
+            }
+            applyEl(k);
+          });
+          row.querySelectorAll('button').forEach(function(b){ b.classList.toggle('on', b===btn); });
+          if(promotedFlex){
+            var displayRow=document.querySelector('.tw-seg-row[data-row=display]');
+            if(displayRow) displayRow.querySelectorAll('button').forEach(function(b){ b.classList.toggle('on', b.dataset.value==='flex'); });
+          }
+          commit();
+          if(prop==='display') buildPanel();
+        });
+      });
     });
     document.querySelectorAll('.tw-row').forEach(function(row){
       var prop=row.dataset.row, kind=row.dataset.kind;
@@ -2460,10 +2626,12 @@
         var ip=document.getElementById('i-_sclPct'); if(ip) ip.value=fmtNum(ns*100);
       } else if(horiz){
         var nw=Math.max(8,Math.min(2000, Math.round(startW + (ev.clientX-sx)/zoom*(hk==='e'?1:-1))));
+        clearSizeModeProps(state[k], 'width'); state[k]._widthMode='fixed';
         state[k].width=nw+'px'; applyEl(k);
         var iw=document.getElementById('i-width'); if(iw) iw.value=fmtNum(nw);
       } else {
         var nh=Math.max(8,Math.min(2000, Math.round(startH + (ev.clientY-sy)/zoom*(hk==='s'?1:-1))));
+        clearSizeModeProps(state[k], 'height'); state[k]._heightMode='fixed';
         state[k].height=nh+'px'; applyEl(k);
         var ih=document.getElementById('i-height'); if(ih) ih.value=fmtNum(nh);
       }

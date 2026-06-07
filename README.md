@@ -10,7 +10,7 @@ Fine-tune any UI component **with an AI coding assistant** through a design-tool
   </a>
 </div>
 
-> **Status:** v1.1.0 · MIT licensed · packaged for Claude Code plus portable adapters for Codex, Cursor, Windsurf, and plain skill-folder installs.
+> **Status:** v1.2.0 · MIT licensed · packaged for Claude Code plus portable adapters for Codex, Cursor, Windsurf, and plain skill-folder installs.
 
 ---
 
@@ -24,7 +24,7 @@ Core principle: **every adjustment is a structured, round-trippable number** —
 
 - **Real styles, not guesses** — the preview links your project's *real* CSS and reads initial values via `getComputedStyle`, so what you see matches production (including layered `!important` overrides).
 - **Three-column workspace** — Layers tree (atomic decomposition of your component) · live preview · control panel.
-- **Eight control categories** — typography, spacing, size, radius, position/offset, shadow, frosted glass, color.
+- **Nine control categories** — typography, spacing, size, layout, radius, position/offset, shadow, frosted glass, color.
 - **Figma/PS interactions** — type-able number boxes, drag-to-scrub, linked corner radii, icon-based alignment, undo/redo + keyboard shortcuts.
 - **Transform box** — select any element to get an 8-handle box: corners scale proportionally, edges resize width/height, drag to move, rotate handle, live px label.
 - **Writes back to source** — on Confirm, the assistant parses the values, locates the matching selectors, edits the real files, and verifies (e.g. runs your build / checks computed styles).

@@ -6,7 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-06-07
+
 ### Added
+- Added auto-layout size modes in the Size panel: Fixed, Fill, Hug, and Auto
+  for width and height, with Fill mapped to responsive CSS such as `100%`,
+  `flex:1 1 0`, or `align-self:stretch` depending on flex context.
+- Added a Layout panel for basic Flexbox logic: display, direction, wrap, gap,
+  align-items, and justify-content, with confirm output emitting real CSS
+  declarations.
 - Added a stale-panel snapshot rule: when source code changes but an existing
   `ui-tweaker-*.html` still shows old UI, agents must re-sync preview DOM,
   selectors, layers, edit targets, pseudo maps, visual rects, and stage-reset
@@ -161,6 +169,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   strip non-allowlisted inline styles before opening the panel.
 - Generic demo component under `examples/` so the template runs out of the box.
 
-[Unreleased]: https://github.com/dhosruiasn/ui-tweaker/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/dhosruiasn/ui-tweaker/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/dhosruiasn/ui-tweaker/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/dhosruiasn/ui-tweaker/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/dhosruiasn/ui-tweaker/releases/tag/v1.0.0

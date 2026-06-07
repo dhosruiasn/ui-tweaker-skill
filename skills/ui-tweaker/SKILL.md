@@ -57,14 +57,14 @@ Flow:
    - **#8** the confirm-output "component:" / "source:" strings
    - **#9 stage reset**: the rule that resets your component root from hidden/positioned to visible/static inside `#card-stage` (target your real root selector; keep the `--tw-card-transform` var so the card-level transform still works). Only needed when your real component is hidden/absolutely positioned in production.
 3. After replacing, every keyed `LAYERS` node must have a matching entry in `SEL` / `OUT_SEL` / the preview DOM's `data-pick`. Before handing off, cross-check key consistency with a script and validate the JS with `node --check`.
-4. The template already ships the fixed UI: left Pages/Layers tree, three-section control panel, eight categories, type-able number boxes, two/four-column grids, Figma section titles, PS linked corner radii, position/offset alignment icons, drag-to-scrub, undo/redo + keyboard shortcuts. **Don't rebuild or restyle these.**
+4. The template already ships the fixed UI: left Pages/Layers tree, three-section control panel, nine categories, type-able number boxes, auto-layout size modes, flex layout controls, two/four-column grids, Figma section titles, PS linked corner radii, position/offset alignment icons, drag-to-scrub, undo/redo + keyboard shortcuts. **Don't rebuild or restyle these.**
 
 > Only fall back to "hand-write per this spec" if the template file is missing/deleted; as long as the template exists, it is the source of truth.
 
 The widget is one HTML page in three columns:
 - Left: Pages/Layers tree (Figma-style) showing the component nesting; click to select, Shift to multi-select.
 - Middle: live preview (restored by linking the real stylesheet); every adjustable atomic child is clickable.
-- Right: control panel (eight categories as collapsible blocks).
+- Right: control panel (nine categories as collapsible blocks).
 
 Expand the category most relevant to the current element; collapse the rest.
 
@@ -142,7 +142,7 @@ These are implemented in the template and must stay consistent. Reuse them for n
 - **Three-column layout with resize handle**: the shell uses `grid-template-columns: var(--tw-left-w, 230px) 6px 1fr 360px`. Left = Layers/Pages tree, the 6px track = draggable resize handle, middle = preview stage, right = control panel. The left pane must be vertically scrollable and resizable, and the resize handle should persist the width in `localStorage` so deeply nested layers remain readable. When the pane is too narrow, layer names truncate with `text-overflow:ellipsis` (`...`); row controls such as eye toggles appear as hover overlays inside the row instead of permanently reserving width.
 - **Pages are real switch targets**: if a panel contains multiple pages/screens/states, the left Pages section must list each one as a selectable target. Clicking a page must switch the preview DOM/root, Layers tree, `SEL`/`OUT_SEL`, current selection, and confirm-output context together. Do not add decorative page rows that cannot switch anything. If pages are split across separate HTML files instead, label/link them clearly rather than implying in-panel switching.
 - **Three-section control panel** (fixes the "confirm bar floating mid-list" bug): `.tw-right` is `display:flex; flex-direction:column; height:100vh; overflow:hidden`; fixed header (`flex:none`) + scrollable `#panel` (`flex:1; min-height:0; overflow-y:auto`) + fixed bottom confirm bar (`flex:none`). **Don't use a `position:sticky` bottom confirm bar.**
-- **Figma section titles**: the eight categories are collapsible blocks (`cat(title, open, [...])`); titles have no number prefix (plain text, no "① ⑥").
+- **Figma section titles**: the nine categories are collapsible blocks (`cat(title, open, [...])`); titles have no number prefix (plain text, no "① ⑥").
 - **Type-able number boxes** (instead of sliders): `numBox(prop,label,min,max,step,unit,init,snap)` produces an `<input type=text inputmode=decimal>`; arrow keys ↑↓ step (Shift×10), Enter blurs, focus selects all. X/Y fields may show a "Center" state only at exact `0`; never coerce typed values like `1`, `2`, or `3` back to `0`.
 - **Multi-column grid**: combine related fields into two/four columns with `fieldGrid(cols, fields)` (e.g. padding TRBL, shadow XYBlur).
 - **Drag-to-scrub (Figma scrub)**: `attachScrub(...)`, horizontal drag on a label/icon changes the value (1px≈1 step), live preview while dragging, write one history entry on release. Cursor `ew-resize`. **No sliders.**
@@ -214,35 +214,38 @@ The panel's preview DOM (template `⟦PROJECT-SPECIFIC #4⟧`) may only "reprodu
 - **Every live apply must be reversible**: before applying the current state for a key, restore that key's edit target to its cached original style, then reapply all current state for keys that share the same edit target. This prevents stale properties from surviving after a user deletes an effect, removes a gradient, toggles no-paint, or changes SVG paint. Do not solve stale effects by clearing arbitrary properties globally; restore the original target first, then replay the active state.
 - **SVG paint undo/reset must restore child inline styles too**: if `applySvgPaint()` writes `fill`/`stroke` onto SVG child nodes (`path`, `circle`, `rect`, `line`, etc.), cache each child node's original `style` during init and restore those child styles inside `restoreBaseStyle()`. Restoring only the keyed `<svg>` element leaves child inline paint overrides behind, so undo/reset appears broken.
 
-The eight control categories:
+The nine control categories:
 
 ① Typography
    font-size (px), font-weight (100–900), line-height (em), letter-spacing (em), font-family (select), color
 
 ② Spacing
-   padding T/B/L/R (px), margin T/B/L/R (px), child gap (gap)
+   padding T/B/L/R (px), margin T/B/L/R (px)
 
 ③ Size
-   width (px/%), height (px/auto), max-width, aspect-ratio, proportional Scale % control (writes the same `_scl` transform scale state as corner-drag / transform-box scaling, so users can enlarge or shrink an element with one field instead of changing W and H separately)
+   width and height each have Fixed / Fill / Hug / Auto modes. Fixed writes px values; Fill maps to `width:100%`, `height:100%`, `flex:1 1 0`, or `align-self:stretch` depending on the parent flex axis; Hug writes `max-content`; Auto writes `auto`. Also includes max-width, aspect-ratio, proportional Scale % control (writes the same `_scl` transform scale state as corner-drag / transform-box scaling, so users can enlarge or shrink an element with one field instead of changing W and H separately)
 
-④ Radius
+④ Layout
+   display (`block` / `flex` / `inline-flex`), flex-direction (`row` / `column`), flex-wrap, gap, align-items, justify-content. Changing direction/alignment/justification should promote non-flex containers to `display:flex` so the preview behaves immediately; confirm output must still emit the actual CSS declarations, not abstract labels.
+
+⑤ Radius
    overall radius (px/%/cqw), individual corners (TL/TR/BL/BR), toggle overall/individual mode
 
-⑤ Position offset
+⑥ Position offset
    X offset (translateX/left/right), Y offset (translateY/top/bottom), rotation (deg), scale, snap + guides
 
-⑥ Shadow
+⑦ Shadow
    X offset, Y offset, Blur, Spread (all px/cqw), opacity (0–1), split foreground/background/occlusion shadows when needed
 
-⑥b Effects
+⑦b Effects
    Stackable effect layers with an eye toggle, type selector, and delete button: Drop shadow, Inner shadow, Layer blur, Background blur, Glass. Use the panel's own compact line icons, not copied app-specific icons. Drop/inner write `box-shadow`; layer blur writes `filter`; background blur/glass write `backdrop-filter` / `-webkit-backdrop-filter`; glass may also write a translucent background color. **SVG exception**: for inline SVG targets, Drop shadow must write `filter: drop-shadow(...)` instead of `box-shadow`, and Background blur / Glass must not add a background color or backdrop box to the SVG element; otherwise the icon gains an unwanted square background.
    Deleting an effect must remove the previewed CSS immediately by restoring the target's original style and replaying remaining active state; never leave old `box-shadow`, `filter`, `backdrop-filter`, or glass background values behind.
 
-⑦ Frosted glass
+⑧ Frosted glass
    blur strength (blur px), white opacity (0–1), top gradient delta (%),
    hover shadow (px), top highlight edge (0–1), inner glow (0–1)
 
-⑧ Color
+⑨ Color
    background, text, border color (all support rgba), border width (px)
    - **No-paint toggle is a standard paint control**: every paint-like color row (background, border, fill, stroke, pseudo badge fill/border, mask icon color where transparent is valid) must include the small square-with-diagonal no-paint button. It writes `none` for SVG fill/stroke, `background:none` or transparent for background-like surfaces, and transparent for border/text-like surfaces as appropriate. The button must stay available after panel rebuilds and must be undo/redo/reset-safe.
    - **Linear gradient row**: non-SVG color surfaces may include a compact linear-gradient control with a live gradient bar, two draggable color stops on the bar, and opacity controls. Dragging a stop changes the stop percentage directly on the bar; color/alpha fields update the same state. It writes `background: linear-gradient(...)`, is history-aware, and appears in confirm output as `background-gradient`. Initial stop colors must be parsed from the selected element's real `getComputedStyle(...).backgroundImage/background` when a gradient already exists; do not initialize the row from generic placeholder colors that differ from the visible component.

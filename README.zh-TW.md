@@ -10,7 +10,7 @@
   </a>
 </div>
 
-> **狀態:** v1.1.0 · MIT 授權 · 已包裝給 Claude Code,也提供 Codex、Cursor、Windsurf 與純 skill folder 安裝用的 portable adapters。
+> **狀態:** v1.2.0 · MIT 授權 · 已包裝給 Claude Code,也提供 Codex、Cursor、Windsurf 與純 skill folder 安裝用的 portable adapters。
 
 ---
 
@@ -24,7 +24,7 @@
 
 - **真實樣式,不用猜** — 預覽連結你專案的**真實 CSS**,初始值用 `getComputedStyle` 讀,所見即上線結果(含多層 `!important` 覆寫)。
 - **三欄工作區** — Layers 樹(元件原子化拆解)· 即時預覽 · 控制面板。
-- **八大控制分類** — 字型、間距、尺寸、圓角、位置偏移、陰影、磨砂玻璃、顏色。
+- **九大控制分類** — 字型、間距、尺寸、排版、圓角、位置偏移、陰影、磨砂玻璃、顏色。
 - **Figma／PS 操作** — 可打字數字框、拖曳刷值、圓角四角連動、圖示對齊、undo/redo + 鍵盤快捷鍵。
 - **變形框** — 選任何元素都給 8 手把框:角=等比縮放、邊=改寬高、框內拖移、旋轉手把、即時 px 標籤。
 - **寫回原始碼** — 按確認後,AI 解析數值、找到對應 selector、改真實檔案、再驗證(例如跑 build／檢查 computed style)。

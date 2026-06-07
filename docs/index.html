@@ -11,6 +11,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700&family=Chiron+Hei+HK:ital,wght@0,200..900;1,200..900&family=Chocolate+Classical+Sans&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&family=TASA+Explorer:wght@400..800&family=TASA+Orbiter:wght@400..800&display=swap" rel="stylesheet">
+<!-- legible display faces the floating bracket notes cycle through on each edge-bounce -->
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Space+Grotesk:wght@400..700&family=Syne:wght@500..800&display=swap" rel="stylesheet">
 <style>
   :root{
     --nav-h:86px;   /* sticky nav height — used to keep the intro text centred in the area BELOW the nav */
@@ -943,10 +945,20 @@
     if(!wrap||!notes.length) return;
     // high-contrast saturated palette — readable on both the warm-paper light bg and the dark bg
     const COLORS=['#e4431e','#ff7a00','#1f9d3a','#0a8f9c','#2563ff','#7a2ff5','#d61f7a','#c81d4e'];
+    // legible Google fonts (no script/handwriting) — family + a weight that's actually loaded
+    const FONTS=[
+      {f:"var(--mono)",w:600},               // JetBrains Mono
+      {f:"'Space Grotesk',sans-serif",w:600},
+      {f:"'Syne',sans-serif",w:700},
+      {f:"'Fraunces',serif",w:600},
+      {f:"'DM Serif Display',serif",w:400}
+    ];
     const isDesktop=()=>window.matchMedia('(min-width:981px)').matches;
     const rand=(a,b)=>a+Math.random()*(b-a);
     const pick=cur=>{let c;do{c=COLORS[(Math.random()*COLORS.length)|0];}while(c===cur);return c;};
-    const items=notes.map((el,i)=>({el,x:0,y:0,vx:0,vy:0,color:COLORS[i%COLORS.length]}));
+    const pickFont=cur=>{let x;do{x=FONTS[(Math.random()*FONTS.length)|0];}while(x===cur&&FONTS.length>1);return x;};
+    function applyStyle(it){ it.el.style.fontFamily=it.font.f; it.el.style.fontWeight=it.font.w; it.el.style.fontSize=it.size.toFixed(2)+'rem'; }
+    const items=notes.map((el,i)=>({el,x:0,y:0,vx:0,vy:0,color:COLORS[i%COLORS.length],font:FONTS[i%FONTS.length],size:1.25}));
     let raf=0,last=0,running=false;
     function place(){
       const W=wrap.clientWidth,H=wrap.clientHeight;
@@ -958,6 +970,7 @@
         let ax=rand(.5,1)*(Math.random()<.5?-1:1), ay=rand(.5,1)*(Math.random()<.5?-1:1);
         const m=Math.hypot(ax,ay)||1; it.vx=ax/m*sp; it.vy=ay/m*sp;   // diagonal, normalised
         it.color=COLORS[i%COLORS.length]; it.el.style.color=it.color;
+        it.font=FONTS[i%FONTS.length]; it.size=rand(1.05,1.5); applyStyle(it);
         it.el.style.transform='translate3d('+it.x+'px,'+it.y+'px,0)';
       });
     }
@@ -974,16 +987,16 @@
         else if(it.x>=mx){it.x=mx;it.vx=-Math.abs(it.vx);hit=true;}
         if(it.y<=0){it.y=0;it.vy=Math.abs(it.vy);hit=true;}
         else if(it.y>=my){it.y=my;it.vy=-Math.abs(it.vy);hit=true;}
-        if(hit){it.color=pick(it.color);it.el.style.color=it.color;}
+        if(hit){ it.color=pick(it.color); it.el.style.color=it.color; it.font=pickFont(it.font); it.size=rand(1.0,1.7); applyStyle(it); }
         it.el.style.transform='translate3d('+it.x+'px,'+it.y+'px,0)';
       }
       raf=requestAnimationFrame(frame);
     }
     function start(){ if(running||!isDesktop())return; running=true; last=0; raf=requestAnimationFrame(frame); }
     function stop(){ running=false; if(raf)cancelAnimationFrame(raf); raf=0; }
-    function reset(){ stop(); if(isDesktop()){ place(); start(); } else { notes.forEach(n=>{n.style.transform='';n.style.color='';}); } }
+    function reset(){ stop(); if(isDesktop()){ place(); start(); } else { notes.forEach(n=>{n.style.transform='';n.style.color='';n.style.fontFamily='';n.style.fontWeight='';n.style.fontSize='';}); } }
     function onResize(){
-      if(!isDesktop()){ stop(); notes.forEach(n=>{n.style.transform='';n.style.color='';}); return; }
+      if(!isDesktop()){ stop(); notes.forEach(n=>{n.style.transform='';n.style.color='';n.style.fontFamily='';n.style.fontWeight='';n.style.fontSize='';}); return; }
       if(!running){ reset(); return; }                 // returned from mobile → re-seed
       const W=wrap.clientWidth,H=wrap.clientHeight;     // keep motion, just clamp inside new bounds
       items.forEach(it=>{ const w=it.el.offsetWidth,h=it.el.offsetHeight;

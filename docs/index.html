@@ -1253,7 +1253,7 @@
     const mobile=()=>window.matchMedia('(max-width:620px)').matches && !reduced();
     const clamp=n=>Math.max(0,Math.min(1,n));
     const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
-    let ticking=false, fold=0, locked=false, lockY=0, touchY=null;
+    let ticking=false, fold=0, locked=false, lockY=0, touchY=null, releaseReady=false;
     root.classList.add('how-fold-ready');
     function clearEl(el){
       el.style.opacity='';
@@ -1315,8 +1315,15 @@
       }
       if(!locked){
         const top=pinTop();
-        if(rect.top>top+80) fold=0;
-        else if(rect.bottom<window.innerHeight*.35) fold=1;
+        if(rect.top>top+80){
+          fold=0;
+          releaseReady=false;
+        } else if(fold<1&&rect.top<=top+8&&rect.bottom>window.innerHeight*.45){
+          lockToCut();
+        } else if(rect.bottom<window.innerHeight*.35){
+          fold=1;
+          releaseReady=true;
+        }
       }
       if(desktop()){
         const amount=ease(fold);
@@ -1338,6 +1345,7 @@
       lockY=window.scrollY+rect.top-pinTop();
       window.scrollTo(0,lockY);
       locked=true;
+      if(fold<.94) releaseReady=false;
     }
     function shouldCatch(delta){
       if(!desktop()&&!mobile()) return false;
@@ -1348,22 +1356,32 @@
     }
     function consume(delta){
       if(!shouldCatch(delta)) return false;
-      const visuallyOpen=fold>=.94;
-      if(delta>0&&visuallyOpen){
+      const visuallyOpen=ease(fold)>=.995;
+      if(delta>0&&visuallyOpen&&releaseReady){
         fold=1;
         render();
         locked=false;
+        releaseReady=false;
         window.scrollBy(0,Math.min(delta,320));
         return true;
       }
       if((delta>0&&fold>=1)||(delta<0&&fold<=0)){
         locked=false;
+        releaseReady=false;
         window.scrollBy(0,delta>0?Math.min(delta,320):Math.max(delta,-320));
         return true;
       }
       if(!locked) lockToCut();
       else window.scrollTo(0,lockY);
-      fold=clamp(fold+delta/620);
+      if(delta<0) releaseReady=false;
+      const maxDelta=mobile()?96:180;
+      const denom=mobile()?780:620;
+      const limitedDelta=Math.sign(delta)*Math.min(Math.abs(delta),maxDelta);
+      fold=clamp(fold+limitedDelta/denom);
+      if(delta>0&&ease(fold)>=.995){
+        fold=1;
+        releaseReady=true;
+      }
       render();
       return true;
     }

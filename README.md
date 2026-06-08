@@ -2,7 +2,7 @@
 
 [繁體中文版 README](./README.zh-TW.md)
 
-Fine-tune any UI component **with an AI coding assistant** through a design-tool-style control panel — scrub values, preview changes live, move and resize elements — then let the assistant write the adjusted values **straight back into your real source code**. No more round-trips of "make it a bit bigger… no, smaller… more rounded."
+Fine-tune any UI component **with an AI coding assistant** through a design-tool-style control panel — scrub values, preview changes live, move and resize elements — then copy structured values your AI can apply precisely. No more round-trips of "make it a bit bigger… no, smaller… more rounded."
 
 <div align="center">
   <a href="https://dhosruiasn.github.io/ui-tweaker-skill/">
@@ -10,13 +10,13 @@ Fine-tune any UI component **with an AI coding assistant** through a design-tool
   </a>
 </div>
 
-> **Status:** v1.2.0 · MIT licensed · packaged for Claude Code plus portable adapters for Codex, Cursor, Windsurf, and plain skill-folder installs.
+> **Status:** v1.2.1 · MIT licensed · packaged for Claude Code plus portable adapters for Codex, Cursor, Windsurf, and plain skill-folder installs.
 
 ---
 
 ## Why
 
-When you ask an AI to tweak UI by describing it in words ("a touch more padding", "not that round"), you burn turns guessing numbers. UI Tweaker flips it: the assistant opens a **live control panel** rendered from *your actual stylesheet*, you adjust visually, hit **Confirm**, and the exact structured values are sent back for the assistant to apply and verify.
+When you ask an AI to tweak UI by describing it in words ("a touch more padding", "not that round"), you burn turns guessing numbers. UI Tweaker flips it: the assistant opens a **live control panel** rendered from *your actual stylesheet*, you adjust visually, hit **Confirm**, and the panel generates exact structured values for the assistant to apply and verify.
 
 Core principle: **every adjustment is a structured, round-trippable number** — never a vibe.
 
@@ -27,7 +27,7 @@ Core principle: **every adjustment is a structured, round-trippable number** —
 - **Nine control categories** — typography, spacing, size, layout, radius, position/offset, shadow, frosted glass, color.
 - **Figma/PS interactions** — type-able number boxes, drag-to-scrub, linked corner radii, icon-based alignment, undo/redo + keyboard shortcuts.
 - **Transform box** — select any element to get an 8-handle box: corners scale proportionally, edges resize width/height, drag to move, rotate handle, live px label.
-- **Writes back to source** — on Confirm, the assistant parses the values, locates the matching selectors, edits the real files, and verifies (e.g. runs your build / checks computed styles).
+- **Structured Copy for AI** — on Confirm, UI Tweaker generates clean CSS values + selector blocks you can paste to your AI so it can apply and verify with less back-and-forth.
 
 ## Install
 
@@ -85,7 +85,7 @@ Your AI assistant will:
 1. Copy `skills/ui-tweaker/template/panel-template.html` next to your project (served so the browser can open it).
 2. Fill the 8 `⟦PROJECT-SPECIFIC⟧` markers from your real component (link your stylesheet, paste the real DOM, build the Layers tree).
 3. Open the control panel. You adjust → **Confirm**.
-4. The assistant applies the structured values to your source and verifies.
+4. Paste the structured values back to your AI; it applies them to source and verifies.
 
 ## How the fixed template works
 

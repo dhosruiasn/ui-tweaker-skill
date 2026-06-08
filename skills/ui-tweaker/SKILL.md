@@ -1,11 +1,11 @@
 ---
 name: ui-tweaker
-description: Triggers when the user says things like "help me tweak [component]", "I want to fine-tune [style]", "adjust the [property] of this element". Generates a live preview + full control panel; after the user adjusts and confirms, the AI writes the values straight back into the source files.
+description: Triggers when the user says things like "help me tweak [component]", "I want to fine-tune [style]", "adjust the [property] of this element". Generates a live preview + full control panel; after the user adjusts and confirms, the panel produces structured values and selectors for the AI to apply to source files.
 ---
 
 # UI Tweaker
 
-Let users fine-tune UI directly with an AI coding assistant through sliders/number boxes; after they confirm, the AI updates the code automatically — no back-and-forth describing numbers in words.
+Let users fine-tune UI directly with an AI coding assistant through sliders/number boxes; after they confirm, the panel copies structured values for the AI to update code precisely — no back-and-forth describing numbers in words.
 
 Core principle: every adjustment is a structured, round-trippable number — never just a "feeling".
 

@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-06-08
+
+### Changed
+- Clarified README, skill metadata, and panel copy so UI Tweaker is described as
+  a live preview plus structured copy workflow for AI, not a fully automatic
+  source rewrite tool.
+- Renamed the template confirm button from "Confirm & update code" to
+  "Confirm & copy for AI" and softened the generated handoff instruction.
+
 ## [1.2.0] - 2026-06-07
 
 ### Added
@@ -169,7 +178,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   strip non-allowlisted inline styles before opening the panel.
 - Generic demo component under `examples/` so the template runs out of the box.
 
-[Unreleased]: https://github.com/dhosruiasn/ui-tweaker/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/dhosruiasn/ui-tweaker/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/dhosruiasn/ui-tweaker/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/dhosruiasn/ui-tweaker/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/dhosruiasn/ui-tweaker/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/dhosruiasn/ui-tweaker/releases/tag/v1.0.0

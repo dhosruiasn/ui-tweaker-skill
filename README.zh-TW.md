@@ -2,7 +2,7 @@
 
 [English README](./README.md)
 
-用 **AI coding assistant** 搭配設計工具風格的控制面板微調任何 UI 元件——刷數值、即時預覽、移動與縮放元素——調好按下**確認**,AI 就把數值**直接寫回你的真實原始碼**。不用再來回「大一點…不對再小一點…再圓一點」。
+用 **AI coding assistant** 搭配設計工具風格的控制面板微調任何 UI 元件——拉滑桿即時預覽 → 一鍵複製精準數值 → 貼給 AI 直接寫回程式碼。不用再來回「大一點…不對再小一點…再圓一點」。
 
 <div align="center">
   <a href="https://dhosruiasn.github.io/ui-tweaker-skill/">
@@ -10,13 +10,13 @@
   </a>
 </div>
 
-> **狀態:** v1.2.0 · MIT 授權 · 已包裝給 Claude Code,也提供 Codex、Cursor、Windsurf 與純 skill folder 安裝用的 portable adapters。
+> **狀態:** v1.2.1 · MIT 授權 · 已包裝給 Claude Code,也提供 Codex、Cursor、Windsurf 與純 skill folder 安裝用的 portable adapters。
 
 ---
 
 ## 為什麼
 
-用文字叫 AI 調 UI(「padding 多一點」「沒那麼圓」)很耗回合在猜數字。UI Tweaker 反過來:AI assistant 用**你真實的樣式表**渲染一個**即時控制面板**,你用視覺調整,按**確認**,精確的結構化數值就送回去給 AI 套用並驗證。
+用文字叫 AI 調 UI(「padding 多一點」「沒那麼圓」)很耗回合在猜數字。UI Tweaker 反過來:AI assistant 用**你真實的樣式表**渲染一個**即時控制面板**,你用視覺調整,按**確認**產生精確的結構化 selector/CSS 數值,再貼給 AI 套用並驗證。
 
 核心原則:**每個調整都是可回填的結構化數值**——不是憑感覺。
 
@@ -27,7 +27,7 @@
 - **九大控制分類** — 字型、間距、尺寸、排版、圓角、位置偏移、陰影、磨砂玻璃、顏色。
 - **Figma／PS 操作** — 可打字數字框、拖曳刷值、圓角四角連動、圖示對齊、undo/redo + 鍵盤快捷鍵。
 - **變形框** — 選任何元素都給 8 手把框:角=等比縮放、邊=改寬高、框內拖移、旋轉手把、即時 px 標籤。
-- **寫回原始碼** — 按確認後,AI 解析數值、找到對應 selector、改真實檔案、再驗證(例如跑 build／檢查 computed style)。
+- **Structured Copy for AI** — 按 Confirm 後，自動產生乾淨的 CSS 數值 + selector 區塊，直接複製給 AI 套用，減少錯誤與溝通成本。
 
 ## 安裝
 
@@ -85,7 +85,7 @@ scripts/doctor
 1. 把 `skills/ui-tweaker/template/panel-template.html` 複製到你專案旁(以瀏覽器能開啟的方式提供)。
 2. 用你真實元件填入 `⟦PROJECT-SPECIFIC⟧` 標記(連結樣式表、貼真實 DOM、建 Layers 樹)。
 3. 開控制面板。你調整 → **確認**。
-4. AI 把結構化數值套到原始碼並驗證。
+4. 把整理好的結構化數值貼給 AI，它就會精準修改你的原始碼並驗證。
 
 ## 固定樣板怎麼運作
 

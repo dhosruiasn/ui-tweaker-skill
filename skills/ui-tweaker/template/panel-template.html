@@ -431,7 +431,7 @@
 
     <div class="tw-confirm">
       <div class="tw-summary" id="summary">No changes yet</div>
-      <button id="btn-confirm">Confirm &amp; update code</button>
+      <button id="btn-confirm">Confirm &amp; copy for AI</button>
     </div>
   </div>
 </div>
@@ -2957,7 +2957,7 @@
       lines.push('');
     });
     if(hasText) lines.push('NOTE: text-content / placeholder / value are display copy, not styling. Update the real HTML/JS/template string source.');
-    lines.push('Please update the corresponding code directly');
+    lines.push('Please apply these values to the corresponding code and verify.');
     return any? lines.join('\n') : '';
   }
   function updateSummary(){

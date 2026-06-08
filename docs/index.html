@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>UI Tweaker — Precision visual control for vibe coding</title>
-<meta name="description" content="Fine-tune any UI component with a design-tool-style control panel, then let your AI assistant write the values back into your real source code.">
+<meta name="description" content="Fine-tune any UI component with a design-tool-style control panel, then copy structured values for your AI to apply precisely.">
 <meta property="og:title" content="UI Tweaker — Precision visual control for vibe coding">
 <meta property="og:description" content="Visually fine-tune UI components, then hand the exact values to your AI to apply to real code.">
 <meta property="og:type" content="website">
@@ -83,6 +83,10 @@
   nav .wrap{max-width:1360px}
   .nav-in{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:18px;height:var(--nav-h)}
   .brand{display:flex;align-items:center;gap:10px;justify-self:start;font-family:var(--display);font-weight:300;font-size:1.18rem;letter-spacing:-.01em;color:#fff}
+  nav .brand{gap:0;min-width:max-content}
+  nav .brand-copy{display:flex;flex:none;flex-direction:column;line-height:.94;color:#fff}
+  nav .brand-name{font-weight:800;font-size:1.86rem;letter-spacing:-.025em;white-space:nowrap}
+  nav .brand-kind{font-weight:400;font-size:1.32rem;letter-spacing:-.01em}
   .brand .logo{width:30px;height:30px;display:grid;place-items:center;border:1.5px solid rgba(255,255,255,.85);color:#fff;flex:none}
   .brand .logo svg{width:17px;height:17px}
   /* independent pill nav (Readymag-style) */
@@ -177,7 +181,7 @@
 
   /* ===== hero — huge type, floating bracket notes, centered CTA (Readymag-style) ===== */
   /* scroll-scrub: hero pins while its pieces part outward to reveal the intro statement */
-  .hero-stage{position:relative;height:340vh}
+  .hero-stage{position:relative;height:460vh}
   .hero{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:48px 0 58px;overflow:hidden}
   .hero-reveal{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:0 40px;opacity:0;pointer-events:none;will-change:opacity,transform}
   .hero-reveal .intro-text{font-family:var(--display);font-weight:400;font-size:clamp(1.4rem,3vw,2.3rem);line-height:1.34;letter-spacing:-.01em;max-width:min(1040px,94vw);color:var(--ink);text-align:center}
@@ -305,16 +309,73 @@
   .spec-row p{color:var(--ink-soft);font-size:1rem}
   @media(max-width:760px){.spec-row{grid-template-columns:42px 1fr;gap:6px 16px}.spec-row p{grid-column:2}}
 
-  /* ===== how = numbered editorial steps ===== */
-  .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--ink)}
-  @media(max-width:860px){.steps{grid-template-columns:repeat(2,1fr)}}
-  @media(max-width:480px){.steps{grid-template-columns:1fr}}
-  .step{padding:30px 28px 34px 0;position:relative}
-  .step+.step{border-left:1px solid var(--border);padding-left:28px}   /* divider on the left, with clearance so text never touches it */
-  @media(max-width:860px){.step{padding:26px 6px 28px;border-bottom:1px solid var(--border)}.step+.step{border-left:none;padding-left:6px}}
-  .step .n{font-family:var(--display);font-weight:600;font-size:2.6rem;line-height:1;color:var(--blue);margin-bottom:18px;display:block}
-  .step h4{font-size:1.08rem;font-weight:700;margin-bottom:9px}
-  .step p{color:var(--ink-soft);font-size:.94rem}
+  /* ===== how = process tile board ===== */
+  #how{background:var(--ink);color:var(--bg);overflow:hidden;scroll-margin-top:-10px}
+  html.how-cut-active #how::before{content:"";position:fixed;left:0;right:0;top:calc(var(--nav-h) - 42px);z-index:55;height:42px;background:var(--ink);pointer-events:none}
+  #how .wrap{max-width:1380px}
+  #how.how-fold-ready .step.reveal{opacity:1;transform:none;transition:none}
+  .steps{display:grid;grid-template-columns:1.18fr repeat(4,minmax(0,1fr));grid-template-rows:1fr 1fr;gap:0;align-items:stretch;margin-top:0;padding:0;border:0;background:transparent;overflow:visible}
+  .process-title{grid-row:1 / span 2;min-height:510px;margin:0;padding:38px 34px 34px;border-radius:42px;background:var(--blue);color:#fff;display:flex;flex-direction:column;justify-content:space-between}
+  .process-title .kicker{margin:0;color:#fff}
+  .process-title .kicker::before{background:#fff}
+  .process-title h2{font-size:clamp(2rem,3.4vw,3.45rem);line-height:1.02;margin:0;max-width:9.5ch;color:#fff}
+  .step{display:contents;color:var(--ink)}
+  .step::before,
+  .step::after{display:none}
+  .step .n{min-height:255px;width:auto;aspect-ratio:auto;border-radius:42px;background:var(--card-solid);color:var(--blue);display:flex;align-items:center;justify-content:flex-start;margin:0;padding:34px 32px 28px;font-family:var(--display);font-weight:800;font-size:clamp(4.2rem,6.2vw,7rem);line-height:1}
+  .step-body{min-height:255px;border-top:0;border-radius:42px;background:var(--card-solid);padding:30px 32px 34px;display:flex;flex-direction:column;justify-content:flex-start}
+  .step h4{width:100%;font-size:1.02rem;font-weight:800;margin:0 0 11px;color:currentColor}
+  .step p{width:100%;color:var(--ink-soft);font-size:.88rem;line-height:1.48}
+  .step:nth-child(2) .n,
+  .step:nth-child(2) .step-body{grid-column:2}
+  .step:nth-child(3) .n,
+  .step:nth-child(3) .step-body{grid-column:3}
+  .step:nth-child(4) .n,
+  .step:nth-child(4) .step-body{grid-column:4}
+  .step:nth-child(5) .n,
+  .step:nth-child(5) .step-body{grid-column:5}
+  .step .n{grid-row:1}
+  .step-body{grid-row:2}
+  @media(min-width:1121px){
+    #how.how-fold-ready{height:calc(100vh - var(--nav-h));min-height:680px;padding:0}
+    #how.how-fold-ready .wrap{position:sticky;top:var(--nav-h);height:calc(100vh - var(--nav-h));display:flex;align-items:center;padding-top:0;padding-bottom:0}
+    #how.how-fold-ready .steps{width:100%}
+    #how.how-fold-ready .steps{perspective:1800px;transform-style:preserve-3d}
+    #how.how-fold-ready .process-title{position:relative;z-index:5;box-shadow:0 18px 38px rgba(0,0,0,.16)}
+    #how.how-fold-ready .step .n,
+    #how.how-fold-ready .step-body{position:relative;transform-origin:left center;backface-visibility:hidden;will-change:transform,opacity,filter;box-shadow:0 18px 32px rgba(0,0,0,.12);margin-left:-1px;width:calc(100% + 1px)}
+    .step-body{padding-top:40px}
+    .step h4{font-size:calc(1.02rem + 5pt)}
+  }
+  @media(max-width:1120px){
+    .steps{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto;gap:14px}
+    .process-title{grid-column:1/-1;grid-row:auto;min-height:300px}
+    .process-title h2{max-width:14ch}
+    .step{display:grid;grid-template-rows:1fr 1fr}
+    .step:nth-child(n) .n,
+    .step:nth-child(n) .step-body{grid-column:auto}
+  }
+  @media(max-width:620px){
+    #how.how-fold-ready{--how-mobile-title:150px;--how-mobile-step:126px;height:calc(100svh - var(--nav-h));min-height:calc(var(--how-mobile-title) + var(--how-mobile-step)*4 + 92px);padding:0}
+    #how.how-fold-ready .wrap{position:sticky;top:var(--nav-h);height:calc(100svh - var(--nav-h));display:flex;align-items:center;padding-top:46px;padding-bottom:46px}
+    #how.how-fold-ready .steps{width:100%}
+    #how.how-fold-ready .steps{perspective:1200px;transform-style:preserve-3d}
+    #how.how-fold-ready .process-title{position:relative;z-index:5;box-shadow:0 14px 30px rgba(0,0,0,.16)}
+    #how.how-fold-ready .step .n,
+    #how.how-fold-ready .step-body{position:relative;transform-origin:50% 0;backface-visibility:hidden;will-change:transform,opacity,filter;box-shadow:0 14px 28px rgba(0,0,0,.10)}
+    #how .wrap{padding:0 18px}
+    .steps{grid-template-columns:1fr;gap:0}
+    .process-title{grid-column:1/-1;min-height:var(--how-mobile-title);padding:20px 28px;border-radius:30px;gap:18px}
+    .process-title h2{font-size:clamp(1.46rem,7vw,1.94rem);max-width:12ch}
+    .step{grid-template-columns:78px 1fr;grid-template-rows:1fr;gap:0}
+    .step .n{grid-row:auto;font-size:3.05rem;padding:18px 14px;align-items:center;justify-content:center}
+    .step-body{grid-row:auto}
+    .step .n,
+    .step-body{min-height:var(--how-mobile-step);border-radius:28px}
+    .step-body{padding:16px 22px;justify-content:center}
+    .step h4{font-size:.96rem;margin-bottom:8px}
+    .step p{font-size:.8rem;line-height:1.38}
+  }
 
   /* ===== install ===== */
   .install-wrap{display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:start}
@@ -359,7 +420,7 @@
   /* ===== footer ===== */
   footer{padding:54px 0 64px;border-top:1px solid var(--border)}
   .foot{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
-  .foot .brand{font-family:var(--display);font-weight:600;font-size:1.1rem;align-items:center}
+  .foot .brand{font-family:var(--display);font-weight:600;font-size:1.1rem;align-items:center;color:var(--blue)}
   .foot-links{display:flex;gap:18px;flex-wrap:wrap;margin:14px 0}
   .foot-links a{font-family:var(--mono);font-size:.78rem;text-transform:lowercase;color:var(--ink-soft);text-decoration:none}
   .foot-links a:hover{color:var(--blue-deep)}
@@ -484,8 +545,7 @@
 <nav>
   <div class="wrap nav-in">
     <div class="brand">
-      <span class="logo"><svg viewBox="0 0 24 24" fill="none"><path d="M4 4h4M4 4v4M20 4h-4M20 4v4M4 20h4M4 20v-4M20 20h-4M20 20v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9 8l7 4-7 4V8z" fill="currentColor"/></svg></span>
-      UI Tweaker
+      <span class="brand-copy"><span class="brand-name">UI Tweaker</span> <span class="brand-kind">skill</span></span>
     </div>
     <div class="nav-links">
       <a href="#why" data-lang-en>Why</a><a href="#why" data-lang-zh>為什麼</a>
@@ -520,7 +580,7 @@
     </div>
     <div class="hero-notes">
       <span class="hero-note n1"><span data-lang-en>Drag to adjust, see it live</span><span data-lang-zh>拖一下，即時看到變化</span></span>
-      <span class="hero-note n2"><span data-lang-en>Writes back to your real code</span><span data-lang-zh>寫回你的真實程式碼</span></span>
+      <span class="hero-note n2"><span data-lang-en>Copy precise values for AI</span><span data-lang-zh>複製精準數值給 AI</span></span>
       <span class="hero-note n3"><span data-lang-en>Works across AI coding tools</span><span data-lang-zh>跨各家 AI coding 工具</span></span>
     </div>
   </div>
@@ -545,7 +605,7 @@
         <svg viewBox="0 0 24 24"><path d="M6 19c4-7 7-11 12-14M7 7h.01M17 17h.01"/></svg>
       </div>
     </div>
-    <p class="wipe-text"><span class="wipe-quote" aria-hidden="true"><svg viewBox="0 0 246 176" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M25 78L109 4" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M151 78L235 4" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="60" cy="116" r="54" fill="currentColor"/><circle cx="186" cy="116" r="54" fill="currentColor"/></svg></span><span data-lang-en>A design-tool panel for <span class="keep-together">vibe coding</span>:<br class="br-desk"><em>scrub real values, preview live, drag to move</em><br class="br-desk">— then hand the exact numbers to<br class="br-desk">your AI to write straight into your source.</span><span data-lang-zh>為 <span class="keep-together">vibe coding</span> 而生的設計工具面板：<br class="br-desk"><em>刷真實數值、即時預覽、拖曳移動</em><br class="br-desk">——再把精確數字交給 AI 直接寫回原始碼。</span></p>
+    <p class="wipe-text"><span class="wipe-quote" aria-hidden="true"><svg viewBox="0 0 246 176" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M25 78L109 4" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M151 78L235 4" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="60" cy="116" r="54" fill="currentColor"/><circle cx="186" cy="116" r="54" fill="currentColor"/></svg></span><span data-lang-en>A design-tool panel for <span class="keep-together">vibe coding</span>:<br class="br-desk"><em>scrub real values, preview live, drag to move</em><br class="br-desk">— then copy the exact numbers for<br class="br-desk">your AI to apply precisely.</span><span data-lang-zh>為 <span class="keep-together">vibe coding</span> 而生的設計工具面板：<br class="br-desk"><em>刷真實數值、即時預覽、拖曳移動</em><br class="br-desk">——再把精準數字交給 AI 精準套用。</span></p>
   </div>
 </section>
 </div>
@@ -660,7 +720,7 @@
       </div>
       <div class="studio-footer">
         <div class="studio-summary" id="studioSummary">No changes yet</div>
-        <button class="studio-confirm" id="studioConfirm" type="button"><span data-lang-en>Confirm &amp; update code</span><span data-lang-zh>確認並更新程式碼</span></button>
+        <button class="studio-confirm" id="studioConfirm" type="button"><span data-lang-en>Confirm &amp; copy for AI</span><span data-lang-zh>確認並複製給 AI</span></button>
       </div>
     </div>
 
@@ -687,7 +747,7 @@
       <div class="spec-row reveal"><span class="idx">02</span><h3><span data-lang-en>Eight control categories</span><span data-lang-zh>八大控制分類</span></h3><p><span data-lang-en>Typography, spacing, size, radius, position/offset, shadow, frosted glass, color — each fully scrubbable.</span><span data-lang-zh>字型、間距、尺寸、圓角、位置偏移、陰影、磨砂玻璃、顏色——每項都能拖曳微調。</span></p></div>
       <div class="spec-row reveal"><span class="idx">03</span><h3><span data-lang-en>Figma / PS interactions</span><span data-lang-zh>Figma／PS 操作</span></h3><p><span data-lang-en>Type-able number boxes, drag-to-scrub, linked corner radii, icon alignment, undo/redo with shortcuts.</span><span data-lang-zh>可打字數字框、拖曳刷值、圓角四角連動、圖示對齊、undo/redo 快捷鍵。</span></p></div>
       <div class="spec-row reveal"><span class="idx">04</span><h3><span data-lang-en>The transform box</span><span data-lang-zh>變形框</span></h3><p><span data-lang-en>Select any element for an 8-handle box: corners scale proportionally, edges resize, drag to move, rotate, live px label.</span><span data-lang-zh>選任何元素都給 8 手把框：角等比縮放、邊改寬高、拖移、旋轉、即時 px 標籤。</span></p></div>
-      <div class="spec-row reveal"><span class="idx">05</span><h3><span data-lang-en>Writes back to source</span><span data-lang-zh>寫回原始碼</span></h3><p><span data-lang-en>On Confirm, copy the structured values to your AI — it locates the selectors, edits the real files, and verifies.</span><span data-lang-zh>按確認後，把結構化數值複製給 AI——它找到 selector、改真實檔案、再驗證。</span></p></div>
+      <div class="spec-row reveal"><span class="idx">05</span><h3><span data-lang-en>Structured Copy for AI</span><span data-lang-zh>結構化複製給 AI</span></h3><p><span data-lang-en>On Confirm, copy structured values for your AI — selectors, values, and intent are ready to paste.</span><span data-lang-zh>按確認後，複製給 AI 的結構化數值——selector、數值與意圖都整理好，直接貼上。</span></p></div>
       <div class="spec-row reveal"><span class="idx">06</span><h3><span data-lang-en>Works across AI tools</span><span data-lang-zh>跨 AI 工具</span></h3><p><span data-lang-en>Packaged as a <span class="keep-together">Claude Code</span> plugin, with portable adapters for Codex, Cursor, Windsurf, and plain skill folders.</span><span data-lang-zh>包裝成 <span class="keep-together">Claude Code</span> plugin，並提供 Codex、Cursor、Windsurf 與純 skill folder 的可攜 adapter。</span></p></div>
     </div>
   </div>
@@ -695,15 +755,15 @@
 
 <section class="pad" id="how">
   <div class="wrap">
-    <div class="head reveal">
-      <span class="kicker" data-lang-en>How it works</span><span class="kicker" data-lang-zh>運作方式</span>
-      <h2><span data-lang-en>From "feels off" to fixed code, in four.</span><span data-lang-zh>從「怪怪的」<wbr>到改好程式碼，<wbr>四步</span></h2>
-    </div>
     <div class="steps">
-      <div class="step reveal"><span class="n">1</span><h4><span data-lang-en>Just ask</span><span data-lang-zh>直接開口</span></h4><p><span data-lang-en>"Help me tweak the card." Your AI opens the panel rendered from your real stylesheet.</span><span data-lang-zh>「幫我調整卡片。」AI 用你真實樣式表開出面板。</span></p></div>
-      <div class="step reveal"><span class="n">2</span><h4><span data-lang-en>Adjust visually</span><span data-lang-zh>視覺調整</span></h4><p><span data-lang-en>Scrub sliders, drag the transform box, watch the live preview update instantly.</span><span data-lang-zh>刷滑桿、拖變形框，即時預覽馬上跟著變。</span></p></div>
-      <div class="step reveal"><span class="n">3</span><h4><span data-lang-en>Confirm &amp; copy</span><span data-lang-zh>確認並複製</span></h4><p><span data-lang-en>Hit Confirm — the panel emits a clean, structured block of values and selectors.</span><span data-lang-zh>按確認——面板吐出乾淨的結構化數值與 selector。</span></p></div>
-      <div class="step reveal"><span class="n">4</span><h4><span data-lang-en>AI applies it</span><span data-lang-zh>AI 套用</span></h4><p><span data-lang-en>Paste to your AI. It edits the real files and verifies — your preview reloads, done.</span><span data-lang-zh>貼給 AI，它改真實檔案並驗證——預覽自動更新，完成。</span></p></div>
+      <div class="head process-title reveal">
+        <span class="kicker" data-lang-en>How it works</span><span class="kicker" data-lang-zh>運作方式</span>
+        <h2><span data-lang-en>From "feels off" to precise values, in four.</span><span data-lang-zh>從「怪怪的」<wbr>到精準數值，<wbr>四步</span></h2>
+      </div>
+      <div class="step reveal"><span class="n">1</span><div class="step-body"><h4><span data-lang-en>Just ask</span><span data-lang-zh>直接開口</span></h4><p><span data-lang-en>"Help me tweak the card." Your AI opens the panel rendered from your real stylesheet.</span><span data-lang-zh>「幫我調整卡片。」AI 用你真實樣式表開出面板。</span></p></div></div>
+      <div class="step reveal"><span class="n">2</span><div class="step-body"><h4><span data-lang-en>Adjust visually</span><span data-lang-zh>視覺調整</span></h4><p><span data-lang-en>Scrub sliders, drag the transform box, watch the live preview update instantly.</span><span data-lang-zh>刷滑桿、拖變形框，即時預覽馬上跟著變。</span></p></div></div>
+      <div class="step reveal"><span class="n">3</span><div class="step-body"><h4><span data-lang-en>Confirm &amp; copy</span><span data-lang-zh>確認並複製</span></h4><p><span data-lang-en>Hit Confirm — the panel emits a clean, structured block of values and selectors.</span><span data-lang-zh>按確認——面板吐出乾淨的結構化數值與 selector。</span></p></div></div>
+      <div class="step reveal"><span class="n">4</span><div class="step-body"><h4><span data-lang-en>AI applies it</span><span data-lang-zh>AI 套用</span></h4><p><span data-lang-en>Paste the structured values to your AI. It can precisely edit your source and verify the result.</span><span data-lang-zh>把整理好的結構化數值貼給 AI，它就會精準修改你的原始碼並驗證。</span></p></div></div>
     </div>
   </div>
 </section>
@@ -809,7 +869,7 @@
       '.fc-icon':{el:card.querySelector('.fc-icon'), out:'.folder-card .fc-icon'}
     };
     const DEF_CARD={radius:18,pad:22,gap:12,shadow:22,scale:100,x:0,y:0,rot:0};
-    const state={}; let cur='#folderCard', zoom=1, history=[], hidx=-1;
+    const state={}, defaults={}; let cur='#folderCard', zoom=1, history=[], hidx=-1;
 
     const val=id=>Math.round(parseFloat(el(id).value)||0);
     const clampSlider=(id,v)=>Math.max(+el(id).min,Math.min(+el(id).max,v));
@@ -822,7 +882,8 @@
       const radius=rs.indexOf('%')>=0 ? Math.round(e.offsetWidth*parseFloat(rs)/100) : (Math.round(parseFloat(rs))||0);
       return {radius:radius, pad:Math.round(parseFloat(cs.paddingLeft))||0, gap:Math.round(parseFloat(cs.gap))||0, shadow:0, scale:100, x:0, y:0, rot:0};
     }
-    function st(t){ if(!state[t]) state[t]=defFor(t); return state[t]; }
+    function baseFor(t){ if(!defaults[t]) defaults[t]=defFor(t); return defaults[t]; }
+    function st(t){ if(!state[t]) state[t]=Object.assign({},baseFor(t)); return state[t]; }
     function labelFor(t){ const r=document.querySelector('.studio-layers .studio-row[data-target="'+t+'"]'); return r?r.querySelector('.studio-lay-name').textContent:'Folder card'; }
 
     function applyEl(t){
@@ -882,23 +943,48 @@
       if(s.fcolor) L.push('background: '+s.fcolor+';');
       return L;
     }
-    function renderOut(){
-      outPre.textContent='[UI Tweaker Confirm]\nComponent: Pikmin Home #screen-home > '+PICK[cur].out+'\nSource: pikmin-react/src/styles.css\n\n'+PICK[cur].out+' {\n'+cssLines(cur).map(l=>'  '+l).join('\n')+'\n}';
-    }
-    function renderSummary(){
-      const zh=document.documentElement.getAttribute('data-lang')==='zh';
-      const s=st(cur), d=defFor(cur), c=[];
+    function changeSummaryLines(t){
+      const s=st(t), d=baseFor(t), c=[];
       if(s.radius!==d.radius) c.push('border-radius: '+s.radius+'px');
       if(s.pad!==d.pad) c.push('padding: '+s.pad+'px');
       if(s.gap!==d.gap) c.push('gap: '+s.gap+'px');
       if(s.shadow!==d.shadow) c.push('box-shadow: '+(s.shadow>0?shadowFor(s.shadow):'none'));
-      if((s.x||0)!==0||(s.y||0)!==0) c.push('offset: '+(s.x||0)+'px, '+(s.y||0)+'px');
+      if((s.x||0)!==(d.x||0)||(s.y||0)!==(d.y||0)) c.push('offset: '+(s.x||0)+'px, '+(s.y||0)+'px');
       if(s.scale!==d.scale) c.push('scale: '+(s.scale/100));
-      if(s.rot) c.push('rotate: '+s.rot+'°');
+      if((s.rot||0)!==(d.rot||0)) c.push('rotate: '+(s.rot||0)+'°');
       if(s.font) c.push('font-family: '+s.font.replace(/'/g,'').split(',')[0]);
       if(s.tcolor) c.push('color: '+s.tcolor);
       if(s.fcolor) c.push('fill: '+s.fcolor);
-      summary.textContent=c.length?(labelFor(cur)+' ·\n'+c.join('\n')):(zh?'尚無變更':'No changes yet');
+      return c;
+    }
+    function changeCssLines(t){
+      const s=st(t), d=baseFor(t), L=[];
+      if(s.radius!==d.radius) L.push('border-radius: '+s.radius+'px;');
+      if(s.pad!==d.pad) L.push('padding: '+s.pad+'px;');
+      if(s.gap!==d.gap) L.push('gap: '+s.gap+'px;');
+      if(s.shadow!==d.shadow) L.push('box-shadow: '+(s.shadow>0?shadowFor(s.shadow):'none')+';');
+      if((s.x||0)!==(d.x||0)||(s.y||0)!==(d.y||0)||s.scale!==d.scale||(s.rot||0)!==(d.rot||0)){
+        const tx=tfm(s); if(tx) L.push('transform: '+tx+';');
+      }
+      if(s.font) L.push('font-family: '+s.font+';');
+      if(s.tcolor) L.push('color: '+s.tcolor+';');
+      if(s.fcolor) L.push('background: '+s.fcolor+';');
+      return L;
+    }
+    function changedTargets(){ return Object.keys(PICK).filter(t=>changeCssLines(t).length); }
+    function renderOut(){
+      const targets=changedTargets();
+      const zh=document.documentElement.getAttribute('data-lang')==='zh';
+      if(!targets.length){
+        outPre.textContent='[UI Tweaker Confirm]\nComponent: Pikmin Home #screen-home\nSource: pikmin-react/src/styles.css\n\n'+(zh?'尚無變更':'No changes yet');
+        return;
+      }
+      outPre.textContent='[UI Tweaker Confirm]\nComponent: Pikmin Home #screen-home\nSource: pikmin-react/src/styles.css\n\n'+targets.map(t=>'/* '+labelFor(t)+' */\n'+PICK[t].out+' {\n'+changeCssLines(t).map(l=>'  '+l).join('\n')+'\n}').join('\n\n');
+    }
+    function renderSummary(){
+      const zh=document.documentElement.getAttribute('data-lang')==='zh';
+      const targets=changedTargets();
+      summary.textContent=targets.length?targets.map(t=>labelFor(t)+' ·\n'+changeSummaryLines(t).join('\n')).join('\n\n'):(zh?'尚無變更':'No changes yet');
     }
     function refresh(){ placeBox(); renderSummary(); if(out.classList.contains('show')) renderOut(); }
 
@@ -1157,6 +1243,163 @@
   const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12});
   document.querySelectorAll('.reveal').forEach((el,i)=>{el.style.transitionDelay=(Math.min(i,6)*60)+'ms';io.observe(el);});
 
+  // how section: scroll-scrubbed brochure fold. Desktop opens sideways; mobile opens downward.
+  (function(){
+    const root=document.getElementById('how');
+    const steps=root?Array.prototype.slice.call(root.querySelectorAll('.step')):[];
+    if(!root||!steps.length) return;
+    const reduced=()=>window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const desktop=()=>window.matchMedia('(min-width:1121px)').matches && !reduced();
+    const mobile=()=>window.matchMedia('(max-width:620px)').matches && !reduced();
+    const clamp=n=>Math.max(0,Math.min(1,n));
+    const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+    let ticking=false, fold=0, locked=false, lockY=0, touchY=null;
+    root.classList.add('how-fold-ready');
+    function clearEl(el){
+      el.style.opacity='';
+      el.style.filter='';
+      el.style.transform='';
+      el.style.transformOrigin='';
+      el.style.zIndex='';
+    }
+    function setDesktopStep(step,i,amount){
+      clearEl(step);
+      const local=ease(clamp((amount-i*.24)/.22));
+      const dir=i%2===0?-1:1;
+      const els=[step.querySelector('.n'),step.querySelector('.step-body')].filter(Boolean);
+      els.forEach(el=>{
+        if(local>=.995){
+          clearEl(el);
+          el.style.zIndex=String(50-i);
+        } else {
+          const closed=1-local;
+          el.style.transformOrigin='left center';
+          el.style.zIndex=String(50-i);
+          el.style.opacity=String(local<.035?0:1);
+          el.style.filter='brightness('+(0.68+local*.32).toFixed(3)+') blur('+(closed*.8).toFixed(2)+'px)';
+          el.style.transform='rotateY('+(dir*88*closed).toFixed(2)+'deg)';
+        }
+      });
+    }
+    function setMobileStep(step,i,amount){
+      clearEl(step);
+      const local=ease(clamp((amount-i*.24)/.22));
+      const dir=i%2===0?1:-1;
+      [step.querySelector('.n'),step.querySelector('.step-body')].filter(Boolean).forEach(el=>{
+        if(local>=.995){
+          clearEl(el);
+          el.style.zIndex=String(50-i);
+        } else {
+          const closed=1-local;
+          el.style.transformOrigin='50% 0';
+          el.style.zIndex=String(50-i);
+          el.style.opacity=String(local<.035?0:1);
+          el.style.filter='brightness('+(0.7+local*.3).toFixed(3)+') blur('+(closed*.8).toFixed(2)+'px)';
+          el.style.transform='rotateX('+(dir*86*closed).toFixed(2)+'deg)';
+        }
+      });
+    }
+    function reset(){
+      steps.forEach(step=>{
+        clearEl(step);
+        [step.querySelector('.n'),step.querySelector('.step-body')].filter(Boolean).forEach(clearEl);
+      });
+    }
+    function render(){
+      const rect=root.getBoundingClientRect();
+      document.documentElement.classList.toggle('how-cut-active',rect.top<=pinTop()+18&&rect.bottom>pinTop()+20);
+      if(!desktop()&&!mobile()){
+        locked=false;
+        reset();
+        return;
+      }
+      if(!locked){
+        const top=pinTop();
+        if(rect.top>top+80) fold=0;
+        else if(rect.bottom<window.innerHeight*.35) fold=1;
+      }
+      if(desktop()){
+        const amount=ease(fold);
+        steps.forEach((step,i)=>setDesktopStep(step,i,amount));
+      } else {
+        const amount=ease(fold);
+        steps.forEach((step,i)=>setMobileStep(step,i,amount));
+      }
+    }
+    function frame(){ ticking=false; render(); }
+    function request(){ if(!ticking){ ticking=true; requestAnimationFrame(frame); } }
+    function pinTop(){
+      const v=getComputedStyle(document.documentElement).getPropertyValue('--nav-h').trim();
+      const nav=parseFloat(v)||0;
+      return nav;
+    }
+    function lockToCut(){
+      const rect=root.getBoundingClientRect();
+      lockY=window.scrollY+rect.top-pinTop();
+      window.scrollTo(0,lockY);
+      locked=true;
+    }
+    function shouldCatch(delta){
+      if(!desktop()&&!mobile()) return false;
+      const rect=root.getBoundingClientRect(), top=pinTop();
+      const enteringDown=delta>0 && fold<1 && (rect.top<=top+70 || rect.top-delta<=top);
+      const enteringUp=delta<0 && fold>0 && rect.top<=top+8 && rect.bottom>window.innerHeight*.45;
+      return enteringDown||enteringUp||locked;
+    }
+    function consume(delta){
+      if(!shouldCatch(delta)) return false;
+      const visuallyOpen=fold>=.94;
+      if(delta>0&&visuallyOpen){
+        fold=1;
+        render();
+        locked=false;
+        window.scrollBy(0,Math.min(delta,320));
+        return true;
+      }
+      if((delta>0&&fold>=1)||(delta<0&&fold<=0)){
+        locked=false;
+        window.scrollBy(0,delta>0?Math.min(delta,320):Math.max(delta,-320));
+        return true;
+      }
+      if(!locked) lockToCut();
+      else window.scrollTo(0,lockY);
+      fold=clamp(fold+delta/620);
+      render();
+      return true;
+    }
+    window.addEventListener('wheel',e=>{
+      if(consume(e.deltaY)) e.preventDefault();
+    },{passive:false});
+    window.addEventListener('touchstart',e=>{
+      touchY=e.touches&&e.touches.length?e.touches[0].clientY:null;
+    },{passive:true});
+    window.addEventListener('touchmove',e=>{
+      if(touchY==null||!e.touches||!e.touches.length) return;
+      const y=e.touches[0].clientY;
+      const delta=touchY-y;
+      if(consume(delta)){
+        e.preventDefault();
+        touchY=y;
+      } else {
+        touchY=y;
+      }
+    },{passive:false});
+    window.addEventListener('scroll',request,{passive:true});
+    window.addEventListener('resize',request);
+    function alignHashCut(){
+      if(location.hash!=='#how'||(!desktop()&&!mobile())) return;
+      fold=0;
+      lockToCut();
+      render();
+      setTimeout(render,0);
+    }
+    window.addEventListener('hashchange',()=>requestAnimationFrame(alignHashCut));
+    render();
+    requestAnimationFrame(alignHashCut);
+    setTimeout(alignHashCut,80);
+    setTimeout(alignHashCut,240);
+  })();
+
   // hero bracket notes — DVD-screensaver bounce (diagonal motion, edge bounce, recolor on hit)
   (function(){
     const wrap=document.querySelector('.hero-notes');
@@ -1330,8 +1573,10 @@
     }
     let ticking=false;
     // phase split across the single stage: [0,A] scatter (letters fly out, the dot sits on the period & grows),
-    // [A,B] the SAME dot expands to full-bleed (+ statement fades in), [B,1] diagonal recede right (statement slides out)
-    const A=0.38, B=0.60;
+    // [A,B] the SAME dot expands to full-bleed (+ statement fades in), [B,C] full-bleed hold,
+    // [C,1] diagonal recede right (statement slides out). The hold creates scroll resistance so fast scrolling
+    // doesn't skip the vermilion statement panel.
+    const A=0.34, B=0.56, C=0.82;
     function frame(){
       ticking=false;
       if(!desktop()){
@@ -1379,8 +1624,13 @@
           if(wtext){ wtext.style.opacity=String(Math.min(1,pe*1.35)); wtext.style.transform=''; }
           if(wtools) wtools.style.transform='';
           panel.classList.toggle('tools-in',pe>.22);
+        } else if(p<C){                // full vermilion hold: absorb scroll while the statement remains readable
+          panel.style.clipPath='circle(85.5vmax at var(--wipe-origin-x,50%) var(--wipe-origin-y,50%))';
+          if(wtext){ wtext.style.opacity='1'; wtext.style.transform=''; }
+          if(wtools){ wtools.style.transform=''; }
+          panel.classList.add('tools-in');
         } else {                       // full vermilion → diagonal recede right, statement slides out with it
-          const pr=(p-B)/(1-B), S=22, tl=pr*(100+S), bl=tl-S;
+          const pr=(p-C)/(1-C), S=22, tl=pr*(100+S), bl=tl-S;
           panel.style.clipPath='polygon('+tl+'% 0, 100% 0, 100% 100%, '+bl+'% 100%)';
           if(wtext){ wtext.style.opacity='1'; wtext.style.transform='translate3d('+(pr*72)+'vw,0,0)'; }
           if(wtools){ wtools.style.transform='translate3d('+(pr*72)+'vw,0,0)'; }

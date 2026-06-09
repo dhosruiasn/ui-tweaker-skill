@@ -624,15 +624,16 @@
     if('_bdHex' in s){ el.style.setProperty('border-color', paintValue(s._bdHex,s._bdA,'transparent'), 'important'); }
     if(('border-width' in s) || ('_bdHex' in s)){ var _bs=(gcs(key).getPropertyValue('border-style')||'').trim(); if(!_bs || _bs.split(' ')[0]==='none'){ el.style.setProperty('border-style','solid','important'); } }
     if(('_bdAlign' in s) || ('border-width' in s) || ('_bdHex' in s)){
-      // stroke alignment: center = real border (above); inside/outside = outline ring so the element keeps its size and there's no layout shift
+      // stroke alignment via outline (all three), so changing width never reflows/shifts the element
       var _bAlign=s._bdAlign||'center';
       var _bW=parseFloat(('border-width' in s)?s['border-width']:cssVal(key,'border-top-width'))||0;
-      if(_bAlign==='center' || _bW<=0){ el.style.removeProperty('outline'); el.style.removeProperty('outline-offset'); }
+      if(_bW<=0){ el.style.removeProperty('outline'); el.style.removeProperty('outline-offset'); }
       else {
         var _bCol=('_bdHex' in s)?paintValue(s._bdHex,s._bdA,'currentColor'):(cssVal(key,'border-top-color')||'#000000');
-        el.style.setProperty('border-width','0','important');                 // hide the real border; draw the stroke via outline
+        el.style.setProperty('border-width','0','important');
         el.style.setProperty('outline', _bW+'px solid '+_bCol, 'important');
-        el.style.setProperty('outline-offset', (_bAlign==='inside'? -_bW : 0)+'px', 'important');
+        var _off=_bAlign==='inside'? -_bW : (_bAlign==='outside'? 0 : -_bW/2);   // center = half in / half out
+        el.style.setProperty('outline-offset', _off+'px', 'important');
       }
     }
     if('_fillHex' in s){ applySvgPaint(el, 'fill', s._fillHex); }
@@ -794,12 +795,7 @@
     ]));
 
     cats.push(shadowCat(key));
-    cats.push(effectsCat(key));
-
-    var bf=cssVal(key,'backdrop-filter')||cssVal(key,'-webkit-backdrop-filter')||'none';
-    cats.push(cat('Frosted glass', false, [
-      fieldGrid(1,[ numBox('backdrop-filter','Blur',0,30,0.5,'px', bfBlur(bf)) ])
-    ]));
+    cats.push(effectsCat(key));   // Effects already provides Glass; the separate Frosted glass category was redundant and removed
 
     if(isSvgKey(key)){
       cats.push(cat('SVG Icon', true, [

@@ -6,12 +6,6 @@ Fine-tune any UI component **with an AI coding assistant** through a design-tool
 
 <video src="https://raw.githubusercontent.com/dhosruiasn/ui-tweaker-skill/main/assets/ui-tweaker-skill-demo.mp4" width="800" controls></video>
 
-<div align="center">
-  <a href="https://dhosruiasn.github.io/ui-tweaker-skill/">
-    <img src="./assets/ui-tweaker-gif.gif" alt="UI Tweaker - The ultimate visual tweaker for vibe coders" width="800">
-  </a>
-</div>
-
 > **Status:** v1.2.1 · MIT licensed · packaged for Claude Code plus portable adapters for Codex, Cursor, Windsurf, and plain skill-folder installs.
 
 ---

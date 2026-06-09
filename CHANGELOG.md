@@ -6,6 +6,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-06-10
+
+### Added
+- Border stroke alignment in the Color panel: inside / center / outside (icon
+  segment). Center keeps the real CSS border; inside/outside use an outline ring
+  so the element keeps its size with no layout shift.
+
+### Changed
+- Gradient is now added and removed via a CTA (like "+ Add shadow layer") instead
+  of a sticky checkbox; adding seeds the stops from the element's own colour, and
+  removing reliably reverts the background.
+- Shadows on text, icons, SVG and images now render as `filter: drop-shadow`
+  (follows the rendered shape, no rectangular base); box elements keep
+  `box-shadow`. SVG therefore has a working shadow option.
+
 ## [1.2.3] - 2026-06-09
 
 ### Fixed

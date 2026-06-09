@@ -508,6 +508,8 @@
   var svgChildPaint = {};      // key -> child-index -> original SVG fill/stroke attributes
   var ORIG_TEXT = {};         // original display copy; reset/undo restores this before reapplying text overrides
   var _textCfgCache = {};     // once an element is detected as text-editable it stays so, even after the text is emptied
+  var CAT_OPEN = {};          // remembered collapse state per section, so it persists across layer switches / panel rebuilds
+  function wireCatOpen(d, k, def){ d.open=(k in CAT_OPEN)?CAT_OPEN[k]:def; d.addEventListener('toggle',function(){ CAT_OPEN[k]=d.open; }); }
   var history = []; var hidx = -1;
 
   // ---- Utilities ----
@@ -999,7 +1001,7 @@
     return state[key]._shadows;
   }
   function shadowCat(key, title, sections){
-    var d=document.createElement('details'); d.className='tw-cat';
+    var d=document.createElement('details'); d.className='tw-cat'; wireCatOpen(d, 'cat:'+(title||'Shadow'), false);
     var s=document.createElement('summary'); s.textContent=title || 'Shadow'; d.appendChild(s);
     var b=document.createElement('div'); b.className='tw-cat-body';
     if(sections && sections.length){
@@ -1029,7 +1031,7 @@
     b.appendChild(add);
   }
   function renderShadowLayer(key, layer, idx, body){
-    var wrap=document.createElement('details'); wrap.className='tw-shadow-layer'; wrap.open=true;
+    var wrap=document.createElement('details'); wrap.className='tw-shadow-layer'; wireCatOpen(wrap, 'shlayer:'+key+'#'+idx, true);
     var head=document.createElement('summary'); head.className='tw-shadow-head';
     var ttl=document.createElement('span'); ttl.textContent='Shadow layer '+(idx+1); head.appendChild(ttl);
     var actions=document.createElement('div'); actions.className='tw-shadow-actions';
@@ -1103,7 +1105,7 @@
     return (state[key] && state[key]._effects) ? state[key]._effects : [];
   }
   function effectsCat(key){
-    var d=document.createElement('details'); d.className='tw-cat'; d.open=true;
+    var d=document.createElement('details'); d.className='tw-cat'; wireCatOpen(d, 'cat:Effects', true);
     var s=document.createElement('summary'); s.textContent='Effects'; d.appendChild(s);
     var b=document.createElement('div'); b.className='tw-cat-body';
     renderEffectsBody(key,b); d.appendChild(b); return d;
@@ -1410,7 +1412,7 @@
     });
   }
   function cat(title, open, rows){
-    var d=document.createElement('details'); d.className='tw-cat'; if(open)d.open=true;
+    var d=document.createElement('details'); d.className='tw-cat'; wireCatOpen(d, 'cat:'+title, !!open);
     var s=document.createElement('summary'); s.textContent=title; d.appendChild(s);
     var b=document.createElement('div'); b.className='tw-cat-body';
     rows.forEach(function(r){ b.appendChild(r); }); d.appendChild(b); return d;

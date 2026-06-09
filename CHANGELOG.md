@@ -20,6 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   stuck empty — the detected text-edit mode is cached so it survives an empty state.
 - Removed the transform-box resize cap (Scale was clamped to 30–300% / 0.3–2);
   scale is now effectively unbounded.
+- Section collapse/expand state (categories and shadow sub-layers) now persists
+  across layer switches and panel rebuilds instead of resetting to defaults, so a
+  section you collapse stays collapsed.
 
 ## [1.2.2] - 2026-06-09
 

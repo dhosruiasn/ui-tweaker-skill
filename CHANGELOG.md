@@ -6,6 +6,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-06-10
+
+### Added
+- Gradient now supports a middle colour stop (colour, alpha, draggable position)
+  for three-stop transitions.
+- Demo tags are split into frame + text as separate edit targets (Tag → Tag text),
+  mirroring the button/btnText split.
+
+### Changed
+- All three border stroke alignments (inside / center / outside) now draw as an
+  outline, so changing border width never reflows or shifts the element.
+- Effects → Glass now renders see-through: the translucent tint is set as the
+  whole background (re-applied last so it wins over an opaque fill/gradient), so
+  the backdrop blur is actually visible.
+- Removed the redundant standalone Frosted glass category (Effects already
+  provides Glass).
+- The transform-box frame gets a white halo so an element's own drop-shadow can't
+  be mistaken for a shadow on the selection frame.
+
 ## [1.3.0] - 2026-06-10
 
 ### Added

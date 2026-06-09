@@ -611,7 +611,8 @@
     }
     if('_svgBgShape' in s){ applySvgBgShape(el, s._svgBgShape); }
     if('_shadows' in s){
-      el.style.setProperty('box-shadow', composeShadow(s._shadows), 'important');
+      if(shadowAsFilter(key)){ var _ds=composeDropShadow(s._shadows); el.dataset.twShadowFilter=_ds; el.style.removeProperty('box-shadow'); el.style.setProperty('filter', _ds||'none', 'important'); }
+      else { el.dataset.twShadowFilter=''; el.style.setProperty('box-shadow', composeShadow(s._shadows), 'important'); }
     }
     if('_effects' in s){ applyEffects(el, s._effects); }
     if(s._gradOn && ('_gradStartHex' in s)){
@@ -636,6 +637,7 @@
   }
   function applyEffects(el, effects){
     var shadows=[], filters=[], bfilters=[];
+    if(el.dataset && el.dataset.twShadowFilter) filters.push(el.dataset.twShadowFilter);   // keep the shape (drop-shadow) shadow when effects also set filters
     var isSvg=!!el && (el.tagName||'').toLowerCase()==='svg';
     (effects||[]).forEach(function(f){
       if(f.off) return;
@@ -988,6 +990,25 @@
     return active.map(function(l){
       return (l.inset?'inset ':'')+l.x+'px '+l.y+'px '+l.blur+'px '+l.spread+'px '+hexToRgba(l.hex||'#000000', l.alpha);
     }).join(', ');
+  }
+  // drop-shadow follows the rendered alpha shape (text glyphs, icon paths, transparent images) — no rectangular base; no spread/inset
+  function composeDropShadow(layers){
+    var active=(layers||[]).filter(function(l){ return !l.off; });
+    return active.map(function(l){
+      return 'drop-shadow('+(l.x||0)+'px '+(l.y||0)+'px '+Math.max(0,l.blur||0)+'px '+hexToRgba(l.hex||'#000000', l.alpha==null?0.2:l.alpha)+')';
+    }).join(' ');
+  }
+  // text / icons (svg) / images should cast a shape-following shadow (filter), not a box-shadow rectangle
+  function shadowAsFilter(key){
+    var el=editElFor(key); if(!el) return false;
+    var tag=(el.tagName||'').toLowerCase();
+    if(tag==='svg'||tag==='img') return true;
+    if(textCfgFor(key)){
+      var bg=(gcs(key).backgroundColor||''), m=bg.match(/rgba?\(([^)]+)\)/);
+      var parts=m?m[1].split(','):null, a=parts?parseFloat(parts[3]!=null?parts[3]:'1'):1;
+      if(!m || a===0) return true;   // text with no painted background
+    }
+    return false;
   }
   function currentLayers(key){
     var st=state[key]||{};

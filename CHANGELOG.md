@@ -6,6 +6,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.3] - 2026-06-09
+
+### Fixed
+- Color panel gradient now seeds its stops from the element's actual background
+  colour instead of a fixed blue; it is gated by an explicit on/off toggle so it
+  no longer applies by default, can be removed, and can be added on solid /
+  no-background elements (gradient and background-color no longer overwrite the
+  same `background` property).
+- Border width/colour now also set `border-style: solid` when the element has no
+  border style, so border adjustments are actually visible.
+- Clearing an element's text and retyping (or undo/reset) no longer leaves it
+  stuck empty — the detected text-edit mode is cached so it survives an empty state.
+- Removed the transform-box resize cap (Scale was clamped to 30–300% / 0.3–2);
+  scale is now effectively unbounded.
+
 ## [1.2.2] - 2026-06-09
 
 ### Fixed

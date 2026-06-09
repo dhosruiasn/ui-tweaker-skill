@@ -1,6 +1,6 @@
 {
   "name": "ui-tweaker",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Use when a user asks to tweak a UI component, adjust spacing, typography, color, size, auto layout, flex layout, radius, position, shadows, SVG icons, or other visual details through a live control panel, then generate structured values and selectors for the AI to apply to source files.",
   "author": {
     "name": "HsuanTung Kao"

@@ -429,7 +429,7 @@
         <div class="demo-card-body">
           <h3 class="demo-card-title" id="demo-card-title" data-pick="title">Mountain Retreat</h3>
           <p class="demo-card-desc" id="demo-card-desc" data-pick="desc">A quiet cabin with floor-to-ceiling views over the valley.</p>
-          <div class="demo-card-tags" id="demo-card-tags" data-pick="tags"><span class="demo-tag" data-pick="tag1">Design</span><span class="demo-tag" data-pick="tag2">Nature</span><span class="demo-tag" data-pick="tag3">Stay</span></div>
+          <div class="demo-card-tags" id="demo-card-tags" data-pick="tags"><span class="demo-tag" data-pick="tag1"><span class="demo-tag-text" data-pick="tag1Text">Design</span></span><span class="demo-tag" data-pick="tag2"><span class="demo-tag-text" data-pick="tag2Text">Nature</span></span><span class="demo-tag" data-pick="tag3"><span class="demo-tag-text" data-pick="tag3Text">Stay</span></span></div>
           <div class="demo-card-footer">
             <button class="demo-card-btn" id="demo-card-btn" data-pick="btn" type="button"><span class="demo-card-btn-text" data-pick="btnText">View</span></button>
           </div>
@@ -473,6 +473,9 @@
     tag1:  '#demo-card-tags .demo-tag:nth-of-type(1)',
     tag2:  '#demo-card-tags .demo-tag:nth-of-type(2)',
     tag3:  '#demo-card-tags .demo-tag:nth-of-type(3)',
+    tag1Text: '#demo-card-tags .demo-tag:nth-of-type(1) .demo-tag-text',
+    tag2Text: '#demo-card-tags .demo-tag:nth-of-type(2) .demo-tag-text',
+    tag3Text: '#demo-card-tags .demo-tag:nth-of-type(3) .demo-tag-text',
     btn:   '#demo-card-btn',
     btnText: '#demo-card-btn .demo-card-btn-text'
   };
@@ -494,6 +497,9 @@
     tag1:'.demo-card-tags .demo-tag:nth-of-type(1)',
     tag2:'.demo-card-tags .demo-tag:nth-of-type(2)',
     tag3:'.demo-card-tags .demo-tag:nth-of-type(3)',
+    tag1Text:'.demo-card-tags .demo-tag:nth-of-type(1) .demo-tag-text',
+    tag2Text:'.demo-card-tags .demo-tag:nth-of-type(2) .demo-tag-text',
+    tag3Text:'.demo-card-tags .demo-tag:nth-of-type(3) .demo-tag-text',
     btn:'.demo-card-btn', btnText:'.demo-card-btn .demo-card-btn-text'
   };
   function elFor(key){ return key && SEL[key] ? document.querySelector(SEL[key]) : null; }
@@ -2221,9 +2227,9 @@
         { key:'title', label:'Title', icon:'text' },
         { key:'desc',  label:'Description', icon:'text' },
         { key:'tags', label:'Tags', icon:'group', children:[
-          { key:'tag1', label:'Tag 1', icon:'tag' },
-          { key:'tag2', label:'Tag 2', icon:'tag' },
-          { key:'tag3', label:'Tag 3', icon:'tag' }
+          { key:'tag1', label:'Tag 1', icon:'tag', children:[ { key:'tag1Text', label:'Tag text', icon:'text' } ] },
+          { key:'tag2', label:'Tag 2', icon:'tag', children:[ { key:'tag2Text', label:'Tag text', icon:'text' } ] },
+          { key:'tag3', label:'Tag 3', icon:'tag', children:[ { key:'tag3Text', label:'Tag text', icon:'text' } ] }
         ]},
         { label:'Footer', icon:'group', children:[
           { key:'btn', label:'Button', icon:'btn', children:[

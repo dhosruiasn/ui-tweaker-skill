@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-06-09
+
+### Fixed
+- Synced the Claude plugin manifests (`.claude-plugin/plugin.json` and
+  `.claude-plugin/marketplace.json`) with the skill metadata so their
+  descriptions also list the auto layout and flex layout controls added in 1.2.0.
+
 ## [1.2.1] - 2026-06-08
 
 ### Changed

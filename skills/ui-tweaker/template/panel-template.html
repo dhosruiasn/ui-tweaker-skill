@@ -294,6 +294,7 @@
   .tw-mini-seg { display:flex; min-width:0; border:1px solid #e4e4e6; border-radius:8px; overflow:hidden; background:#fff; }
   .tw-mini-seg button { flex:1 1 0; min-width:0; height:28px; padding:0 6px; border:0; border-right:1px solid #eeeeef; background:#fff; color:#5f6368; font-size:10.5px; cursor:pointer; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .tw-mini-seg button:last-child { border-right:0; }
+  .tw-mini-seg button svg { display:block; margin:0 auto; width:15px; height:15px; }
   .tw-mini-seg button:hover { background:#f4f4f5; }
 	  .tw-mini-seg button.on { background:var(--tw-accent-soft); color:var(--tw-accent); font-weight:600; }
   .tw-size-axis .tw-seg-row { grid-template-columns:1fr; gap:4px; margin:0; }
@@ -622,6 +623,18 @@
     if('_txHex' in s){ el.style.setProperty('color', s._txHex==='none'?'transparent':s._txHex, 'important'); }
     if('_bdHex' in s){ el.style.setProperty('border-color', paintValue(s._bdHex,s._bdA,'transparent'), 'important'); }
     if(('border-width' in s) || ('_bdHex' in s)){ var _bs=(gcs(key).getPropertyValue('border-style')||'').trim(); if(!_bs || _bs.split(' ')[0]==='none'){ el.style.setProperty('border-style','solid','important'); } }
+    if(('_bdAlign' in s) || ('border-width' in s) || ('_bdHex' in s)){
+      // stroke alignment: center = real border (above); inside/outside = outline ring so the element keeps its size and there's no layout shift
+      var _bAlign=s._bdAlign||'center';
+      var _bW=parseFloat(('border-width' in s)?s['border-width']:cssVal(key,'border-top-width'))||0;
+      if(_bAlign==='center' || _bW<=0){ el.style.removeProperty('outline'); el.style.removeProperty('outline-offset'); }
+      else {
+        var _bCol=('_bdHex' in s)?paintValue(s._bdHex,s._bdA,'currentColor'):(cssVal(key,'border-top-color')||'#000000');
+        el.style.setProperty('border-width','0','important');                 // hide the real border; draw the stroke via outline
+        el.style.setProperty('outline', _bW+'px solid '+_bCol, 'important');
+        el.style.setProperty('outline-offset', (_bAlign==='inside'? -_bW : 0)+'px', 'important');
+      }
+    }
     if('_fillHex' in s){ applySvgPaint(el, 'fill', s._fillHex); }
     if('_strokeHex' in s){ applySvgPaint(el, 'stroke', s._strokeHex); }
     applyText(key);
@@ -825,6 +838,11 @@
         colorRow('_bg','Background', cssVal(key,'background-color'), true, '_bg'),
         colorRow('_tx2','Text', cssVal(key,'color'), false, '_txC'),
         colorRow('_bd','Border', cssVal(key,'border-top-color'), true, '_bd'),
+        segControl('_bdAlign','Stroke', [
+          ['inside',  '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor"><rect x="3" y="3" width="12" height="12" stroke-width="1"/><rect x="4.6" y="4.6" width="8.8" height="8.8" stroke-width="2.4"/></svg>', 'Inside'],
+          ['center',  '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor"><rect x="3.8" y="3.8" width="10.4" height="10.4" stroke-width="2.6"/></svg>', 'Center'],
+          ['outside', '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor"><rect x="5" y="5" width="8" height="8" stroke-width="1"/><rect x="2.5" y="2.5" width="13" height="13" stroke-width="2.4"/></svg>', 'Outside']
+        ], (st._bdAlign||'center')),
         fieldGrid(1,[ numBox('border-width','Border width',0,8,0.5,'px', parseFloat(cssVal(key,'border-top-width'))||0) ])
       ]));
     }
@@ -1226,7 +1244,8 @@
     var group=document.createElement('div'); group.className='tw-mini-seg';
     items.forEach(function(it){
       var b=document.createElement('button'); b.type='button';
-      b.dataset.value=it[0]; b.textContent=it[1];
+      b.dataset.value=it[0];
+      if((it[1]||'').charAt(0)==='<'){ b.innerHTML=it[1]; if(it[2]) b.title=it[2]; } else { b.textContent=it[1]; }
       if(it[0]===init) b.className='on';
       group.appendChild(b);
     });

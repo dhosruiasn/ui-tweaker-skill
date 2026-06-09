@@ -4,7 +4,7 @@
 
 Fine-tune any UI component **with an AI coding assistant** through a design-tool-style control panel — scrub values, preview changes live, move and resize elements — then copy structured values your AI can apply precisely. No more round-trips of "make it a bit bigger… no, smaller… more rounded."
 
-<video src="https://github.com/dhosruiasn/ui-tweaker-skill/main/assets/ui-tweaker-skill-demo.mp4" width="800" controls></video>
+<video src="./assets/ui-tweaker-skill -demo-vedio" width="800" controls></video>
 
 > **Status:** v1.2.1 · MIT licensed · packaged for Claude Code plus portable adapters for Codex, Cursor, Windsurf, and plain skill-folder installs.
 

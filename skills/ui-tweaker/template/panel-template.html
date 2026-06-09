@@ -216,7 +216,7 @@
   /* The transform box must paint above every child of the preview component; if the component itself has a high z-index (e.g. a card with z-index:100), this must be higher */
   #tw-tbox { position:absolute; z-index:99999; pointer-events:none; display:none; }
   #tw-tbox.on { display:block; }
-	  .tw-tbox-frame { position:absolute; inset:0; border:1.5px solid var(--tw-accent); pointer-events:none; box-sizing:border-box; }
+	  .tw-tbox-frame { position:absolute; inset:0; border:1.5px solid var(--tw-accent); pointer-events:none; box-sizing:border-box; box-shadow:0 0 0 1px rgba(255,255,255,.9), inset 0 0 0 1px rgba(255,255,255,.9); }
   .tw-tbox-body { position:absolute; inset:0; pointer-events:auto; cursor:move; z-index:1; }
 	  .tw-tbox-h { position:absolute; width:9px; height:9px; box-sizing:border-box; background:#fff; border:1.5px solid var(--tw-accent); border-radius:2px; pointer-events:auto; z-index:3; }
   .tw-tbox-h.e-nw{ left:-5px;  top:-5px;    cursor:nwse-resize; }
@@ -638,6 +638,7 @@
     }
     if('_fillHex' in s){ applySvgPaint(el, 'fill', s._fillHex); }
     if('_strokeHex' in s){ applySvgPaint(el, 'stroke', s._strokeHex); }
+    if('_effects' in s){ var _glass=(s._effects||[]).filter(function(f){return f.type==='glass'&&!f.off;})[0]; if(_glass){ el.style.setProperty('background', hexToRgba(_glass.hex||'#ffffff', _glass.alpha==null?0.28:_glass.alpha), 'important'); } }   // glass tint wins (see-through so the backdrop blur shows)
     applyText(key);
     if(!skipRestore) sameEditTargetKeys(key).forEach(function(k){ applyEl(k, true); });
     scheduleTBox();
@@ -647,7 +648,14 @@
     var a0=('_gradStartA' in s)?s._gradStartA:1, a1=('_gradEndA' in s)?s._gradEndA:1;
     var deg=('_gradAngle' in s)?s._gradAngle:180;
     var p0=('_gradStartPos' in s)?s._gradStartPos:0, p1=('_gradEndPos' in s)?s._gradEndPos:100;
-    return 'linear-gradient('+deg+'deg, '+hexToRgba(s._gradStartHex||'#ffffff',a0)+' '+f1(p0)+'%, '+hexToRgba(s._gradEndHex||'#94e1ff',a1)+' '+f1(p1)+'%)';
+    var stops=[hexToRgba(s._gradStartHex||'#ffffff',a0)+' '+f1(p0)+'%'];
+    if('_gradMidHex' in s){ var am=('_gradMidA' in s)?s._gradMidA:1, pm=('_gradMidPos' in s)?s._gradMidPos:50; stops.push(hexToRgba(s._gradMidHex,am)+' '+f1(pm)+'%'); }
+    stops.push(hexToRgba(s._gradEndHex||'#94e1ff',a1)+' '+f1(p1)+'%');
+    return 'linear-gradient('+deg+'deg, '+stops.join(', ')+')';
+  }
+  function blendHex(a,b){
+    function p(h){ h=(h||'#000000').replace('#',''); if(h.length===3) h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2]; return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
+    var x=p(a),y=p(b); return '#'+[0,1,2].map(function(i){ return ('0'+Math.round((x[i]+y[i])/2).toString(16)).slice(-2); }).join('');
   }
   function applyEffects(el, effects){
     var shadows=[], filters=[], bfilters=[];
@@ -670,7 +678,7 @@
         if(!isSvg){
           bfilters.push('blur('+(f.blur==null?18:f.blur)+'px)');
           bfilters.push('saturate('+(f.saturate==null?1.6:f.saturate)+')');
-          el.style.setProperty('background-color', hexToRgba(f.hex||'#ffffff', f.alpha==null?0.28:f.alpha), 'important');
+          // the translucent tint is re-applied at the end of applyEl() so it wins over the background block
         }
       }
     });
@@ -1494,12 +1502,14 @@
     var a0=('_gradStartA' in st)?st._gradStartA:gd.a0, a1=('_gradEndA' in st)?st._gradEndA:gd.a1;
     var h0=st._gradStartHex||gd.h0, h1=st._gradEndHex||gd.h1;
     var p0=('_gradStartPos' in st)?st._gradStartPos:0, p1=('_gradEndPos' in st)?st._gradEndPos:100;
+    var hm=('_gradMidHex' in st)?st._gradMidHex:blendHex(h0,h1), am=('_gradMidA' in st)?st._gradMidA:f1((a0+a1)/2), pm=('_gradMidPos' in st)?st._gradMidPos:50;
     row.innerHTML='<div class="tw-grad-head"><span>'+label+'</span><button type="button" class="tw-grad-remove" aria-label="Remove gradient">✕</button></div>'+
-      '<div class="tw-gradient-bar"><button type="button" class="tw-grad-stop on" data-grad-handle="start" aria-label="Start color stop"></button><button type="button" class="tw-grad-stop" data-grad-handle="end" aria-label="End color stop"></button></div>'+
-      '<div class="tw-gradient-controls"><input type="color" data-stop="start" value="'+h0+'"><input type="range" data-alpha="start" min="0" max="1" step="0.01" value="'+f1(a0)+'"><input type="color" data-stop="end" value="'+h1+'"><input type="range" data-alpha="end" min="0" max="1" step="0.01" value="'+f1(a1)+'"></div>';
+      '<div class="tw-gradient-bar"><button type="button" class="tw-grad-stop on" data-grad-handle="start" aria-label="Start color stop"></button><button type="button" class="tw-grad-stop" data-grad-handle="mid" aria-label="Middle color stop"></button><button type="button" class="tw-grad-stop" data-grad-handle="end" aria-label="End color stop"></button></div>'+
+      '<div class="tw-gradient-controls"><input type="color" data-stop="start" value="'+h0+'"><input type="range" data-alpha="start" min="0" max="1" step="0.01" value="'+f1(a0)+'"><input type="color" data-stop="mid" value="'+hm+'"><input type="range" data-alpha="mid" min="0" max="1" step="0.01" value="'+f1(am)+'"><input type="color" data-stop="end" value="'+h1+'"><input type="range" data-alpha="end" min="0" max="1" step="0.01" value="'+f1(a1)+'"></div>';
     row.dataset.startPos=p0;
     row.dataset.endPos=p1;
-    paintGradientRow(row, h0, h1, a0, a1, p0, p1);
+    row.dataset.midPos=pm;
+    paintGradientRow(row, h0, h1, a0, a1, p0, p1, hm, am, pm);
     return row;
   }
   function gradientInitial(key){
@@ -1516,12 +1526,15 @@
     if(cb && cb.hex && cb.a!==0){ var aa=(cb.a==null?1:cb.a); return {h0:cb.hex,a0:aa,h1:cb.hex,a1:aa}; }
     return {h0:'#ffffff',a0:1,h1:'#ffffff',a1:1};
   }
-  function paintGradientRow(row,h0,h1,a0,a1,p0,p1){
+  function paintGradientRow(row,h0,h1,a0,a1,p0,p1,hm,am,pm){
     var bar=row.querySelector('.tw-gradient-bar');
-    bar.style.background=makeGradient({_gradStartHex:h0,_gradStartA:a0,_gradEndHex:h1,_gradEndA:a1,_gradStartPos:p0,_gradEndPos:p1,_gradAngle:90});
-    var s0=row.querySelector('[data-grad-handle=start]'), s1=row.querySelector('[data-grad-handle=end]');
+    var gs={_gradStartHex:h0,_gradStartA:a0,_gradEndHex:h1,_gradEndA:a1,_gradStartPos:p0,_gradEndPos:p1,_gradAngle:90};
+    if(hm!=null){ gs._gradMidHex=hm; gs._gradMidA=am; gs._gradMidPos=pm; }
+    bar.style.background=makeGradient(gs);
+    var s0=row.querySelector('[data-grad-handle=start]'), s1=row.querySelector('[data-grad-handle=end]'), sm=row.querySelector('[data-grad-handle=mid]');
     if(s0){ s0.style.left=f1(p0)+'%'; s0.style.background=hexToRgba(h0,a0); }
     if(s1){ s1.style.left=f1(p1)+'%'; s1.style.background=hexToRgba(h1,a1); }
+    if(sm&&hm!=null){ sm.style.left=f1(pm)+'%'; sm.style.background=hexToRgba(hm,am); }
   }
   function fmt(v,unit){ if(unit==='') return f1(v); return f1(v)+unit; }
 
@@ -1672,14 +1685,15 @@
       var bar=row.querySelector('.tw-gradient-bar'); if(!bar) return;
       var active='start';
       var upd=function(){
-        var h0=row.querySelector('[data-stop=start]').value, h1=row.querySelector('[data-stop=end]').value;
-        var a0=parseFloat(row.querySelector('[data-alpha=start]').value), a1=parseFloat(row.querySelector('[data-alpha=end]').value);
-        var p0=parseFloat(row.dataset.startPos||'0'), p1=parseFloat(row.dataset.endPos||'100');
-        paintGradientRow(row,h0,h1,a0,a1,p0,p1);
+        var h0=row.querySelector('[data-stop=start]').value, h1=row.querySelector('[data-stop=end]').value, hm=row.querySelector('[data-stop=mid]').value;
+        var a0=parseFloat(row.querySelector('[data-alpha=start]').value), a1=parseFloat(row.querySelector('[data-alpha=end]').value), am=parseFloat(row.querySelector('[data-alpha=mid]').value);
+        var p0=parseFloat(row.dataset.startPos||'0'), p1=parseFloat(row.dataset.endPos||'100'), pm=parseFloat(row.dataset.midPos||'50');
+        paintGradientRow(row,h0,h1,a0,a1,p0,p1,hm,am,pm);
         controlKeys().forEach(function(k){
           ensure(k);
-          state[k]._gradStartHex=h0; state[k]._gradEndHex=h1;
-          state[k]._gradStartA=a0; state[k]._gradEndA=a1; state[k]._gradStartPos=p0; state[k]._gradEndPos=p1; state[k]._gradAngle=180;
+          state[k]._gradStartHex=h0; state[k]._gradEndHex=h1; state[k]._gradMidHex=hm;
+          state[k]._gradStartA=a0; state[k]._gradEndA=a1; state[k]._gradMidA=am;
+          state[k]._gradStartPos=p0; state[k]._gradEndPos=p1; state[k]._gradMidPos=pm; state[k]._gradAngle=180;
           state[k]._gradOn=true;
           applyEl(k);
         });
@@ -1693,7 +1707,7 @@
           var move=function(ev){
             var r=bar.getBoundingClientRect();
             var pct=Math.max(0,Math.min(100,((ev.clientX-r.left)/Math.max(1,r.width))*100));
-            row.dataset[active==='start'?'startPos':'endPos']=pct;
+            row.dataset[active==='start'?'startPos':(active==='mid'?'midPos':'endPos')]=pct;
             upd();
           };
           var up=function(){ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); commit(); };
@@ -1705,8 +1719,9 @@
       bar.addEventListener('mousedown',function(e){
         if(e.target.classList.contains('tw-grad-stop')) return;
         var r=bar.getBoundingClientRect(), pct=((e.clientX-r.left)/Math.max(1,r.width))*100;
-        var p0=parseFloat(row.dataset.startPos||'0'), p1=parseFloat(row.dataset.endPos||'100');
-        active=Math.abs(pct-p0)<=Math.abs(pct-p1)?'start':'end';
+        var cand=[['start',parseFloat(row.dataset.startPos||'0')],['mid',parseFloat(row.dataset.midPos||'50')],['end',parseFloat(row.dataset.endPos||'100')]];
+        cand.sort(function(a,b){ return Math.abs(pct-a[1])-Math.abs(pct-b[1]); });
+        active=cand[0][0];
         var stop=row.querySelector('[data-grad-handle='+active+']');
         if(stop) stop.dispatchEvent(new MouseEvent('mousedown',{clientX:e.clientX,clientY:e.clientY,bubbles:true}));
       });
@@ -2421,7 +2436,7 @@
   ];
   var FORMAT_STATE_KEYS = {
     _bgHex:true,_bgA:true,_txHex:true,_bdHex:true,_bdA:true,_fillHex:true,_strokeHex:true,
-    _gradStartHex:true,_gradEndHex:true,_gradStartA:true,_gradEndA:true,_gradStartPos:true,_gradEndPos:true,_gradAngle:true,
+    _gradStartHex:true,_gradEndHex:true,_gradStartA:true,_gradEndA:true,_gradStartPos:true,_gradEndPos:true,_gradAngle:true,_gradMidHex:true,_gradMidA:true,_gradMidPos:true,
     _effects:true,_glassBlur:true,_glassSat:true,_glassTopA:true,_glassMidA:true,_glassBotA:true,_glassTopHi:true,_glassEdgeA:true,
     _glassEdgeTop:true,_glassEdgeSides:true,_glassEdgeRight:true,_glassEdgeBot:true,_glassInnerA:true,_glassInnerTop:true,
     _glassX:true,_glassBorderA:true,_glassBorderX:true,_glassBorderY:true,_shadows:true
@@ -3004,7 +3019,7 @@
       else if(p==='_svgSize')out['width/height']=s._svgSize+'px';
       else if(p==='_svgBgShape')out['background-shape']=s._svgBgShape;
       else if(p==='_effects'){}
-      else if(p==='_gradStartHex'||p==='_gradEndHex'||p==='_gradStartA'||p==='_gradEndA'||p==='_gradStartPos'||p==='_gradEndPos'||p==='_gradAngle'){}
+      else if(p==='_gradStartHex'||p==='_gradEndHex'||p==='_gradStartA'||p==='_gradEndA'||p==='_gradStartPos'||p==='_gradEndPos'||p==='_gradAngle'||p==='_gradMidHex'||p==='_gradMidA'||p==='_gradMidPos'){}
       else if(p==='_text')out['text-content']=s._text;
       else if(p==='_ph')out['placeholder']=s._ph;
       else if(p==='_val')out['value (typed text)']=s._val;

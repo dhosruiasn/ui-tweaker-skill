@@ -341,8 +341,10 @@
 	  .tw-add-effect { width:100%; margin-top:4px; padding:8px; font-size:11px; border:1px dashed #cfcfcf; border-radius:8px; background:#fafafb; color:var(--tw-accent); cursor:pointer; }
   .tw-gradient-row { margin:11px 0; }
   .tw-gradient-row label { display:block; font-size:11px; color:#666; margin-bottom:6px; }
-  .tw-gradient-row label.tw-grad-label { display:flex; align-items:center; gap:6px; cursor:pointer; }
-  .tw-gradient-row label.tw-grad-label input.tw-grad-on { width:auto; margin:0; accent-color:var(--tw-accent); cursor:pointer; }
+  .tw-grad-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:7px; font-size:11px; color:#666; }
+  .tw-grad-remove { border:0; background:#f3f3f4; color:#9aa0a6; width:20px; height:20px; border-radius:5px; cursor:pointer; font-size:11px; line-height:1; padding:0; }
+  .tw-grad-remove:hover { background:#ececef; color:#5f6368; }
+  .tw-add-grad { margin-top:0; }
   .tw-gradient-bar { position:relative; height:22px; border-radius:999px; border:1px solid #d8d8dc; box-shadow:inset 0 0 0 1px rgba(255,255,255,.45); margin-bottom:9px; overflow:visible; cursor:crosshair; }
   .tw-grad-stop { position:absolute; top:50%; width:22px; height:22px; border-radius:999px; border:2px solid #fff; box-shadow:0 1px 8px rgba(32,33,36,.22); transform:translate(-50%,-50%); cursor:ew-resize; padding:0; }
 	  .tw-grad-stop.on { outline:2px solid var(--tw-accent); outline-offset:2px; }
@@ -615,6 +617,7 @@
     if(s._gradOn && ('_gradStartHex' in s)){
       el.style.setProperty('background', makeGradient(s), 'important');
     } else if('_bgHex' in s){ el.style.setProperty('background', paintValue(s._bgHex,s._bgA,'none'), 'important'); }
+    else { el.style.removeProperty('background'); }   // gradient removed and no bg override → revert to the element's own background
     if('_txHex' in s){ el.style.setProperty('color', s._txHex==='none'?'transparent':s._txHex, 'important'); }
     if('_bdHex' in s){ el.style.setProperty('border-color', paintValue(s._bdHex,s._bdA,'transparent'), 'important'); }
     if(('border-width' in s) || ('_bdHex' in s)){ var _bs=(gcs(key).getPropertyValue('border-style')||'').trim(); if(!_bs || _bs.split(' ')[0]==='none'){ el.style.setProperty('border-style','solid','important'); } }
@@ -1444,12 +1447,19 @@
     return row;
   }
   function gradientRow(label,key){
-    var st=state[key]||{}, gd=gradientInitial(key);
+    var st=state[key]||{};
+    var row=document.createElement('div'); row.className='tw-gradient-row'; row.dataset.kind='gradient'; row.dataset.gradLabel=label;
+    if(!st._gradOn){
+      // gated behind a CTA like "+ Add shadow layer" — controls only appear once added
+      row.innerHTML='<button type="button" class="tw-add-shadow tw-add-grad">+ Add '+label.toLowerCase()+'</button>';
+      return row;
+    }
+    var gd=gradientInitial(key);
     var a0=('_gradStartA' in st)?st._gradStartA:gd.a0, a1=('_gradEndA' in st)?st._gradEndA:gd.a1;
     var h0=st._gradStartHex||gd.h0, h1=st._gradEndHex||gd.h1;
     var p0=('_gradStartPos' in st)?st._gradStartPos:0, p1=('_gradEndPos' in st)?st._gradEndPos:100;
-    var row=document.createElement('div'); row.className='tw-gradient-row'; row.dataset.kind='gradient';
-    row.innerHTML='<label class="tw-grad-label"><input type="checkbox" class="tw-grad-on"'+(st._gradOn?' checked':'')+'> '+label+'</label><div class="tw-gradient-bar"><button type="button" class="tw-grad-stop on" data-grad-handle="start" aria-label="Start color stop"></button><button type="button" class="tw-grad-stop" data-grad-handle="end" aria-label="End color stop"></button></div>'+
+    row.innerHTML='<div class="tw-grad-head"><span>'+label+'</span><button type="button" class="tw-grad-remove" aria-label="Remove gradient">✕</button></div>'+
+      '<div class="tw-gradient-bar"><button type="button" class="tw-grad-stop on" data-grad-handle="start" aria-label="Start color stop"></button><button type="button" class="tw-grad-stop" data-grad-handle="end" aria-label="End color stop"></button></div>'+
       '<div class="tw-gradient-controls"><input type="color" data-stop="start" value="'+h0+'"><input type="range" data-alpha="start" min="0" max="1" step="0.01" value="'+f1(a0)+'"><input type="color" data-stop="end" value="'+h1+'"><input type="range" data-alpha="end" min="0" max="1" step="0.01" value="'+f1(a1)+'"></div>';
     row.dataset.startPos=p0;
     row.dataset.endPos=p1;
@@ -1613,8 +1623,17 @@
       }
     });
     document.querySelectorAll('.tw-gradient-row').forEach(function(row){
-      var bar=row.querySelector('.tw-gradient-bar');
-      var gOn=row.querySelector('.tw-grad-on');
+      var addBtn=row.querySelector('.tw-add-grad');
+      if(addBtn){ addBtn.addEventListener('click',function(){
+        controlKeys().forEach(function(k){ ensure(k); var gd=gradientInitial(k);   // seed stops from the element's own colour so it matches
+          state[k]._gradStartHex=gd.h0; state[k]._gradEndHex=gd.h1; state[k]._gradStartA=gd.a0; state[k]._gradEndA=gd.a1;
+          state[k]._gradStartPos=0; state[k]._gradEndPos=100; state[k]._gradAngle=180; state[k]._gradOn=true; applyEl(k);
+        });
+        commit(); buildPanel();
+      }); return; }
+      var rem=row.querySelector('.tw-grad-remove');
+      if(rem){ rem.addEventListener('click',function(){ controlKeys().forEach(function(k){ ensure(k); state[k]._gradOn=false; applyEl(k); }); commit(); buildPanel(); }); }
+      var bar=row.querySelector('.tw-gradient-bar'); if(!bar) return;
       var active='start';
       var upd=function(){
         var h0=row.querySelector('[data-stop=start]').value, h1=row.querySelector('[data-stop=end]').value;
@@ -1625,16 +1644,10 @@
           ensure(k);
           state[k]._gradStartHex=h0; state[k]._gradEndHex=h1;
           state[k]._gradStartA=a0; state[k]._gradEndA=a1; state[k]._gradStartPos=p0; state[k]._gradEndPos=p1; state[k]._gradAngle=180;
-          state[k]._gradOn=true;                 // adjusting the gradient turns it on
+          state[k]._gradOn=true;
           applyEl(k);
         });
-        if(gOn) gOn.checked=true;
       };
-      if(gOn){ gOn.addEventListener('change',function(){
-        if(gOn.checked){ upd(); }                // enable → seed colours from the row + apply
-        else { controlKeys().forEach(function(k){ ensure(k); state[k]._gradOn=false; applyEl(k); }); }  // disable → revert to the element's own background
-        commit();
-      }); }
       row.querySelectorAll('input').forEach(function(inp){ inp.addEventListener('input',upd); inp.addEventListener('change',commit); });
       row.querySelectorAll('.tw-grad-stop').forEach(function(stop){
         stop.addEventListener('mousedown',function(e){

@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-06-10
+
+### Added
+- Photoshop-style multi-stop gradient editor: unlimited colour stops. Click the
+  bar to add a stop (default colour = the interpolated midpoint of its
+  neighbours), click/drag a stop to select/move it, double-click to open the
+  colour picker, edit colour/alpha/exact position, and remove a middle stop with
+  the ✕ or the Delete key (the two end stops are protected). Replaces the old
+  fixed start/mid/end model (migrated transparently); gradient CSS now emits all
+  stops in order.
+
 ## [1.4.0] - 2026-06-10
 
 ### Added

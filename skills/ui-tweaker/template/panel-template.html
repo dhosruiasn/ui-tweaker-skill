@@ -352,6 +352,16 @@
   .tw-gradient-controls { display:grid; grid-template-columns:34px 1fr 34px 1fr; gap:7px; align-items:center; }
   .tw-gradient-controls input[type=color] { width:34px; height:28px; padding:0; border:1px solid #e0e0e0; border-radius:6px; background:#fff; }
 	  .tw-gradient-controls input[type=range] { width:100%; accent-color:var(--tw-accent); }
+  .tw-gradient-bar:focus { outline:none; }
+  .tw-gs-controls { display:flex; align-items:center; gap:7px; margin-top:2px; }
+  .tw-gs-color { width:34px; height:28px; padding:0; border:1px solid #e0e0e0; border-radius:6px; background:#fff; flex:none; cursor:pointer; }
+  .tw-gs-alpha { flex:1 1 auto; min-width:40px; accent-color:var(--tw-accent); }
+  .tw-gs-posbox { display:inline-flex; align-items:center; gap:2px; flex:none; }
+  .tw-gs-posbox input { width:42px; font-size:11px; padding:3px 4px; border:1px solid #e0e0e0; border-radius:6px; text-align:right; }
+  .tw-gs-posbox i { font-size:10px; color:#999; font-style:normal; }
+  .tw-gs-del { flex:none; width:24px; height:24px; border:0; border-radius:6px; background:#f3f3f4; color:#9aa0a6; cursor:pointer; font-size:11px; }
+  .tw-gs-del:hover { background:#fde7e2; color:#c0392b; }
+  .tw-gs-hint { font-size:10px; color:#aaa; margin-top:5px; line-height:1.4; }
 
   .tw-confirm { flex:none; margin:0; padding:12px 16px; background:#fff; border-top:1px solid #ececec; }
   .tw-summary { font-size:11px; color:#888; max-height:84px; overflow:auto; white-space:pre-wrap; background:#f7f7f8; border:1px solid #efefef; border-radius:8px; padding:8px; margin-bottom:10px; font-family: ui-monospace, monospace; }
@@ -650,14 +660,26 @@
     scheduleTBox();
   }
 
+  // multi-stop gradient model: state._gradStops = [{p:0-100, h:'#hex', a:0-1}, ...] (>=2). Falls back / migrates from the old start/mid/end keys.
+  function gradStops(s){
+    if(s._gradStops && s._gradStops.length>=2) return s._gradStops;
+    var arr=[{p:('_gradStartPos' in s)?s._gradStartPos:0, h:s._gradStartHex||'#ffffff', a:('_gradStartA' in s)?s._gradStartA:1}];
+    if('_gradMidHex' in s) arr.push({p:('_gradMidPos' in s)?s._gradMidPos:50, h:s._gradMidHex, a:('_gradMidA' in s)?s._gradMidA:1});
+    arr.push({p:('_gradEndPos' in s)?s._gradEndPos:100, h:s._gradEndHex||'#94e1ff', a:('_gradEndA' in s)?s._gradEndA:1});
+    return arr;
+  }
   function makeGradient(s){
-    var a0=('_gradStartA' in s)?s._gradStartA:1, a1=('_gradEndA' in s)?s._gradEndA:1;
     var deg=('_gradAngle' in s)?s._gradAngle:180;
-    var p0=('_gradStartPos' in s)?s._gradStartPos:0, p1=('_gradEndPos' in s)?s._gradEndPos:100;
-    var stops=[hexToRgba(s._gradStartHex||'#ffffff',a0)+' '+f1(p0)+'%'];
-    if('_gradMidHex' in s){ var am=('_gradMidA' in s)?s._gradMidA:1, pm=('_gradMidPos' in s)?s._gradMidPos:50; stops.push(hexToRgba(s._gradMidHex,am)+' '+f1(pm)+'%'); }
-    stops.push(hexToRgba(s._gradEndHex||'#94e1ff',a1)+' '+f1(p1)+'%');
-    return 'linear-gradient('+deg+'deg, '+stops.join(', ')+')';
+    var st=gradStops(s).slice().sort(function(a,b){return a.p-b.p;});
+    return 'linear-gradient('+deg+'deg, '+st.map(function(o){return hexToRgba(o.h,o.a==null?1:o.a)+' '+f1(o.p)+'%';}).join(', ')+')';
+  }
+  function _hexArr(h){ h=(h||'#000000').replace('#',''); if(h.length===3)h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2]; return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
+  function gradColorAt(stops, pos){   // interpolated colour+alpha at a position (for a new stop's default = midpoint of its neighbours)
+    var st=stops.slice().sort(function(a,b){return a.p-b.p;});
+    if(pos<=st[0].p) return {h:st[0].h,a:st[0].a==null?1:st[0].a};
+    if(pos>=st[st.length-1].p) return {h:st[st.length-1].h,a:st[st.length-1].a==null?1:st[st.length-1].a};
+    for(var i=0;i<st.length-1;i++){ if(pos>=st[i].p&&pos<=st[i+1].p){ var t=(pos-st[i].p)/Math.max(.0001,st[i+1].p-st[i].p); var c1=_hexArr(st[i].h),c2=_hexArr(st[i+1].h); var hh='#'+[0,1,2].map(function(j){return ('0'+Math.round(c1[j]+(c2[j]-c1[j])*t).toString(16)).slice(-2);}).join(''); var a0=st[i].a==null?1:st[i].a,a1=st[i+1].a==null?1:st[i+1].a; return {h:hh,a:f1(a0+(a1-a0)*t)}; } }
+    return {h:st[0].h,a:1};
   }
   function blendHex(a,b){
     function p(h){ h=(h||'#000000').replace('#',''); if(h.length===3) h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2]; return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
@@ -1504,18 +1526,17 @@
       row.innerHTML='<button type="button" class="tw-add-shadow tw-add-grad">+ Add '+label.toLowerCase()+'</button>';
       return row;
     }
-    var gd=gradientInitial(key);
-    var a0=('_gradStartA' in st)?st._gradStartA:gd.a0, a1=('_gradEndA' in st)?st._gradEndA:gd.a1;
-    var h0=st._gradStartHex||gd.h0, h1=st._gradEndHex||gd.h1;
-    var p0=('_gradStartPos' in st)?st._gradStartPos:0, p1=('_gradEndPos' in st)?st._gradEndPos:100;
-    var hm=('_gradMidHex' in st)?st._gradMidHex:blendHex(h0,h1), am=('_gradMidA' in st)?st._gradMidA:f1((a0+a1)/2), pm=('_gradMidPos' in st)?st._gradMidPos:50;
+    var stops=gradStops(st);
+    var sel=Math.max(0,Math.min(st._gradSel==null?0:st._gradSel, stops.length-1));
+    var order=stops.map(function(o,i){return {p:o.p,i:i};}).sort(function(a,b){return a.p-b.p;});
+    var firstI=order[0].i, lastI=order[order.length-1].i;
+    var handles=stops.map(function(o,i){ return '<button type="button" class="tw-grad-stop'+(i===sel?' on':'')+'" data-stop-index="'+i+'" tabindex="-1" style="left:'+f1(o.p)+'%;background:'+hexToRgba(o.h,o.a==null?1:o.a)+'"></button>'; }).join('');
+    var sc=stops[sel]; var canDel=(sel!==firstI && sel!==lastI);
     row.innerHTML='<div class="tw-grad-head"><span>'+label+'</span><button type="button" class="tw-grad-remove" aria-label="Remove gradient">✕</button></div>'+
-      '<div class="tw-gradient-bar"><button type="button" class="tw-grad-stop on" data-grad-handle="start" aria-label="Start color stop"></button><button type="button" class="tw-grad-stop" data-grad-handle="mid" aria-label="Middle color stop"></button><button type="button" class="tw-grad-stop" data-grad-handle="end" aria-label="End color stop"></button></div>'+
-      '<div class="tw-gradient-controls"><input type="color" data-stop="start" value="'+h0+'"><input type="range" data-alpha="start" min="0" max="1" step="0.01" value="'+f1(a0)+'"><input type="color" data-stop="mid" value="'+hm+'"><input type="range" data-alpha="mid" min="0" max="1" step="0.01" value="'+f1(am)+'"><input type="color" data-stop="end" value="'+h1+'"><input type="range" data-alpha="end" min="0" max="1" step="0.01" value="'+f1(a1)+'"></div>';
-    row.dataset.startPos=p0;
-    row.dataset.endPos=p1;
-    row.dataset.midPos=pm;
-    paintGradientRow(row, h0, h1, a0, a1, p0, p1, hm, am, pm);
+      '<div class="tw-gradient-bar" tabindex="0">'+handles+'</div>'+
+      '<div class="tw-gs-controls"><input type="color" class="tw-gs-color" value="'+sc.h+'"><input type="range" class="tw-gs-alpha" min="0" max="1" step="0.01" value="'+f1(sc.a==null?1:sc.a)+'"><span class="tw-gs-posbox"><input type="number" class="tw-gs-pos" min="0" max="100" value="'+Math.round(sc.p)+'"><i>%</i></span>'+(canDel?'<button type="button" class="tw-gs-del" title="Delete stop (or press Delete)">✕</button>':'')+'</div>'+
+      '<div class="tw-gs-hint">Click the bar to add a colour · double-click a dot to recolour · Delete removes a middle stop</div>';
+    row.querySelector('.tw-gradient-bar').style.background=makeGradient({_gradStops:stops,_gradAngle:90});
     return row;
   }
   function gradientInitial(key){
@@ -1689,48 +1710,42 @@
       var rem=row.querySelector('.tw-grad-remove');
       if(rem){ rem.addEventListener('click',function(){ controlKeys().forEach(function(k){ ensure(k); state[k]._gradOn=false; applyEl(k); }); commit(); buildPanel(); }); }
       var bar=row.querySelector('.tw-gradient-bar'); if(!bar) return;
-      var active='start';
-      var upd=function(){
-        var h0=row.querySelector('[data-stop=start]').value, h1=row.querySelector('[data-stop=end]').value, hm=row.querySelector('[data-stop=mid]').value;
-        var a0=parseFloat(row.querySelector('[data-alpha=start]').value), a1=parseFloat(row.querySelector('[data-alpha=end]').value), am=parseFloat(row.querySelector('[data-alpha=mid]').value);
-        var p0=parseFloat(row.dataset.startPos||'0'), p1=parseFloat(row.dataset.endPos||'100'), pm=parseFloat(row.dataset.midPos||'50');
-        paintGradientRow(row,h0,h1,a0,a1,p0,p1,hm,am,pm);
-        controlKeys().forEach(function(k){
-          ensure(k);
-          state[k]._gradStartHex=h0; state[k]._gradEndHex=h1; state[k]._gradMidHex=hm;
-          state[k]._gradStartA=a0; state[k]._gradEndA=a1; state[k]._gradMidA=am;
-          state[k]._gradStartPos=p0; state[k]._gradEndPos=p1; state[k]._gradMidPos=pm; state[k]._gradAngle=180;
-          state[k]._gradOn=true;
-          applyEl(k);
-        });
-      };
-      row.querySelectorAll('input').forEach(function(inp){ inp.addEventListener('input',upd); inp.addEventListener('change',commit); });
-      row.querySelectorAll('.tw-grad-stop').forEach(function(stop){
-        stop.addEventListener('mousedown',function(e){
+      function stopsOf(k){ ensure(k); if(!state[k]._gradStops) state[k]._gradStops=gradStops(state[k]).map(function(o){return {p:o.p,h:o.h,a:o.a==null?1:o.a};}); return state[k]._gradStops; }
+      function sel(){ var v=state[cur]&&state[cur]._gradSel; return v==null?0:v; }
+      function applyAll(){ controlKeys().forEach(function(k){ ensure(k); state[k]._gradOn=true; applyEl(k); }); }
+      function repaint(){ var ss=stopsOf(cur); bar.style.background=makeGradient({_gradStops:ss,_gradAngle:90});
+        bar.querySelectorAll('.tw-grad-stop').forEach(function(h){ var i=+h.dataset.stopIndex, o=ss[i]; if(o){ h.style.left=f1(o.p)+'%'; h.style.background=hexToRgba(o.h,o.a==null?1:o.a); h.classList.toggle('on', i===sel()); } });
+        var o=ss[sel()]; if(o){ var ci=row.querySelector('.tw-gs-color'), ai=row.querySelector('.tw-gs-alpha'), pi=row.querySelector('.tw-gs-pos'); if(ci&&document.activeElement!==ci)ci.value=o.h; if(ai&&document.activeElement!==ai)ai.value=f1(o.a==null?1:o.a); if(pi&&document.activeElement!==pi)pi.value=Math.round(o.p); }
+      }
+      function isEnd(i){ var ss=stopsOf(cur); var ord=ss.map(function(o,j){return {p:o.p,i:j};}).sort(function(a,b){return a.p-b.p;}); return i===ord[0].i||i===ord[ord.length-1].i; }
+      function removeSel(){ var i=sel(); if(isEnd(i)) return; controlKeys().forEach(function(k){ var arr=stopsOf(k); arr.splice(i,1); state[k]._gradSel=Math.max(0,i-1); state[k]._gradOn=true; applyEl(k); }); commit(); buildPanel(); }
+      function setColor(prop,v){ controlKeys().forEach(function(k){ stopsOf(k)[sel()][prop]=v; }); applyAll(); repaint(); }
+      var cIn=row.querySelector('.tw-gs-color'); if(cIn){ cIn.addEventListener('input',function(){ setColor('h',this.value); }); cIn.addEventListener('change',commit); }
+      var aIn=row.querySelector('.tw-gs-alpha'); if(aIn){ aIn.addEventListener('input',function(){ setColor('a',parseFloat(this.value)); }); aIn.addEventListener('change',commit); }
+      var pIn=row.querySelector('.tw-gs-pos'); if(pIn){ pIn.addEventListener('input',function(){ setColor('p',Math.max(0,Math.min(100,parseFloat(this.value)||0))); }); pIn.addEventListener('change',commit); }
+      var dBtn=row.querySelector('.tw-gs-del'); if(dBtn) dBtn.addEventListener('click',removeSel);
+      // existing stop handles: click=select, drag=move, dbl-click=open colour picker
+      bar.querySelectorAll('.tw-grad-stop').forEach(function(h){
+        var idx=+h.dataset.stopIndex;
+        h.addEventListener('mousedown',function(e){
           e.preventDefault(); e.stopPropagation();
-          active=stop.dataset.gradHandle;
-          row.querySelectorAll('.tw-grad-stop').forEach(function(s){ s.classList.toggle('on', s===stop); });
-          var move=function(ev){
-            var r=bar.getBoundingClientRect();
-            var pct=Math.max(0,Math.min(100,((ev.clientX-r.left)/Math.max(1,r.width))*100));
-            row.dataset[active==='start'?'startPos':(active==='mid'?'midPos':'endPos')]=pct;
-            upd();
-          };
-          var up=function(){ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); commit(); };
-          document.addEventListener('mousemove',move);
-          document.addEventListener('mouseup',up);
-          move(e);
+          controlKeys().forEach(function(k){ ensure(k); state[k]._gradSel=idx; }); repaint(); bar.focus();
+          var moved=false;
+          var move=function(ev){ moved=true; var r=bar.getBoundingClientRect(); var pct=Math.max(0,Math.min(100,((ev.clientX-r.left)/Math.max(1,r.width))*100)); controlKeys().forEach(function(k){ stopsOf(k)[idx].p=pct; }); applyAll(); repaint(); };
+          var up=function(){ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); commit(); buildPanel(); };
+          document.addEventListener('mousemove',move); document.addEventListener('mouseup',up);
         });
+        h.addEventListener('dblclick',function(e){ e.preventDefault(); e.stopPropagation(); controlKeys().forEach(function(k){ ensure(k); state[k]._gradSel=idx; }); var ci=row.querySelector('.tw-gs-color'); if(ci) ci.click(); });
       });
+      // click empty bar → add a stop there (default colour = interpolated midpoint of its neighbours)
       bar.addEventListener('mousedown',function(e){
         if(e.target.classList.contains('tw-grad-stop')) return;
-        var r=bar.getBoundingClientRect(), pct=((e.clientX-r.left)/Math.max(1,r.width))*100;
-        var cand=[['start',parseFloat(row.dataset.startPos||'0')],['mid',parseFloat(row.dataset.midPos||'50')],['end',parseFloat(row.dataset.endPos||'100')]];
-        cand.sort(function(a,b){ return Math.abs(pct-a[1])-Math.abs(pct-b[1]); });
-        active=cand[0][0];
-        var stop=row.querySelector('[data-grad-handle='+active+']');
-        if(stop) stop.dispatchEvent(new MouseEvent('mousedown',{clientX:e.clientX,clientY:e.clientY,bubbles:true}));
+        var r=bar.getBoundingClientRect(), pct=Math.max(0,Math.min(100,((e.clientX-r.left)/Math.max(1,r.width))*100));
+        var c=gradColorAt(stopsOf(cur), pct), ni;
+        controlKeys().forEach(function(k){ var arr=stopsOf(k); arr.push({p:pct,h:c.h,a:c.a}); ni=arr.length-1; state[k]._gradSel=ni; state[k]._gradOn=true; applyEl(k); });
+        commit(); buildPanel();
       });
+      bar.addEventListener('keydown',function(e){ if(e.key==='Delete'||e.key==='Backspace'){ e.preventDefault(); removeSel(); } });
     });
     document.querySelectorAll('.tw-svg-action').forEach(function(btn){
       btn.addEventListener('click',function(){
@@ -2442,7 +2457,7 @@
   ];
   var FORMAT_STATE_KEYS = {
     _bgHex:true,_bgA:true,_txHex:true,_bdHex:true,_bdA:true,_fillHex:true,_strokeHex:true,
-    _gradStartHex:true,_gradEndHex:true,_gradStartA:true,_gradEndA:true,_gradStartPos:true,_gradEndPos:true,_gradAngle:true,_gradMidHex:true,_gradMidA:true,_gradMidPos:true,
+    _gradStartHex:true,_gradEndHex:true,_gradStartA:true,_gradEndA:true,_gradStartPos:true,_gradEndPos:true,_gradAngle:true,_gradMidHex:true,_gradMidA:true,_gradMidPos:true,_gradStops:true,_gradSel:true,
     _effects:true,_glassBlur:true,_glassSat:true,_glassTopA:true,_glassMidA:true,_glassBotA:true,_glassTopHi:true,_glassEdgeA:true,
     _glassEdgeTop:true,_glassEdgeSides:true,_glassEdgeRight:true,_glassEdgeBot:true,_glassInnerA:true,_glassInnerTop:true,
     _glassX:true,_glassBorderA:true,_glassBorderX:true,_glassBorderY:true,_shadows:true
@@ -3025,7 +3040,7 @@
       else if(p==='_svgSize')out['width/height']=s._svgSize+'px';
       else if(p==='_svgBgShape')out['background-shape']=s._svgBgShape;
       else if(p==='_effects'){}
-      else if(p==='_gradStartHex'||p==='_gradEndHex'||p==='_gradStartA'||p==='_gradEndA'||p==='_gradStartPos'||p==='_gradEndPos'||p==='_gradAngle'||p==='_gradMidHex'||p==='_gradMidA'||p==='_gradMidPos'){}
+      else if(p==='_gradStartHex'||p==='_gradEndHex'||p==='_gradStartA'||p==='_gradEndA'||p==='_gradStartPos'||p==='_gradEndPos'||p==='_gradAngle'||p==='_gradMidHex'||p==='_gradMidA'||p==='_gradMidPos'||p==='_gradStops'||p==='_gradSel'){}
       else if(p==='_text')out['text-content']=s._text;
       else if(p==='_ph')out['placeholder']=s._ph;
       else if(p==='_val')out['value (typed text)']=s._val;

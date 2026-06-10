@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.2] - 2026-06-10
+
+### Added
+- Brand logo in the panel header (replaces the placeholder emoji next to the
+  component name).
+- Body and Footer group layers are now real edit targets, so they can be hidden
+  via the eye toggle like other layers.
+
+### Fixed
+- Toast notifications are `pointer-events:none`, so they never block clicks on the
+  Confirm button underneath.
+
 ## [1.5.1] - 2026-06-10
 
 ### Fixed

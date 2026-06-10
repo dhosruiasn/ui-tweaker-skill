@@ -71,6 +71,11 @@
 	  .tw-left-resizer:hover::after, .tw-left-resizer.dragging::after { background:var(--tw-accent); }
   .tw-lay-top { flex:none; display:flex; align-items:center; gap:8px; padding:13px 14px 12px; border-bottom:1px solid #ececec; font-size:12.5px; font-weight:600; color:#1e1e1e; }
   .tw-lay-top .tw-lay-emoji { font-size:14px; }
+  .tw-brand-logo { flex:none; width:24px; height:24px; border-radius:7px; filter:drop-shadow(0 1px 2px rgba(60,150,215,.22)); }
+  .tw-brand-logo .glass { fill:url(#tw-logo-glass); stroke:#d8f4ff; stroke-width:1.4; }
+  .tw-brand-logo .frame { fill:none; stroke:#92d7ff; stroke-width:1.35; stroke-linecap:round; stroke-linejoin:round; }
+  .tw-brand-logo .handle { fill:#eefaff; stroke:#9edcff; stroke-width:.8; }
+  .tw-brand-logo .cursor { fill:#6cc3fb; stroke:#f4fcff; stroke-width:1.2; stroke-linejoin:round; }
   .tw-lay-sec { padding:10px 8px; border-bottom:1px solid #f1f1f1; min-width:0; }
   .tw-lay-sec:last-child { border-bottom:none; }
   .tw-lay-h { font-size:10.5px; font-weight:600; letter-spacing:.5px; color:#aaa; text-transform:uppercase; padding:2px 8px 6px; }
@@ -369,7 +374,7 @@
 	  .tw-confirm button { width:100%; padding:11px; border:none; border-radius:8px; background:var(--tw-accent); color:#fff; font-size:13px; font-weight:600; cursor:pointer; transition:background .12s; }
 	  .tw-confirm button:hover { background:var(--tw-accent-strong); }
 	  .tw-confirm button.copied { background:#1f9d3a; }
-  .tw-toast { position:fixed; bottom:18px; left:50%; transform:translateX(-50%) translateY(20px); background:#202124; color:#fff; font-size:12.5px; padding:9px 16px; border-radius:999px; opacity:0; transition:.25s; z-index:50; }
+  .tw-toast { position:fixed; bottom:18px; left:50%; transform:translateX(-50%) translateY(20px); background:#202124; color:#fff; font-size:12.5px; padding:9px 16px; border-radius:999px; opacity:0; transition:.25s; z-index:50; pointer-events:none; }
   .tw-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 </style>
 </head>
@@ -377,7 +382,8 @@
 <div class="tw-wrap">
   <!-- ============ Far left: Pages / Layers ============ -->
   <div class="tw-layers">
-    <div class="tw-lay-top"><span class="tw-lay-emoji">🃏</span>Demo Card</div>
+    <!-- ⟦PROJECT-SPECIFIC: brand logo + component name shown at the top of the panel⟧ -->
+    <div class="tw-lay-top"><svg class="tw-brand-logo" viewBox="0 0 48 48" aria-hidden="true"><defs><linearGradient id="tw-logo-glass" x1="10" y1="8" x2="38" y2="42" gradientUnits="userSpaceOnUse"><stop stop-color="#f7fdff"/><stop offset=".58" stop-color="#aee8ff"/><stop offset="1" stop-color="#5fc1f7"/></linearGradient></defs><rect class="glass" x="5.5" y="5.5" width="37" height="37" rx="11"/><path class="frame" d="M15 15h18v18H15z"/><rect class="handle" x="12.5" y="12.5" width="6" height="6" rx="1.7"/><rect class="handle" x="29.5" y="12.5" width="6" height="6" rx="1.7"/><rect class="handle" x="12.5" y="29.5" width="6" height="6" rx="1.7"/><rect class="handle" x="29.5" y="29.5" width="6" height="6" rx="1.7"/><path class="cursor" d="M20.4 17.4 31.7 25l-6.1 1.7-2.1 6.2z"/></svg>Demo Card</div>
     <div class="tw-lay-sec">
       <div class="tw-lay-h">Pages</div>
       <div class="tw-lay-page"><span class="tw-lay-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg></span>Demo page</div>
@@ -474,6 +480,8 @@
   // ⟦PROJECT-SPECIFIC #5: SEL — pick key → selector used to query inside the widget (matches the preview DOM)⟧
   var SEL = {
     card:  '#demo-card',
+    body:  '#demo-card .demo-card-body',
+    footer:'#demo-card .demo-card-footer',
     media: '.demo-card-media',
     img:   '#demo-card-img',
     badge: '#demo-card-badge',
@@ -501,7 +509,7 @@
   var NON_PICKABLE = {};
   // ⟦PROJECT-SPECIFIC #6: OUT_SEL — pick key → CSS selector emitted in the confirm output⟧
   var OUT_SEL = {
-    card:'.demo-card', media:'.demo-card-media', img:'.demo-card-media img',
+    card:'.demo-card', body:'.demo-card-body', footer:'.demo-card-footer', media:'.demo-card-media', img:'.demo-card-media img',
     badge:'.demo-card-badge', badgeIcon:'.demo-card-badge svg',
     badgeText:'.demo-card-badge .demo-card-badge-text',
     title:'.demo-card-title', desc:'.demo-card-desc',
@@ -2242,7 +2250,7 @@
           { key:'badgeText', label:'Badge text', icon:'text' }
         ]}
       ]},
-      { label:'Body', icon:'group', children:[
+      { key:'body', label:'Body', icon:'group', children:[
         { key:'title', label:'Title', icon:'text' },
         { key:'desc',  label:'Description', icon:'text' },
         { key:'tags', label:'Tags', icon:'group', children:[
@@ -2250,7 +2258,7 @@
           { key:'tag2', label:'Tag 2', icon:'tag', children:[ { key:'tag2Text', label:'Tag text', icon:'text' } ] },
           { key:'tag3', label:'Tag 3', icon:'tag', children:[ { key:'tag3Text', label:'Tag text', icon:'text' } ] }
         ]},
-        { label:'Footer', icon:'group', children:[
+        { key:'footer', label:'Footer', icon:'group', children:[
           { key:'btn', label:'Button', icon:'btn', children:[
             { key:'btnText', label:'Button text', icon:'text' }
           ]}

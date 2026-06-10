@@ -362,11 +362,13 @@
   .tw-gs-del { flex:none; width:24px; height:24px; border:0; border-radius:6px; background:#f3f3f4; color:#9aa0a6; cursor:pointer; font-size:11px; }
   .tw-gs-del:hover { background:#fde7e2; color:#c0392b; }
   .tw-gs-hint { font-size:10px; color:#aaa; margin-top:5px; line-height:1.4; }
+  .tw-hidden { display:none !important; }
 
   .tw-confirm { flex:none; margin:0; padding:12px 16px; background:#fff; border-top:1px solid #ececec; }
   .tw-summary { font-size:11px; color:#888; max-height:84px; overflow:auto; white-space:pre-wrap; background:#f7f7f8; border:1px solid #efefef; border-radius:8px; padding:8px; margin-bottom:10px; font-family: ui-monospace, monospace; }
 	  .tw-confirm button { width:100%; padding:11px; border:none; border-radius:8px; background:var(--tw-accent); color:#fff; font-size:13px; font-weight:600; cursor:pointer; transition:background .12s; }
 	  .tw-confirm button:hover { background:var(--tw-accent-strong); }
+	  .tw-confirm button.copied { background:#1f9d3a; }
   .tw-toast { position:fixed; bottom:18px; left:50%; transform:translateX(-50%) translateY(20px); background:#202124; color:#fff; font-size:12.5px; padding:9px 16px; border-radius:999px; opacity:0; transition:.25s; z-index:50; }
   .tw-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 </style>
@@ -760,6 +762,7 @@
   // ---- Build the control panel ----
   function buildPanel(){
     var key=cur, p=document.getElementById('panel');
+    var _scrollSave=p.scrollTop;   // keep the panel's scroll position across rebuilds (don't jump to top on every interaction)
     p.innerHTML='';
     if(!key){
       var empty=document.createElement('div');
@@ -881,6 +884,7 @@
 
     cats.forEach(function(c){ p.appendChild(c); });
     bindRows();
+    p.scrollTop=_scrollSave;   // restore scroll
   }
 
   function lineH(key){
@@ -1534,7 +1538,7 @@
     var sc=stops[sel]; var canDel=(sel!==firstI && sel!==lastI);
     row.innerHTML='<div class="tw-grad-head"><span>'+label+'</span><button type="button" class="tw-grad-remove" aria-label="Remove gradient">✕</button></div>'+
       '<div class="tw-gradient-bar" tabindex="0">'+handles+'</div>'+
-      '<div class="tw-gs-controls"><input type="color" class="tw-gs-color" value="'+sc.h+'"><input type="range" class="tw-gs-alpha" min="0" max="1" step="0.01" value="'+f1(sc.a==null?1:sc.a)+'"><span class="tw-gs-posbox"><input type="number" class="tw-gs-pos" min="0" max="100" value="'+Math.round(sc.p)+'"><i>%</i></span>'+(canDel?'<button type="button" class="tw-gs-del" title="Delete stop (or press Delete)">✕</button>':'')+'</div>'+
+      '<div class="tw-gs-controls"><input type="color" class="tw-gs-color" value="'+sc.h+'"><input type="range" class="tw-gs-alpha" min="0" max="1" step="0.01" value="'+f1(sc.a==null?1:sc.a)+'"><span class="tw-gs-posbox"><input type="number" class="tw-gs-pos" min="0" max="100" value="'+Math.round(sc.p)+'"><i>%</i></span><button type="button" class="tw-gs-del'+(canDel?'':' tw-hidden')+'" title="Delete stop (or press Delete)">✕</button></div>'+
       '<div class="tw-gs-hint">Click the bar to add a colour · double-click a dot to recolour · Delete removes a middle stop</div>';
     row.querySelector('.tw-gradient-bar').style.background=makeGradient({_gradStops:stops,_gradAngle:90});
     return row;
@@ -1716,9 +1720,10 @@
       function repaint(){ var ss=stopsOf(cur); bar.style.background=makeGradient({_gradStops:ss,_gradAngle:90});
         bar.querySelectorAll('.tw-grad-stop').forEach(function(h){ var i=+h.dataset.stopIndex, o=ss[i]; if(o){ h.style.left=f1(o.p)+'%'; h.style.background=hexToRgba(o.h,o.a==null?1:o.a); h.classList.toggle('on', i===sel()); } });
         var o=ss[sel()]; if(o){ var ci=row.querySelector('.tw-gs-color'), ai=row.querySelector('.tw-gs-alpha'), pi=row.querySelector('.tw-gs-pos'); if(ci&&document.activeElement!==ci)ci.value=o.h; if(ai&&document.activeElement!==ai)ai.value=f1(o.a==null?1:o.a); if(pi&&document.activeElement!==pi)pi.value=Math.round(o.p); }
+        var d=row.querySelector('.tw-gs-del'); if(d) d.classList.toggle('tw-hidden', isEnd(sel()));   // ends can't be deleted
       }
       function isEnd(i){ var ss=stopsOf(cur); var ord=ss.map(function(o,j){return {p:o.p,i:j};}).sort(function(a,b){return a.p-b.p;}); return i===ord[0].i||i===ord[ord.length-1].i; }
-      function removeSel(){ var i=sel(); if(isEnd(i)) return; controlKeys().forEach(function(k){ var arr=stopsOf(k); arr.splice(i,1); state[k]._gradSel=Math.max(0,i-1); state[k]._gradOn=true; applyEl(k); }); commit(); buildPanel(); }
+      function removeSel(){ var i=sel(); if(isEnd(i)) return; controlKeys().forEach(function(k){ var arr=stopsOf(k); arr.splice(i,1); state[k]._gradSel=Math.max(0,i-1); state[k]._gradOn=true; applyEl(k); }); commit(); buildPanel(); var nb=document.querySelector('.tw-gradient-bar'); if(nb) nb.focus(); }
       function setColor(prop,v){ controlKeys().forEach(function(k){ stopsOf(k)[sel()][prop]=v; }); applyAll(); repaint(); }
       var cIn=row.querySelector('.tw-gs-color'); if(cIn){ cIn.addEventListener('input',function(){ setColor('h',this.value); }); cIn.addEventListener('change',commit); }
       var aIn=row.querySelector('.tw-gs-alpha'); if(aIn){ aIn.addEventListener('input',function(){ setColor('a',parseFloat(this.value)); }); aIn.addEventListener('change',commit); }
@@ -1730,9 +1735,8 @@
         h.addEventListener('mousedown',function(e){
           e.preventDefault(); e.stopPropagation();
           controlKeys().forEach(function(k){ ensure(k); state[k]._gradSel=idx; }); repaint(); bar.focus();
-          var moved=false;
-          var move=function(ev){ moved=true; var r=bar.getBoundingClientRect(); var pct=Math.max(0,Math.min(100,((ev.clientX-r.left)/Math.max(1,r.width))*100)); controlKeys().forEach(function(k){ stopsOf(k)[idx].p=pct; }); applyAll(); repaint(); };
-          var up=function(){ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); commit(); buildPanel(); };
+          var move=function(ev){ var r=bar.getBoundingClientRect(); var pct=Math.max(0,Math.min(100,((ev.clientX-r.left)/Math.max(1,r.width))*100)); controlKeys().forEach(function(k){ stopsOf(k)[idx].p=pct; }); applyAll(); repaint(); };
+          var up=function(){ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); commit(); };   // update in place (no rebuild) so the bar keeps focus for keyboard Delete
           document.addEventListener('mousemove',move); document.addEventListener('mouseup',up);
         });
         h.addEventListener('dblclick',function(e){ e.preventDefault(); e.stopPropagation(); controlKeys().forEach(function(k){ ensure(k); state[k]._gradSel=idx; }); var ci=row.querySelector('.tw-gs-color'); if(ci) ci.click(); });
@@ -3083,6 +3087,9 @@
     try{ navigator.clipboard && navigator.clipboard.writeText(t); }catch(e){}
     if(window.sendPrompt){ try{ window.sendPrompt(t); }catch(e){} }
     toast('Confirm text copied — paste it back into the chat to apply');
+    var b=this; if(b._twT) return;                 // flash "Copied!" then revert after a couple of seconds
+    var orig=b.textContent; b.textContent='Copied!'; b.classList.add('copied');
+    b._twT=setTimeout(function(){ b.textContent=orig; b.classList.remove('copied'); b._twT=null; }, 1800);
   });
   function toast(msg){ var el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); setTimeout(function(){el.classList.remove('show');},2200); }
 

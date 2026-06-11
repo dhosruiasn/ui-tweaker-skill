@@ -20,6 +20,12 @@
   "resources": [
     "skills/ui-tweaker/SKILL.md",
     "skills/ui-tweaker/SKILL.zh-TW.md",
+    "skills/ui-tweaker/references/fidelity-and-dom.md",
+    "skills/ui-tweaker/references/fidelity-and-dom.zh-TW.md",
+    "skills/ui-tweaker/references/template-behaviors.md",
+    "skills/ui-tweaker/references/template-behaviors.zh-TW.md",
+    "skills/ui-tweaker/references/confirm-apply.md",
+    "skills/ui-tweaker/references/confirm-apply.zh-TW.md",
     "skills/ui-tweaker/template/panel-template.html",
     "examples/demo.css"
   ],

@@ -6,6 +6,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- References: two field-tested rules (found 2026-06-12 while testing
+  panel-template.html 1.5.2 in the Pickmin project; added to both the English
+  `references/` files and their `.zh-TW` counterparts): (1) SEL map selectors
+  must be stage-scoped (`#card-stage [data-pick="key"]`) — a bare `[data-pick]`
+  selector matches the Layers-tree rows first, so the panel reads wrong initial
+  values; (2) viewport-based `@media` responsive rules don't react to
+  stage-width switching — give `#card-stage` `container-type: inline-size` in
+  the stage reset and mirror the breakpoints with `@container` rules so grid
+  columns follow the stage width.
+
+### Changed
+- Token-efficiency restructure: SKILL.md / SKILL.zh-TW.md slimmed from ~73KB to
+  ~9KB each. Detailed specs moved to on-demand `references/` files
+  (`fidelity-and-dom`, `template-behaviors`, `confirm-apply`, each with a
+  `.zh-TW` counterpart). Behaviour is unchanged; the content was relocated, not
+  rewritten.
+- Panel generation now copies `template/panel-template.html` with `cp` and edits
+  only the `⟦PROJECT-SPECIFIC⟧` marker regions; the skill explicitly forbids
+  reading or re-emitting the full template (or a generated panel) through the
+  model context. New "Token-efficiency hard rules" section at the top of both
+  SKILL files.
+
 ## [1.5.2] - 2026-06-10
 
 ### Added

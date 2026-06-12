@@ -56,6 +56,29 @@
   body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:120;opacity:var(--grain);mix-blend-mode:multiply;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:180px}
   html[data-theme="dark"] body::after{mix-blend-mode:soft-light}
+  @media(pointer:fine){
+    body.crosshair-ready,
+    body.crosshair-ready a,
+    body.crosshair-ready button,
+    body.crosshair-ready input,
+    body.crosshair-ready select,
+    body.crosshair-ready textarea,
+    body.crosshair-ready [role="button"]{cursor:none!important}
+    .cursor-crosshair{--x:50vw;--y:50vh;position:fixed;inset:0;z-index:140;pointer-events:none;opacity:0;transition:opacity .12s ease;mix-blend-mode:multiply}
+    .cursor-crosshair.on{opacity:1}
+    .cursor-crosshair::before,.cursor-crosshair::after{content:"";position:absolute;background:color-mix(in srgb,var(--ink) 38%,transparent)}
+    .cursor-crosshair::before{left:0;right:0;top:var(--y);height:1px;transform:translateY(-.5px)}
+    .cursor-crosshair::after{top:0;bottom:0;left:var(--x);width:1px;transform:translateX(-.5px)}
+    .cursor-mark{position:absolute;left:var(--x);top:var(--y);width:40px;height:40px;transform:translate(-50%,-50%);display:block}
+    .cursor-mark::before,.cursor-mark::after{content:"";position:absolute;left:50%;top:50%;background:var(--ink);transform:translate(-50%,-50%)}
+    .cursor-mark::before{width:40px;height:3px}
+    .cursor-mark::after{width:3px;height:40px}
+    html[data-theme="dark"] .cursor-crosshair{mix-blend-mode:normal}
+    html[data-theme="dark"] .cursor-crosshair::before,
+    html[data-theme="dark"] .cursor-crosshair::after{background:rgba(242,236,221,.36)}
+    html[data-theme="dark"] .cursor-mark::before,
+    html[data-theme="dark"] .cursor-mark::after{background:var(--ink)}
+  }
   ::selection{background:var(--blue);color:#fff}
   .wrap{max-width:1180px;margin:0 auto;padding:0 32px}
   @media(max-width:600px){.wrap{padding:0 20px}}
@@ -195,7 +218,7 @@
   .wipe-text{position:relative;z-index:1;font-family:var(--display);font-weight:400;font-size:clamp(1.6rem,3.6vw,2.9rem);line-height:1.32;max-width:1000px;text-align:center;opacity:0;will-change:transform,opacity}
   .wipe-text em{font-style:normal;font-weight:700;color:#f8ff6b;font-size:calc(1em + 15pt);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:6px}
   .wipe-tools{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;will-change:transform}
-  .wipe-tool{--tool-x:50%;--tool-y:50%;--tool-r:0deg;--tool-start-r:0deg;--tool-rebound:-42px;position:absolute;left:var(--tool-x);top:var(--tool-y);display:flex;align-items:center;justify-content:center;color:#fff;background:rgba(255,255,255,.10);border:1.4px solid rgba(255,255,255,.72);box-shadow:0 10px 26px rgba(80,20,6,.16);backdrop-filter:blur(2px);opacity:0;transform:translate3d(-50%,-50%,0) translateY(-30vh) rotate(var(--tool-start-r));will-change:transform,opacity;pointer-events:auto;cursor:grab;touch-action:none}
+  .wipe-tool{--tool-x:50%;--tool-y:50%;--tool-r:0deg;--tool-start-r:0deg;--tool-rebound:-42px;position:absolute;left:var(--tool-x);top:var(--tool-y);display:flex;align-items:center;justify-content:center;color:#fff;background:rgba(255,255,255,.10);border:1.4px solid rgba(255,255,255,.72);box-shadow:0 10px 26px rgba(80,20,6,.16);opacity:0;transform:translate3d(-50%,-50%,0) translateY(-30vh) rotate(var(--tool-start-r));will-change:transform,opacity;pointer-events:auto;cursor:grab;touch-action:none}
   .wipe-tool.dragging{cursor:grabbing;z-index:4}
   .wipe-tool.tool-settled{opacity:1;transform:translate3d(-50%,-50%,0) rotate(var(--tool-r))}
   .wipe-panel.tools-in .wipe-tool{animation:wipe-tool-drop var(--tool-d,1.08s) linear var(--tool-delay,0s) both}
@@ -232,6 +255,38 @@
     .wipe-text{opacity:1!important;transform:none!important}
   }
   .hero .title,.hero .hero-cta,.hero-notes{will-change:transform,opacity}
+  /* ===== page-load entrance: hero content rises from the horizon, the pointer drops in =====
+     CSS animations outrank the inline transforms the scroll-scrub frame() writes at rest, so they
+     play cleanly on load and hand back to the original position once finished (no JS changes). */
+  @keyframes hero-rise{
+    0%{opacity:0;transform:translate3d(0,76px,0)}
+    100%{opacity:1;transform:translate3d(0,0,0)}
+  }
+  /* mask-rise: each visual line slides up THROUGH a fixed mask, with a motion-blur trail. The mask is a
+     static clip-path on each .word (NOT overflow:hidden — that retargets an inline-block's baseline and
+     makes the line jump ~27px when removed). Driven by the JS below, which wraps every word's letters in a
+     riser <span>, staggers lines top→bottom, then UNWRAPS after landing — the same .ch nodes are reused,
+     so the scatter/scrub logic that holds references to them keeps working. */
+  @keyframes line-rise{
+    0%{transform:translateY(125%);filter:blur(7px)}
+    55%{filter:blur(0)}
+    100%{transform:translateY(0);filter:blur(0)}
+  }
+  @keyframes hero-pointer-drop{
+    0%{opacity:0;transform:translate3d(0,-122vh,0) rotate(-45deg)}
+    58%{opacity:1;transform:translate3d(0,4.5vh,0) rotate(-45deg)}
+    74%{transform:translate3d(0,-2vh,0) rotate(-45deg)}
+    88%{transform:translate3d(0,.9vh,0) rotate(-45deg)}
+    100%{opacity:1;transform:translate3d(0,0,0) rotate(-45deg)}
+  }
+  /* fill:backwards (NOT both) — forwards would lock the entrance transform and block the scroll scatter */
+  .hero .scrub-readout{animation:hero-rise .92s cubic-bezier(.16,.84,.3,1) backwards;animation-delay:.3s}
+  .hero .hero-cta{animation:hero-rise .92s cubic-bezier(.16,.84,.3,1) backwards;animation-delay:.42s}
+  .hero .hero-notes{animation:hero-rise 1s cubic-bezier(.16,.84,.3,1) backwards;animation-delay:.54s}
+  .hero-pointer{animation:hero-pointer-drop 1.18s cubic-bezier(.5,.02,.42,1) backwards;animation-delay:.62s}
+  @media(prefers-reduced-motion:reduce){
+    .hero .scrub-readout,.hero .hero-cta,.hero .hero-notes,.hero-note,.hero-pointer{animation:none}
+  }
   .hero-pointer{position:absolute;left:5.4vw;top:5vh;z-index:2;width:clamp(86px,8vw,142px);height:auto;color:var(--ink);transform:rotate(-45deg);transform-origin:50% 55%;pointer-events:auto;cursor:pointer;filter:drop-shadow(0 3px 0 rgba(25,21,18,.08))}
   .hero-pointer svg{display:block;width:100%;height:auto;transform-origin:50% 55%}
   .hero-pointer.spin svg{animation:hero-pointer-spin 4.32s cubic-bezier(.45,0,.2,1)}
@@ -260,14 +315,24 @@
   /* floating bracket annotations */
   .hero-notes{position:absolute;inset:0;pointer-events:none;overflow:hidden}
   .note-fx{position:absolute;left:0;top:0;pointer-events:none;z-index:0}   /* particle burst layer (behind the bracket notes) */
-  .hero-note{position:absolute;left:0;top:0;display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-weight:600;font-size:1.25rem;line-height:1;color:var(--blue-deep);white-space:nowrap;will-change:transform}
+  .hero-note{position:absolute;left:0;top:0;display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-weight:600;font-size:1.25rem;line-height:1;color:var(--blue-deep);white-space:nowrap;will-change:transform;opacity:0;transition:opacity .18s ease}
+  .hero-notes.notes-ready .hero-note{opacity:1}
   .hero-note::before{content:"{";font-size:1.7em;font-weight:400}
   .hero-note::after{content:"}";font-size:1.7em;font-weight:400}
+  /* mobile ambient drift for the { } notes. Desktop drives .hero-note via inline transform (DVD bounce);
+     that JS doesn't run under 981px, so the mobile rule can safely drop its `transform:none` guard and let
+     this animation own the transform instead. */
+  @keyframes note-float{
+    0%,100%{transform:translateY(0) rotate(-1.2deg)}
+    50%{transform:translateY(-7px) rotate(1.4deg)}
+  }
   @media(max-width:980px){
     .hero-stage{height:auto}
     .hero{position:static;height:auto;min-height:auto;padding:64px 0 46px;overflow:visible}
     .hero-notes{position:static;display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin-top:32px;overflow:visible}
-    .hero-note{position:relative;left:auto;top:auto;transform:none!important;font-size:1rem}
+    .hero-note{position:relative;left:auto;top:auto;font-size:1rem;animation:note-float 4.2s ease-in-out infinite;will-change:transform}
+    .hero-note.n2{animation-duration:4.8s;animation-delay:-1.4s}
+    .hero-note.n3{animation-duration:5.4s;animation-delay:-2.6s}
     .hero-pointer{display:none}
     .hero-reveal{position:static;opacity:1!important;transform:none!important;pointer-events:auto;padding:30px 20px 4px}
     .title .ch.seed-source-dot{width:auto;height:auto;margin-left:0;background:transparent;color:inherit;line-height:inherit;vertical-align:baseline;overflow:visible}
@@ -299,6 +364,50 @@
   .head p{color:var(--ink-soft);font-size:1.08rem;max-width:620px}
   html[data-lang="zh"] .head h2{word-break:keep-all}   /* wide: one line; narrow: break only at the <wbr> after the comma (clean, not mid-phrase) */
   #why .head p{max-width:920px}   /* wide enough that each sentence fits one line on desktop → 2 lines */
+  /* ===== #why pinned headline: slogan lines fill in (light→ink), one per scroll; head rises as the red curtain recedes ===== */
+  #why{padding-top:0;margin-top:-100vh;position:relative;z-index:4}
+  .why-head-stage{position:relative;height:300vh}
+  .why-head-pin{position:sticky;top:var(--nav-h);height:calc(100vh - var(--nav-h));display:flex;align-items:center}
+  .why-head-pin .head{margin:0;will-change:transform}
+  .head .why-title{font-family:var(--display);font-weight:800;text-transform:uppercase;line-height:.9;letter-spacing:-.02em;font-size:clamp(2.6rem,7.2vw,6.4rem);display:flex;flex-direction:column;margin-bottom:26px}
+  .why-line{--fill:0;display:block;width:max-content;max-width:100%}
+  .why-line>span{-webkit-background-clip:text;background-clip:text;color:transparent;
+    background-image:linear-gradient(90deg,var(--ink) 0,var(--ink) calc(var(--fill)*100%),color-mix(in srgb,var(--ink) 16%,transparent) calc(var(--fill)*100%),color-mix(in srgb,var(--ink) 16%,transparent) 100%)}
+  html[data-lang="zh"] .head .why-title{text-transform:none;letter-spacing:.04em;line-height:1.14;word-break:keep-all}
+  .why-demo-stage{position:relative;height:220vh;margin-top:0}
+  .why-demo-pin{position:sticky;top:calc(var(--nav-h) + 24px);padding-bottom:40px}
+  .why-demo{transform-origin:50% 50%;will-change:clip-path,opacity,filter}
+  .why-demo-pin .studio-note{opacity:0;transform:translate3d(0,42px,0);filter:blur(3px);will-change:transform,opacity,filter}
+  /* #why face — eyes from the user-supplied SVG (white shape + clipped black pupils that track the cursor) + a downward arc mouth with its own sway */
+  .why-face{position:absolute;top:21%;right:4%;width:clamp(180px,18vw,290px);pointer-events:none;z-index:2;opacity:0;scale:1.3;transform-origin:right center}   /* whole face scaled +30%, anchored right, moved into the green box (lower-right) */
+  .wf-group{display:flex;flex-direction:column;align-items:center;transform-origin:50% 50%;animation:wf-sway 3s ease-in-out infinite}
+  .wf-eyes{width:100%;height:auto;overflow:visible;margin-top:5px}   /* eyes nudged down 5px */
+  .wf-white{fill:#fff}
+  .wf-pupil{fill:var(--ink);will-change:transform}
+  html[data-theme="dark"] .wf-pupil{fill:#04a3fe}
+  .wf-mouth{--mouth-y:0%;position:relative;top:0;width:40%;margin-top:clamp(-40px,-3.4vw,-24px);overflow:visible;transform-origin:50% 18%;transform-box:fill-box;will-change:transform;animation:wf-mouth-sway 4.8s ease-in-out infinite}
+  .wf-mouth path{stroke:var(--ink)}
+  @keyframes wf-sway{0%,100%{transform:rotate(-9deg)}50%{transform:rotate(9deg)}}
+  @keyframes wf-mouth-sway{
+    0%,100%{transform:translate3d(-8%,calc(var(--mouth-y) + 1%),0) rotate(11deg)}
+    45%{transform:translate3d(7%,calc(var(--mouth-y) - 3%),0) rotate(-13deg)}
+    68%{transform:translate3d(2%,calc(var(--mouth-y) + 2%),0) rotate(-4deg)}
+  }
+  /* face DROPS in from above once the #why head has settled (class added by #why frame()) */
+  .why-face.wf-drop{animation:wf-drop .85s cubic-bezier(.3,.72,.4,1) both}
+  @keyframes wf-drop{0%{opacity:0;transform:translateY(-150%)}58%{opacity:1;transform:translateY(7%)}80%{transform:translateY(-3%)}100%{opacity:1;transform:translateY(0)}}
+  @media(prefers-reduced-motion:reduce){.wf-group,.wf-mouth{animation:none}}
+  @media(max-width:980px){.why-face{display:none}}
+  @media(max-width:980px){
+    #why{margin-top:0;padding-top:64px;z-index:auto}   /* drop the desktop-only -100vh wipe-handoff overlap so #why doesn't slam into the hero */
+    .why-head-stage{height:auto}
+    .why-head-pin{position:static;height:auto;display:block}
+    .why-demo-stage{height:auto;margin-top:clamp(44px,10vw,72px)}
+    .why-demo-pin{position:static;padding-bottom:0}
+    .why-demo-pin .studio-note{opacity:1!important;transform:none!important;filter:none!important;margin-top:28px}
+    .head .why-title{font-size:clamp(2rem,9vw,3.2rem)}
+    .why-line{--fill:1}
+  }
 
   /* ===== features = spec sheet ===== */
   .spec{border-top:1px solid var(--ink)}
@@ -307,11 +416,40 @@
   .spec-row .idx{font-family:var(--mono);font-size:.8rem;color:var(--blue)}
   .spec-row h3{font-family:var(--sans);font-size:1.32rem;font-weight:700;letter-spacing:-.01em;line-height:1.15}
   .spec-row p{color:var(--ink-soft);font-size:1rem}
+  #features .head.reveal,#features .spec-row.reveal{opacity:1;transform:none;transition:none}
+  #features .head{overflow:hidden}
+  #features .head .kicker,#features .head h2{opacity:0;transform:translate3d(0,42px,0);filter:blur(4px);will-change:transform,opacity,filter}
+  #features .head .kicker::before{transform:scaleX(0);transform-origin:left center;transition:transform .62s cubic-bezier(.2,.8,.2,1)}
+  #features .spec{border-top:0;position:relative}
+  #features .spec::before{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:var(--ink);transform:scaleX(0);transform-origin:left center}
+  #features .spec-row{--row:0;position:relative;overflow:hidden;border-bottom:0}
+  #features .spec-row:nth-child(2){--row:1}
+  #features .spec-row:nth-child(3){--row:2}
+  #features .spec-row:nth-child(4){--row:3}
+  #features .spec-row:nth-child(5){--row:4}
+  #features .spec-row:nth-child(6){--row:5}
+  #features .spec-row::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--border);transform:scaleX(0);transform-origin:left center}
+  #features .spec-row .idx,#features .spec-row h3,#features .spec-row p{opacity:0;transform:translate3d(0,34px,0);filter:blur(4px);will-change:transform,opacity,filter}
+  #features.features-in .head .kicker::before,#features.features-in .spec::before,#features.features-in .spec-row::after{transform:scaleX(1)}
+  #features.features-in .head .kicker,#features.features-in .head h2,#features.features-in .spec-row .idx,#features.features-in .spec-row h3,#features.features-in .spec-row p{opacity:1;transform:none;filter:none}
+  #features.features-in .spec::before{transition:transform .78s cubic-bezier(.2,.8,.2,1)}
+  #features.features-in .spec-row::after{transition:transform .76s cubic-bezier(.2,.8,.2,1);transition-delay:calc(.1s + var(--row)*.13s)}
+  #features.features-in .head .kicker{transition:opacity .64s cubic-bezier(.2,.8,.2,1) .42s,transform .64s cubic-bezier(.2,.8,.2,1) .42s,filter .64s ease .42s}
+  #features.features-in .head h2{transition:opacity .72s cubic-bezier(.2,.8,.2,1) .56s,transform .72s cubic-bezier(.2,.8,.2,1) .56s,filter .72s ease .56s}
+  #features.features-in .spec-row .idx{transition:opacity .62s cubic-bezier(.2,.8,.2,1),transform .62s cubic-bezier(.2,.8,.2,1),filter .62s ease;transition-delay:calc(.58s + var(--row)*.13s)}
+  #features.features-in .spec-row h3{transition:opacity .68s cubic-bezier(.2,.8,.2,1),transform .68s cubic-bezier(.2,.8,.2,1),filter .68s ease;transition-delay:calc(.64s + var(--row)*.13s)}
+  #features.features-in .spec-row p{transition:opacity .72s cubic-bezier(.2,.8,.2,1),transform .72s cubic-bezier(.2,.8,.2,1),filter .72s ease;transition-delay:calc(.72s + var(--row)*.13s)}
+  @media(prefers-reduced-motion:reduce){
+    #features .head .kicker,#features .head h2,#features .spec-row .idx,#features .spec-row h3,#features .spec-row p{opacity:1;transform:none;filter:none;transition:none}
+    #features .head .kicker::before,#features .spec::before,#features .spec-row::after{transform:scaleX(1);transition:none}
+  }
   @media(max-width:760px){.spec-row{grid-template-columns:42px 1fr;gap:6px 16px}.spec-row p{grid-column:2}}
 
   /* ===== how = process tile board ===== */
   #how{background:var(--ink);color:var(--bg);overflow:hidden;scroll-margin-top:-10px}
   html.how-cut-active #how::before{content:"";position:fixed;left:0;right:0;top:calc(var(--nav-h) - 42px);z-index:55;height:42px;background:var(--ink);pointer-events:none}
+  html[data-theme="dark"] #how{background:#e8e8e4;color:#16130f}
+  html[data-theme="dark"].how-cut-active #how::before{background:#e8e8e4}
   #how .wrap{max-width:1380px}
   #how.how-fold-ready .step.reveal{opacity:1;transform:none;transition:none}
   .steps{display:grid;grid-template-columns:1.18fr repeat(4,minmax(0,1fr));grid-template-rows:1fr 1fr;gap:0;align-items:stretch;margin-top:0;padding:0;border:0;background:transparent;overflow:visible}
@@ -478,14 +616,17 @@
   .folder-card{width:208px;box-sizing:border-box;background:var(--card-solid);border:1px solid var(--border-strong);display:flex;flex-direction:column;transition:border-radius .08s,padding .08s,box-shadow .08s,gap .08s}
   .folder-card .fc-thumb{height:92px;border-radius:14px;background:linear-gradient(150deg,#f6cdbd,#ef8a63);position:relative;overflow:hidden;flex:none}
   .folder-card .fc-thumb::after{content:"";position:absolute;left:14px;bottom:-22px;width:84px;height:84px;border-radius:50%;background:radial-gradient(circle at 38% 34%,rgba(255,255,255,.6),transparent 60%)}
+  .folder-card .fc-body,.folder-card .fc-footer{display:flex;transition:border-radius .08s,padding .08s,box-shadow .08s,gap .08s}
+  .folder-card .fc-body{flex-direction:column}
+  .folder-card .fc-footer{justify-content:flex-end}
   .folder-card .fc-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
   .folder-card .fc-title{font-family:var(--sans);font-weight:700;font-size:.96rem;color:var(--ink)}
   .folder-card .fc-badge{font-family:var(--mono);font-size:.66rem;font-weight:600;color:var(--blue-deep);background:color-mix(in srgb,var(--blue) 15%,transparent);padding:2px 8px;border-radius:var(--radius-pill)}
   .folder-card .fc-icon{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--blue);color:#fff;align-self:flex-end}
   .folder-card .fc-icon svg{width:18px;height:18px}
   /* click-to-select affordances in the preview */
-  .folder-card,.folder-card .fc-thumb,.folder-card .fc-title,.folder-card .fc-badge,.folder-card .fc-icon{cursor:move;touch-action:none}
-  .folder-card .fc-thumb:hover,.folder-card .fc-title:hover,.folder-card .fc-badge:hover,.folder-card .fc-icon:hover{outline:1.5px dashed color-mix(in srgb,var(--blue) 55%,transparent);outline-offset:2px}
+  .folder-card,.folder-card .fc-thumb,.folder-card .fc-body,.folder-card .fc-footer,.folder-card .fc-title,.folder-card .fc-badge,.folder-card .fc-icon{cursor:move;touch-action:none}
+  .folder-card .fc-thumb:hover,.folder-card .fc-body:hover,.folder-card .fc-footer:hover,.folder-card .fc-title:hover,.folder-card .fc-badge:hover,.folder-card .fc-icon:hover{outline:1.5px dashed color-mix(in srgb,var(--blue) 55%,transparent);outline-offset:2px}
   .folder-card [contenteditable]{outline:2px solid var(--blue);outline-offset:3px;cursor:text;border-radius:3px}
   .studio-tbox{position:absolute;left:0;top:0;pointer-events:none;transform-origin:center center}
   .studio-tbox .tb-frame{position:absolute;inset:-1px;border:1.5px solid var(--blue);box-sizing:border-box}
@@ -499,6 +640,8 @@
   .studio-tbox .tb-size{position:absolute;left:50%;top:100%;transform:translate(-50%,9px);background:var(--blue);color:#fff;font-family:var(--mono);font-size:.64rem;font-weight:600;padding:3px 8px;border-radius:5px;white-space:nowrap}
   .studio-panel{border-left:1px solid var(--border);background:var(--card-solid);display:flex;flex-direction:column;min-width:0}
   .studio-panel-h{padding:12px 14px;border-bottom:1px solid var(--border);font-weight:700;font-size:.84rem;color:var(--ink);display:flex;align-items:baseline;gap:8px}
+  .studio-panel-logo{width:20px;height:20px;border:1.4px solid var(--blue);color:var(--blue);display:inline-grid;place-items:center;border-radius:5px;flex:none}
+  .studio-panel-logo svg{width:13px;height:13px}
   .studio-panel-h small{font-weight:400;color:var(--ink-faint);font-size:.68rem;font-family:var(--mono)}
   .studio-cats{flex:1;overflow:auto;max-height:430px}
   .studio-cat{border-bottom:1px solid var(--border)}
@@ -533,7 +676,58 @@
   .studio-out-top .label{font-family:var(--mono);font-size:.74rem;color:var(--blue-deep)}
   .studio-out pre{margin:0;padding:16px;font-family:var(--code);font-size:.78rem;line-height:1.7;color:var(--ink);overflow-x:auto;white-space:pre}
   .studio-note{font-size:.92rem;color:var(--ink-soft);margin-top:18px;display:flex;align-items:center;gap:8px;font-family:var(--mono)}
-  .studio-note svg{flex:none}
+  html:not([data-theme="dark"]) .studio{border-color:#e2e5ea;background:#fff;box-shadow:0 16px 34px rgba(39,47,62,.10)}
+  html:not([data-theme="dark"]) .studio-layers,
+  html:not([data-theme="dark"]) .studio-panel{background:#fff;border-color:#e5e7eb}
+  html:not([data-theme="dark"]) .studio-lay-sec,
+  html:not([data-theme="dark"]) .studio-bar,
+  html:not([data-theme="dark"]) .studio-panel-h,
+  html:not([data-theme="dark"]) .studio-cat,
+  html:not([data-theme="dark"]) .studio-footer,
+  html:not([data-theme="dark"]) .studio-out-top{border-color:#e7e8eb}
+  html:not([data-theme="dark"]) .studio-canvas,
+  html:not([data-theme="dark"]) .studio-stage{background:#eef1f6}
+  html:not([data-theme="dark"]) .studio-bar{background:#f8f9fb}
+  html:not([data-theme="dark"]) .studio-lay-h,
+  html:not([data-theme="dark"]) .studio-panel-h small,
+  html:not([data-theme="dark"]) .studio-hint,
+  html:not([data-theme="dark"]) .studio-zoom .z,
+  html:not([data-theme="dark"]) .studio-summary{color:#9a9da3}
+  html:not([data-theme="dark"]) .studio-page{background:#f3f4f6;color:#4d5057}
+  html:not([data-theme="dark"]) .studio-row{color:#555861}
+  html:not([data-theme="dark"]) .studio-row:hover:not(.on){background:#f5f6f8}
+  html:not([data-theme="dark"]) .studio-row.on{background:#fff0ec;color:#d94a2b}
+  html:not([data-theme="dark"]) .studio-row .car,
+  html:not([data-theme="dark"]) .studio-row .ico{color:#a4a7ad}
+  html:not([data-theme="dark"]) .studio-row.on .ico{color:#e24b2d}
+  html:not([data-theme="dark"]) .studio-seg,
+  html:not([data-theme="dark"]) .studio-tools button,
+  html:not([data-theme="dark"]) .studio-zoom button,
+  html:not([data-theme="dark"]) .studio-select,
+  html:not([data-theme="dark"]) .studio-crow input[type=color],
+  html:not([data-theme="dark"]) .studio-summary{background:#fff;border-color:#dfe2e7}
+  html:not([data-theme="dark"]) .studio-tools button,
+  html:not([data-theme="dark"]) .studio-zoom button,
+  html:not([data-theme="dark"]) .studio-seg button{color:#636872}
+  html:not([data-theme="dark"]) .studio-seg button.on,
+  html:not([data-theme="dark"]) .studio-tools button.on{color:#fff}
+  html:not([data-theme="dark"]) .studio-tools button:disabled{border-color:#e7e8eb;color:#c2c5ca}
+  html:not([data-theme="dark"]) .studio-cat>summary,
+  html:not([data-theme="dark"]) .studio-panel-h,
+  html:not([data-theme="dark"]) .studio-select,
+  html:not([data-theme="dark"]) .folder-card .fc-title{color:#1d1f24}
+  html:not([data-theme="dark"]) .studio-ctrl label,
+  html:not([data-theme="dark"]) .studio-crow .studio-clbl{color:#4f535c}
+  html:not([data-theme="dark"]) .studio-ctrl label .v{color:#d94a2b;background:#fff0ec;border-color:#f4c8bd}
+  html:not([data-theme="dark"]) .studio-ctrl input[type=range]{background:#f5d9d3;accent-color:#e24b2d}
+  html:not([data-theme="dark"]) .studio-ctrl input[type=range]::-webkit-slider-thumb{background:#fff;border-color:#e24b2d}
+  html:not([data-theme="dark"]) .studio-ctrl input[type=range]::-moz-range-thumb{background:#fff;border-color:#e24b2d}
+  html:not([data-theme="dark"]) .studio-footer{background:#fff}
+  html:not([data-theme="dark"]) .studio-summary{background:#f7f8fa}
+  html:not([data-theme="dark"]) .folder-card{background:#fff;border-color:#e1e3e7}
+  html:not([data-theme="dark"]) .studio-tbox .tb-h,
+  html:not([data-theme="dark"]) .studio-tbox .tb-rot{background:#fff}
+  html:not([data-theme="dark"]) .studio-out{border-color:#e2e5ea;background:#fff}
 
   /* language toggle — :not() raises specificity so it also wins over display rules */
   html:not([data-lang="zh"]) [data-lang-zh]{display:none}
@@ -612,12 +806,32 @@
 
 <section class="pad" id="why">
   <div class="wrap">
-    <div class="head reveal">
+    <div class="why-head-stage" id="whyHeadStage"><div class="why-head-pin">
+    <div class="head">
       <span class="kicker" data-lang-en>The problem</span><span class="kicker" data-lang-zh>痛點</span>
-      <h2><span data-lang-en>Words are a terrible design tool.</span><span data-lang-zh>文字是最差的設計工具</span></h2>
+      <h2 class="why-title">
+        <span class="why-line"><span data-lang-en>Words are</span><span data-lang-zh>文字是</span></span>
+        <span class="why-line"><span data-lang-en>a terrible</span><span data-lang-zh>最差的</span></span>
+        <span class="why-line"><span data-lang-en>design tool</span><span data-lang-zh>設計工具</span></span>
+      </h2>
       <p><span data-lang-en>Telling an AI "a touch more padding… no, less… rounder" burns turns guessing numbers.<br class="br-desk"><span class="keep-together">UI Tweaker</span> flips it: every adjustment is a structured, round-trippable value — never a vibe.</span><span data-lang-zh>叫 AI「padding 多一點⋯不對少一點⋯再圓一點」很耗回合在猜數字。<span class="keep-together">UI Tweaker</span> 反過來：每個調整都是可回填的結構化數值——不是憑感覺。</span></p>
     </div>
-    <div class="studio reveal">
+    <div class="why-face" aria-hidden="true">
+      <div class="wf-group">
+      <svg class="wf-eyes" viewBox="0 0 1000 500" overflow="visible">
+        <defs><clipPath id="wfEyeMask"><path d="M104,183 L503,71 L931,198 C905,342 694,420 544,289 L168,394 Z"/></clipPath></defs>
+        <path class="wf-white" d="M104,183 L503,71 L931,198 C905,342 694,420 544,289 L168,394 Z"/>
+        <g clip-path="url(#wfEyeMask)">
+          <circle class="wf-pupil" cx="380" cy="190" r="108"/>
+          <circle class="wf-pupil" cx="651" cy="175" r="108"/>
+        </g>
+      </svg>
+      <svg class="wf-mouth" viewBox="0 0 100 46" overflow="visible"><path d="M6 34 Q50 2 94 34" stroke-width="15" fill="none"/></svg>
+      </div>
+    </div>
+    </div></div>
+    <div class="why-demo-stage" id="whyDemoStage"><div class="why-demo-pin">
+    <div class="studio why-demo">
       <div class="studio-grid">
 
         <!-- LEFT: pages + layers tree -->
@@ -631,9 +845,11 @@
             <div class="studio-row"><span class="car">›</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg></span><span class="studio-lay-name">Home screen</span></div>
             <div class="studio-row on" data-target="#folderCard" style="padding-left:18px"><span class="car">⌄</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg></span><span class="studio-lay-name">Folder card</span></div>
             <div class="studio-row" data-target=".fc-thumb" style="padding-left:36px"><span class="car leaf">›</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M5 17l4-4 3 3 3-4 4 5"/><circle cx="8.5" cy="9.5" r="1.4" fill="currentColor" stroke="none"/></svg></span><span class="studio-lay-name">Thumbnail</span></div>
-            <div class="studio-row" data-target=".fc-title" style="padding-left:36px"><span class="car leaf">›</span><span class="ico tnode">T</span><span class="studio-lay-name">Title</span></div>
-            <div class="studio-row" data-target=".fc-badge" style="padding-left:36px"><span class="car leaf">›</span><span class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg></span><span class="studio-lay-name">Count</span></div>
-            <div class="studio-row" data-target=".fc-icon" style="padding-left:36px"><span class="car leaf">›</span><span class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg></span><span class="studio-lay-name">Action icon</span></div>
+            <div class="studio-row" data-target=".fc-body" style="padding-left:36px"><span class="car">⌄</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 9h8M8 13h5"/></svg></span><span class="studio-lay-name">Body group</span></div>
+            <div class="studio-row" data-target=".fc-title" style="padding-left:54px"><span class="car leaf">›</span><span class="ico tnode">T</span><span class="studio-lay-name">Title</span></div>
+            <div class="studio-row" data-target=".fc-badge" style="padding-left:54px"><span class="car leaf">›</span><span class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg></span><span class="studio-lay-name">Count</span></div>
+            <div class="studio-row" data-target=".fc-footer" style="padding-left:36px"><span class="car">⌄</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="16" height="12" rx="2"/><path d="M4 14h16"/></svg></span><span class="studio-lay-name">Footer group</span></div>
+            <div class="studio-row" data-target=".fc-icon" style="padding-left:54px"><span class="car leaf">›</span><span class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg></span><span class="studio-lay-name">Action icon</span></div>
           </div>
         </div>
 
@@ -662,8 +878,8 @@
             <div class="studio-card-wrap" id="cardWrap">
               <div class="folder-card" id="folderCard">
                 <div class="fc-thumb"></div>
-                <div class="fc-row"><span class="fc-title">Flower</span><span class="fc-badge">415</span></div>
-                <span class="fc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 9c0-2.5-1.5-4-3-4s-2.5 2-1 4M12 15c0 2.5 1.5 4 3 4s2.5-2 1-4M9 12c-2.5 0-4 1.5-4 3s2 2.5 4 1M15 12c2.5 0 4-1.5 4-3s-2-2.5-4-1"/></svg></span>
+                <div class="fc-body"><div class="fc-row"><span class="fc-title">Flower</span><span class="fc-badge">415</span></div></div>
+                <div class="fc-footer"><span class="fc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 9c0-2.5-1.5-4-3-4s-2.5 2-1 4M12 15c0 2.5 1.5 4 3 4s2.5-2 1-4M9 12c-2.5 0-4 1.5-4 3s2 2.5 4 1M15 12c2.5 0 4-1.5 4-3s-2-2.5-4-1"/></svg></span></div>
               </div>
               <div class="studio-tbox" id="studioTbox" aria-hidden="true">
                 <div class="tb-frame"></div>
@@ -679,7 +895,7 @@
 
         <!-- RIGHT: control panel -->
         <div class="studio-panel">
-          <div class="studio-panel-h"><span id="studioCurName">Folder card</span> <small data-lang-en>live from the real stylesheet</small><small data-lang-zh>讀取自真實樣式表</small></div>
+          <div class="studio-panel-h"><span class="studio-panel-logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 4h4M4 4v4M20 4h-4M20 4v4M4 20h4M4 20v-4M20 20h-4M20 20v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9 8l7 4-7 4V8z" fill="currentColor"/></svg></span><span id="studioCurName">Folder card</span> <small data-lang-en>live from the real stylesheet</small><small data-lang-zh>讀取自真實樣式表</small></div>
           <div class="studio-cats">
             <details class="studio-cat" open><summary><span data-lang-en>Typography</span><span data-lang-zh>字型</span></summary><div class="studio-cat-body">
               <select class="studio-select" id="st-font">
@@ -697,7 +913,9 @@
             </div></details>
             <details class="studio-cat" open><summary><span data-lang-en>Size</span><span data-lang-zh>尺寸</span></summary><div class="studio-cat-body">
               <div class="studio-ctrl"><label>scale<span class="v" id="ov-scale">100 %</span></label><input type="range" id="st-scale" min="50" max="200" value="100" step="1"></div>
+              <p class="studio-hint" data-lang-en>Real tool also supports Fixed, Fill, Hug, and Auto size modes.</p><p class="studio-hint" data-lang-zh>真實工具也支援 Fixed、Fill、Hug、Auto 尺寸模式。</p>
             </div></details>
+            <details class="studio-cat"><summary><span data-lang-en>Layout</span><span data-lang-zh>佈局</span></summary><div class="studio-cat-body"><p class="studio-hint" data-lang-en>Flex controls: display, direction, wrap, gap, align-items, justify-content.</p><p class="studio-hint" data-lang-zh>Flex 控制：display、方向、換行、gap、align-items、justify-content。</p></div></details>
             <details class="studio-cat" open><summary><span data-lang-en>Radius</span><span data-lang-zh>圓角</span></summary><div class="studio-cat-body">
               <div class="studio-ctrl"><label>radius<span class="v" id="ov-radius">18 px</span></label><input type="range" id="st-radius" min="0" max="40" value="18" step="1"></div>
             </div></details>
@@ -708,11 +926,11 @@
             <details class="studio-cat" open><summary><span data-lang-en>Shadow</span><span data-lang-zh>陰影</span></summary><div class="studio-cat-body">
               <div class="studio-ctrl"><label>blur<span class="v" id="ov-shadow">22 px</span></label><input type="range" id="st-shadow" min="0" max="44" value="22" step="1"></div>
             </div></details>
-            <details class="studio-cat"><summary><span data-lang-en>Effects</span><span data-lang-zh>效果</span></summary><div class="studio-cat-body"><p class="studio-hint" data-lang-en>No effects yet</p><p class="studio-hint" data-lang-zh>尚無效果</p><button class="studio-add" type="button"><span data-lang-en>+ Add effect</span><span data-lang-zh>+ 新增效果</span></button></div></details>
-            <details class="studio-cat"><summary><span data-lang-en>Frosted glass</span><span data-lang-zh>磨砂玻璃</span></summary><div class="studio-cat-body"><p class="studio-hint" data-lang-en>In the real tool: backdrop blur, saturation, tint.</p><p class="studio-hint" data-lang-zh>在真實工具中可調：背景模糊、飽和度、染色。</p></div></details>
+            <details class="studio-cat"><summary><span data-lang-en>Effects</span><span data-lang-zh>效果</span></summary><div class="studio-cat-body"><p class="studio-hint" data-lang-en>Glass lives here now: backdrop blur, saturation, tint, plus shadow layers.</p><p class="studio-hint" data-lang-zh>Glass 現在放在這裡：背景模糊、飽和度、染色，加上陰影圖層。</p><button class="studio-add" type="button"><span data-lang-en>+ Add glass</span><span data-lang-zh>+ 新增 Glass</span></button></div></details>
             <details class="studio-cat"><summary><span data-lang-en>Color</span><span data-lang-zh>顏色</span></summary><div class="studio-cat-body">
               <div class="studio-crow"><span class="studio-clbl" data-lang-en>text</span><span class="studio-clbl" data-lang-zh>文字</span><input type="color" id="st-tcolor" value="#191512"></div>
               <div class="studio-crow"><span class="studio-clbl" data-lang-en>fill</span><span class="studio-clbl" data-lang-zh>填色</span><input type="color" id="st-fcolor" value="#ffffff"></div>
+              <p class="studio-hint" data-lang-en>Includes border stroke alignment and a Photoshop-style multi-stop gradient editor.</p><p class="studio-hint" data-lang-zh>包含邊框對齊，以及 Photoshop 風格多 stop 漸層編輯器。</p>
             </div></details>
           </div>
         </div>
@@ -732,7 +950,8 @@
       <pre id="studioOutPre"></pre>
     </div>
 
-    <p class="studio-note reveal"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="var(--blue)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg><span data-lang-en>Drag any slider on the right — the card updates live. Hit Confirm to see what your AI receives.</span><span data-lang-zh>拉右側任一滑桿——卡片即時更新。按確認，看 AI 會收到的數值。</span></p>
+    <p class="studio-note reveal"><span data-lang-en>Drag any slider on the right — the card updates live. Hit Confirm to see what your AI receives.</span><span data-lang-zh>拉右側任一滑桿——卡片即時更新。按確認，看 AI 會收到的數值。</span></p>
+    </div></div>
   </div>
 </section>
 
@@ -744,8 +963,8 @@
     </div>
     <div class="spec">
       <div class="spec-row reveal"><span class="idx">01</span><h3><span data-lang-en>Real styles, not guesses</span><span data-lang-zh>真實樣式，不用猜</span></h3><p><span data-lang-en>The preview links your project's real CSS and reads initial values via getComputedStyle — what you see matches production.</span><span data-lang-zh>預覽連結你專案的真實 CSS，用 getComputedStyle 讀初始值——所見即上線結果。</span></p></div>
-      <div class="spec-row reveal"><span class="idx">02</span><h3><span data-lang-en>Eight control categories</span><span data-lang-zh>八大控制分類</span></h3><p><span data-lang-en>Typography, spacing, size, radius, position/offset, shadow, frosted glass, color — each fully scrubbable.</span><span data-lang-zh>字型、間距、尺寸、圓角、位置偏移、陰影、磨砂玻璃、顏色——每項都能拖曳微調。</span></p></div>
-      <div class="spec-row reveal"><span class="idx">03</span><h3><span data-lang-en>Figma / PS interactions</span><span data-lang-zh>Figma／PS 操作</span></h3><p><span data-lang-en>Type-able number boxes, drag-to-scrub, linked corner radii, icon alignment, undo/redo with shortcuts.</span><span data-lang-zh>可打字數字框、拖曳刷值、圓角四角連動、圖示對齊、undo/redo 快捷鍵。</span></p></div>
+      <div class="spec-row reveal"><span class="idx">02</span><h3><span data-lang-en>Nine control categories</span><span data-lang-zh>九大控制分類</span></h3><p><span data-lang-en>Typography, spacing, size, layout, radius, position/offset, shadow, frosted glass, color — each fully scrubbable.</span><span data-lang-zh>字型、間距、尺寸、佈局、圓角、位置偏移、陰影、磨砂玻璃、顏色——每項都能拖曳微調。</span></p></div>
+      <div class="spec-row reveal"><span class="idx">03</span><h3><span data-lang-en>Modern color controls</span><span data-lang-zh>新版顏色控制</span></h3><p><span data-lang-en>Photoshop-style multi-stop gradients, border stroke alignment, and glass effects that stay see-through.</span><span data-lang-zh>Photoshop 風格多 stop 漸層、邊框對齊，以及真正透明可見的 Glass 效果。</span></p></div>
       <div class="spec-row reveal"><span class="idx">04</span><h3><span data-lang-en>The transform box</span><span data-lang-zh>變形框</span></h3><p><span data-lang-en>Select any element for an 8-handle box: corners scale proportionally, edges resize, drag to move, rotate, live px label.</span><span data-lang-zh>選任何元素都給 8 手把框：角等比縮放、邊改寬高、拖移、旋轉、即時 px 標籤。</span></p></div>
       <div class="spec-row reveal"><span class="idx">05</span><h3><span data-lang-en>Structured Copy for AI</span><span data-lang-zh>結構化複製給 AI</span></h3><p><span data-lang-en>On Confirm, copy structured values for your AI — selectors, values, and intent are ready to paste.</span><span data-lang-zh>按確認後，複製給 AI 的結構化數值——selector、數值與意圖都整理好，直接貼上。</span></p></div>
       <div class="spec-row reveal"><span class="idx">06</span><h3><span data-lang-en>Works across AI tools</span><span data-lang-zh>跨 AI 工具</span></h3><p><span data-lang-en>Packaged as a <span class="keep-together">Claude Code</span> plugin, with portable adapters for Codex, Cursor, Windsurf, and plain skill folders.</span><span data-lang-zh>包裝成 <span class="keep-together">Claude Code</span> plugin，並提供 Codex、Cursor、Windsurf 與純 skill folder 的可攜 adapter。</span></p></div>
@@ -864,8 +1083,10 @@
     const PICK={
       '#folderCard':{el:card, out:'.folder-card'},
       '.fc-thumb':{el:card.querySelector('.fc-thumb'), out:'.folder-card .fc-thumb'},
+      '.fc-body':{el:card.querySelector('.fc-body'), out:'.folder-card .fc-body'},
       '.fc-title':{el:card.querySelector('.fc-title'), out:'.folder-card .fc-title'},
       '.fc-badge':{el:card.querySelector('.fc-badge'), out:'.folder-card .fc-badge'},
+      '.fc-footer':{el:card.querySelector('.fc-footer'), out:'.folder-card .fc-footer'},
       '.fc-icon':{el:card.querySelector('.fc-icon'), out:'.folder-card .fc-icon'}
     };
     const DEF_CARD={radius:18,pad:22,gap:12,shadow:22,scale:100,x:0,y:0,rot:0};
@@ -1149,6 +1370,30 @@
     const svg=pointer.querySelector('svg');
     if(svg) svg.addEventListener('animationend',()=>pointer.classList.remove('spin'));
   })();
+  // Cursor crosshair — follows mouse position without blocking links or controls.
+  (function(){
+    if(!(window.matchMedia&&window.matchMedia('(pointer:fine)').matches)) return;
+    const cross=document.createElement('div');
+    cross.className='cursor-crosshair';
+    cross.setAttribute('aria-hidden','true');
+    cross.innerHTML='<span class="cursor-mark"></span>';
+    document.body.appendChild(cross);
+    document.body.classList.add('crosshair-ready');
+    let x=innerWidth/2, y=innerHeight/2, raf=0;
+    function draw(){
+      raf=0;
+      cross.style.setProperty('--x',x+'px');
+      cross.style.setProperty('--y',y+'px');
+    }
+    window.addEventListener('pointermove',e=>{
+      if(e.pointerType&&e.pointerType!=='mouse') return;
+      x=e.clientX; y=e.clientY;
+      cross.classList.add('on');
+      if(!raf) raf=requestAnimationFrame(draw);
+    },{passive:true});
+    document.addEventListener('pointerleave',()=>cross.classList.remove('on'));
+    window.addEventListener('blur',()=>cross.classList.remove('on'));
+  })();
   // Nav motion: each pill lands at its own natural angle, then hover sends a short wave through visible pills.
   (function(){
     const prefersReduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1243,6 +1488,23 @@
   const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12});
   document.querySelectorAll('.reveal').forEach((el,i)=>{el.style.transitionDelay=(Math.min(i,6)*60)+'ms';io.observe(el);});
 
+  (function(){
+    const features=document.getElementById('features');
+    if(!features) return;
+    if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+      features.classList.add('features-in');
+      return;
+    }
+    const featuresIo=new IntersectionObserver(entries=>{
+      entries.forEach(entry=>{
+        if(!entry.isIntersecting) return;
+        features.classList.add('features-in');
+        featuresIo.unobserve(features);
+      });
+    },{threshold:.18,rootMargin:'0px 0px -16% 0px'});
+    featuresIo.observe(features);
+  })();
+
   // how section: scroll-scrubbed brochure fold. Desktop opens sideways; mobile opens downward.
   (function(){
     const root=document.getElementById('how');
@@ -1253,7 +1515,7 @@
     const mobile=()=>window.matchMedia('(max-width:620px)').matches && !reduced();
     const clamp=n=>Math.max(0,Math.min(1,n));
     const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
-    let ticking=false, fold=0, locked=false, lockY=0, touchY=null, releaseReady=false;
+    let ticking=false, fold=0, hold=0, locked=false, lockY=0, touchY=null, releaseReady=false;
     root.classList.add('how-fold-ready');
     function clearEl(el){
       el.style.opacity='';
@@ -1317,6 +1579,7 @@
         const top=pinTop();
         if(rect.top>top+80){
           fold=0;
+          hold=0;
           releaseReady=false;
         } else if(fold<1&&rect.top<=top+8&&rect.bottom>window.innerHeight*.45){
           lockToCut();
@@ -1345,7 +1608,7 @@
       lockY=window.scrollY+rect.top-pinTop();
       window.scrollTo(0,lockY);
       locked=true;
-      if(fold<.94) releaseReady=false;
+      if(fold<.94){ releaseReady=false; hold=0; }
     }
     function shouldCatch(delta){
       if(!desktop()&&!mobile()) return false;
@@ -1357,30 +1620,42 @@
     function consume(delta){
       if(!shouldCatch(delta)) return false;
       const visuallyOpen=ease(fold)>=.995;
+      const maxDelta=mobile()?96:180;
+      const holdNeed=mobile()?340:520;
+      const limitedDelta=Math.sign(delta)*Math.min(Math.abs(delta),maxDelta);
       if(delta>0&&visuallyOpen&&releaseReady){
+        if(!locked) lockToCut();
+        else window.scrollTo(0,lockY);
         fold=1;
+        hold+=Math.abs(limitedDelta);
+        if(hold<holdNeed){
+          render();
+          return true;
+        }
         render();
         locked=false;
         releaseReady=false;
+        hold=0;
         window.scrollBy(0,Math.min(delta,320));
         return true;
       }
       if((delta>0&&fold>=1)||(delta<0&&fold<=0)){
         locked=false;
         releaseReady=false;
+        hold=0;
         window.scrollBy(0,delta>0?Math.min(delta,320):Math.max(delta,-320));
         return true;
       }
       if(!locked) lockToCut();
       else window.scrollTo(0,lockY);
-      if(delta<0) releaseReady=false;
-      const maxDelta=mobile()?96:180;
+      if(delta<0){ releaseReady=false; hold=0; }
       const denom=mobile()?780:620;
-      const limitedDelta=Math.sign(delta)*Math.min(Math.abs(delta),maxDelta);
+      const wasOpen=fold>=1;
       fold=clamp(fold+limitedDelta/denom);
       if(delta>0&&ease(fold)>=.995){
         fold=1;
         releaseReady=true;
+        if(!wasOpen) hold=0;
       }
       render();
       return true;
@@ -1475,7 +1750,63 @@
       ctx.globalAlpha=1;
     }
     function clearParts(){ parts.length=0; if(cw) ctx.clearRect(0,0,cw,ch); }
-    let raf=0,last=0,running=false;
+    let raf=0,last=0,running=false,entryReady=false,decodedOnce=false,waitingForTitle=false,decryptTimer=0,decryptToken=0;
+    const CIPHER='{}[]<>/\\\\|_+-=01#@$%&*ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+    function cipherText(src,ratio){
+      var out='';
+      var chars=src.split('');
+      var nonSpace=chars.map((ch,i)=>(/\s/.test(ch)?-1:i)).filter(i=>i>=0);
+      var reveal=Math.floor(nonSpace.length*ratio);
+      var scan=5;
+      for(var i=0;i<src.length;i++){
+        var ch=src.charAt(i);
+        if(/\s/.test(ch)){ out+=ch; continue; }
+        var order=nonSpace.indexOf(i);
+        if(order<reveal) out+=ch;
+        else if(order<reveal+scan) out+=CIPHER.charAt((Math.random()*CIPHER.length)|0);
+        else out+='\u00a0';
+      }
+      return out;
+    }
+    function decryptNotes(done){
+      clearTimeout(decryptTimer);
+      const token=++decryptToken;
+      const spans=[];
+      notes.forEach(n=>Array.prototype.slice.call(n.querySelectorAll('[data-lang-en],[data-lang-zh]')).forEach(s=>{
+        if(!s.dataset.decryptText) s.dataset.decryptText=s.textContent;
+        spans.push(s);
+      }));
+      if(!spans.length){ done(); return; }
+      spans.forEach(s=>{ s.textContent=cipherText(s.dataset.decryptText,0); });
+      const startT=performance.now(), dur=1150, stagger=170;
+      wrap.classList.add('notes-ready');
+      notes.forEach(n=>n.classList.add('decrypting'));
+      function tick(now){
+        if(token!==decryptToken) return;
+        let active=false;
+        spans.forEach(s=>{
+          const note= s.closest('.hero-note');
+          const idx=note?notes.indexOf(note):0;
+          const p=Math.min(1,Math.max(0,(now-startT-idx*stagger)/dur));
+          const eased=1-Math.pow(1-p,3);
+          s.textContent=cipherText(s.dataset.decryptText,eased);
+          if(p<1) active=true;
+        });
+        if(active) requestAnimationFrame(tick);
+        else {
+          spans.forEach(s=>s.textContent=s.dataset.decryptText);
+          notes.forEach(n=>n.classList.remove('decrypting'));
+          decryptTimer=setTimeout(()=>{ if(token===decryptToken) done(); },80);
+        }
+      }
+      requestAnimationFrame(tick);
+    }
+    function primeEncryptedNotes(){
+      notes.forEach(n=>Array.prototype.slice.call(n.querySelectorAll('[data-lang-en],[data-lang-zh]')).forEach(s=>{
+        if(!s.dataset.decryptText) s.dataset.decryptText=s.textContent;
+        s.textContent=cipherText(s.dataset.decryptText,0);
+      }));
+    }
     function place(){
       sizeCanvas(); clearParts(); computeLetterRects();
       const W=wrap.clientWidth,H=wrap.clientHeight;
@@ -1516,9 +1847,34 @@
       drawParts(dt);
       raf=requestAnimationFrame(frame);
     }
-    function start(){ if(running||!isDesktop())return; running=true; last=0; raf=requestAnimationFrame(frame); }
+    function start(){ if(running||!isDesktop()||!entryReady)return; running=true; last=0; raf=requestAnimationFrame(frame); }
     function stop(){ running=false; if(raf)cancelAnimationFrame(raf); raf=0; }
-    function reset(){ stop(); if(isDesktop()){ place(); start(); } else { clearParts(); notes.forEach(n=>{n.style.transform='';n.style.color='';n.style.fontFamily='';n.style.fontWeight='';n.style.fontSize='';}); } }
+    function waitForTitleSettled(fn){
+      if(document.body.classList.contains('hero-title-settled')){ fn(); return; }
+      const done=()=>{ window.removeEventListener('hero-title-settled',done); fn(); };
+      window.addEventListener('hero-title-settled',done,{once:true});
+    }
+    function reset(){
+      stop();
+      if(isDesktop()){
+        place();
+        if(!decodedOnce) primeEncryptedNotes();
+        if(decodedOnce){ entryReady=true; start(); }
+        else if(!waitingForTitle){
+          entryReady=false;
+          waitingForTitle=true;
+          waitForTitleSettled(()=>{
+            waitingForTitle=false;
+            if(decodedOnce) return;
+            decryptNotes(()=>{ decodedOnce=true; entryReady=true; start(); });
+          });
+        }
+      } else {
+        clearParts();
+        wrap.classList.add('notes-ready');
+        notes.forEach(n=>{n.style.transform='';n.style.color='';n.style.fontFamily='';n.style.fontWeight='';n.style.fontSize='';});
+      }
+    }
     function onResize(){
       if(!isDesktop()){ stop(); clearParts(); notes.forEach(n=>{n.style.transform='';n.style.color='';n.style.fontFamily='';n.style.fontWeight='';n.style.fontSize='';}); return; }
       if(!running){ reset(); return; }                 // returned from mobile → re-seed
@@ -1583,6 +1939,14 @@
       document.documentElement.style.setProperty('--wipe-origin-x',(seedChar._seedX-pr.left)+'px');
       document.documentElement.style.setProperty('--wipe-origin-y',(seedChar._seedY-pr.top)+'px');
     }
+    function fullWipeRadius(){
+      if(!panel) return 0;
+      const pr=panel.getBoundingClientRect();
+      const css=getComputedStyle(document.documentElement);
+      const ox=parseFloat(css.getPropertyValue('--wipe-origin-x'))||pr.width/2;
+      const oy=parseFloat(css.getPropertyValue('--wipe-origin-y'))||pr.height/2;
+      return Math.ceil(Math.hypot(Math.max(ox,pr.width-ox),Math.max(oy,pr.height-oy)))+32;
+    }
     measureSeed();
     const stopLetters=Array.prototype.slice.call(title.querySelectorAll('[data-lang-en] .word')).find(w=>w.textContent==='Stop');
     if(stopLetters){
@@ -1619,15 +1983,18 @@
       const ps=Math.min(1,p/A), es=ps<.5?2*ps*ps:1-Math.pow(-2*ps+2,2)/2;
       const D=Math.max(vw,vh)*1.15, op=String(Math.max(0,1-ps*1.3));
       for(const c of chs){ if(c===seedChar) continue; c.style.transform='translate3d('+(c._dx*c._dist*D*es)+'px,'+(c._dy*c._dist*D*es)+'px,0) rotate('+(c._rot*es)+'deg)'; c.style.opacity=op; }
-      cta.style.transform='translate3d(0,'+(es*0.6*vh)+'px,0)'; cta.style.opacity=String(Math.max(0,1-ps*1.8));
-      if(readout) readout.style.opacity=String(Math.max(0,1-ps*2.6));
-      if(notes){ notes.style.transform='scale('+(1+es*0.75)+')'; notes.style.opacity=String(Math.max(0,1-ps*1.25)); }
+      // the other hero pieces scatter outward too — each its own direction + spin, synced with the letters
+      cta.style.transform='translate3d('+(0.12*D*es)+'px,'+(0.72*D*es)+'px,0) rotate('+(24*es)+'deg)'; cta.style.opacity=String(Math.max(0,1-ps*1.7));
+      if(readout){ readout.style.transform='translate3d('+(-0.5*D*es)+'px,'+(0.46*D*es)+'px,0) rotate('+(-28*es)+'deg)'; readout.style.opacity=String(Math.max(0,1-ps*2.2)); }
+      if(notes){ notes.style.transform='translate3d('+(0.46*D*es)+'px,'+(0.6*D*es)+'px,0) scale('+(1+es*0.4)+') rotate('+(16*es)+'deg)'; notes.style.opacity=String(Math.max(0,1-ps*1.25)); }
       if(pointer){ pointer.style.transform='translate3d('+(-D*.42*es)+'px,'+(-D*.28*es)+'px,0) rotate('+(-45-70*es)+'deg)'; pointer.style.opacity=op; }
       // the period IS the dot at rest (panel hidden below); it fades out only once the panel dot has grown over the same spot
       if(seedChar){ seedChar.style.opacity = String(Math.max(0,Math.min(1,1-p/0.05))); seedChar.style.transform=''; }
       // --- PANEL — at rest it is INVISIBLE so the live period is the only dot (dragging letter-spacing can't expose a 2nd dot);
       //     on scroll it grows concentrically over the period (live-synced origin) → reads as the same dot continuing, then expands, then recedes
       if(panel){
+        const fullR=fullWipeRadius();
+        const startR=Math.max(vw,vh)*0.035;
         if(p<A){
           panel.classList.remove('tools-in');
           if(wtools) wtools.style.transform='';
@@ -1637,13 +2004,13 @@
           panel.style.clipPath='circle('+r+'vmax at var(--wipe-origin-x,50%) var(--wipe-origin-y,50%))';
           if(wtext){ wtext.style.opacity='0'; wtext.style.transform=''; }
         } else if(p<B){                // the SAME dot expands to full-bleed; the statement fades in
-          const pe=(p-A)/(B-A), ee=pe<.5?2*pe*pe:1-Math.pow(-2*pe+2,2)/2;
-          panel.style.clipPath='circle('+(3.5+ee*82)+'vmax at var(--wipe-origin-x,50%) var(--wipe-origin-y,50%))';
-          if(wtext){ wtext.style.opacity=String(Math.min(1,pe*1.35)); wtext.style.transform=''; }
+          const pe=(p-A)/(B-A), cover=Math.min(1,pe*1.35), ee=cover<.5?2*cover*cover:1-Math.pow(-2*cover+2,2)/2;
+          panel.style.clipPath='circle('+(startR+ee*(fullR-startR))+'px at var(--wipe-origin-x,50%) var(--wipe-origin-y,50%))';
+          if(wtext){ wtext.style.opacity=String(cover); wtext.style.transform=''; }
           if(wtools) wtools.style.transform='';
           panel.classList.toggle('tools-in',pe>.22);
         } else if(p<C){                // full vermilion hold: absorb scroll while the statement remains readable
-          panel.style.clipPath='circle(85.5vmax at var(--wipe-origin-x,50%) var(--wipe-origin-y,50%))';
+          panel.style.clipPath='circle('+fullR+'px at var(--wipe-origin-x,50%) var(--wipe-origin-y,50%))';
           if(wtext){ wtext.style.opacity='1'; wtext.style.transform=''; }
           if(wtools){ wtools.style.transform=''; }
           panel.classList.add('tools-in');
@@ -1709,25 +2076,75 @@
     window.addEventListener('pointercancel',endDrag);
   })();
 
-  // Studio enters from the LEFT as the wipe hands off — echoes the red panel exiting right (no plain "scroll up from below")
+  // #why pinned sequence: as the red wipe hands off, the head rises in, then the slogan
+  // lines FILL IN (light→ink) one per scroll while the section is pinned; finally the demo enters bottom-right.
   (function(){
     var why=document.getElementById('why'); if(!why) return;
-    var inner=why.querySelector('.wrap'); if(!inner) return;
+    var stage=document.getElementById('whyHeadStage');
+    var head=why.querySelector('.head');
+    var lines=head?Array.prototype.slice.call(head.querySelectorAll('.why-line')):[];
+    var demoStage=document.getElementById('whyDemoStage');
+    var demo=why.querySelector('.why-demo');
+    var face=why.querySelector('.why-face');
+    if(!stage||!head||!lines.length) return;
     var desktop=function(){return window.matchMedia('(min-width:981px)').matches;};
-    var ticking=false;
+    var ease=function(t){return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;};
     function frame(){
-      ticking=false;
-      if(!desktop()){ inner.style.transform=''; return; }
-      var vh=window.innerHeight, top=why.getBoundingClientRect().top;
-      // p: 0 as the section first peeks at the viewport bottom → 1 once it has risen ~62% up
-      var p=Math.min(1,Math.max(0,(vh-top)/(vh*0.62)));
-      if(p>=1){ inner.style.transform=''; return; }      // settled → drop the transform so the live demo isn't inside a transformed box
-      var e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;           // easeInOut
-      inner.style.transform='translate3d('+((1-e)*-46)+'vw,0,0)';
+      if(!desktop()){
+        head.style.transform='';head.style.opacity='';
+        lines.forEach(function(l){l.style.setProperty('--fill','1');});
+        if(demo){demo.style.transform='';demo.style.opacity='';demo.style.clipPath='';demo.style.filter='';}
+        var mNote=demoStage?demoStage.querySelector('.studio-note'):null;
+        if(mNote){mNote.style.transform='';mNote.style.opacity='';mNote.style.filter='';}
+        return;
+      }
+      var vh=window.innerHeight;
+      // stage progress: 0 when its top hits the pin line → 1 when its bottom passes
+      var r=stage.getBoundingClientRect();
+      var total=Math.max(1,stage.offsetHeight-vh);
+      var P=Math.min(1,Math.max(0,-r.top/total));
+      // Bring the real #why copy up from below before it reaches the pin line.
+      var navH=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h'))||86;
+      var enterStart=navH+vh*0.28;
+      var headOp=Math.min(1,Math.max(0,(enterStart-r.top)/(enterStart-navH)));
+      var headEase=ease(headOp);
+      head.style.transform='translate3d(0,'+((1-headEase)*96)+'px,0)';
+      head.style.opacity=String(headOp);
+      if(face && headOp>=0.99) face.classList.add('wf-drop');   // face DROPS in (once) the moment the head settles in place
+      var fs=0.04, fe=0.9, seg=(fe-fs)/lines.length;
+      lines.forEach(function(l,i){
+        var f=Math.min(1,Math.max(0,(P-fs-i*seg)/seg));
+        l.style.setProperty('--fill',f.toFixed(3));
+      });
+      // demo sticks at its layout position, then opens like a TV powering on as the stage scrolls.
+      if(demo&&demoStage){
+        var dsr=demoStage.getBoundingClientRect();
+        var pinTop=navH+24;
+        var dtotal=Math.max(1,demoStage.offsetHeight-vh);
+        var raw=Math.min(1,Math.max(0,(pinTop-dsr.top)/dtotal));
+        var openP=Math.min(1,raw/0.48);
+        var de=ease(openP);
+        if(openP>=1){ demo.style.transform=''; demo.style.opacity=''; demo.style.clipPath=''; demo.style.filter=''; }
+        else {
+          var slit=(1-de)*50;
+          demo.style.transform='scaleX('+(0.985+de*0.015)+')';
+          demo.style.clipPath='inset('+slit+'% 0 '+slit+'% 0 round var(--radius-lg))';
+          demo.style.opacity=String(openP>0.02?1:0);
+          demo.style.filter='brightness('+(1+(1-de)*0.18)+')';
+        }
+        var note=demoStage.querySelector('.studio-note');
+        if(note){
+          var noteP=Math.min(1,Math.max(0,(raw-0.68)/0.22));
+          var ne=ease(noteP);
+          note.style.opacity=String(ne);
+          note.style.transform='translate3d(0,'+((1-ne)*42)+'px,0)';
+          note.style.filter='blur('+((1-ne)*3).toFixed(2)+'px)';
+        }
+      }
     }
-    // run synchronously on scroll so an instant nav-jump to #why corrects the transform before paint (no off-left flash)
     window.addEventListener('scroll',frame,{passive:true});
     window.addEventListener('resize',frame);
+    if(document.fonts&&document.fonts.ready) document.fonts.ready.then(frame);
     frame();
   })();
 
@@ -1775,6 +2192,86 @@
     measure(); render();
     if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>{measure();render();});
     window.addEventListener('load',()=>{measure();render();});
+  })();
+
+  // headline entrance: each visual LINE slides up through a fixed mask (Better Off®-style), lines
+  // staggered top→bottom, motion-blur trail. The .word elements are split by the scroll-scrub IIFE
+  // above; here we wrap each word's content in a riser, animate it, then UNWRAP so the same .ch nodes
+  // (held by the scatter/scrub logic) survive untouched.
+  (function(){
+    const title=document.querySelector('.hero .title');
+    if(!title) return;
+    function publishTitleSettled(){
+      document.body.classList.add('hero-title-settled');
+      window.dispatchEvent(new Event('hero-title-settled'));
+    }
+    if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches){ publishTitleSettled(); return; }
+    const base=0.12, step=0.15, dur=1.05;
+    function arm(){
+      // the visible language group only (the hidden one has no layout → bad line detection)
+      let group=null;
+      title.querySelectorAll('[data-lang-en],[data-lang-zh]').forEach(g=>{ if(getComputedStyle(g).display!=='none') group=g; });
+      if(!group){ publishTitleSettled(); return; }
+      const words=Array.prototype.slice.call(group.querySelectorAll('.word'));
+      if(!words.length){ publishTitleSettled(); return; }
+      // bucket words into visual lines by their top edge, then rank lines top→bottom
+      const tops=[];
+      words.forEach(w=>{ const t=Math.round(w.getBoundingClientRect().top); let li=tops.findIndex(v=>Math.abs(v-t)<8); if(li<0){tops.push(t);li=tops.length-1;} w._ln=li; });
+      const rank={}; tops.map((t,i)=>({t,i})).sort((a,b)=>a.t-b.t).forEach((o,r)=>{ rank[o.i]=r; });
+      const lineCount=tops.length;
+      words.forEach(w=>{
+        // fixed mask via clip-path — wide left/right + tall top so blur halo & tight line-height ascenders
+        // aren't clipped; the bottom edge (just below the baseline) is the line the letters rise through.
+        w.style.clipPath='inset(-40% -12% -12% -12%)';
+        const inner=document.createElement('span');
+        inner.className='rise-inner';
+        inner.style.display='inline-block';
+        inner.style.willChange='transform,filter';
+        while(w.firstChild) inner.appendChild(w.firstChild);
+        w.appendChild(inner);
+        inner.style.animation='line-rise '+dur+'s cubic-bezier(.2,.7,.32,1) backwards';
+        inner.style.animationDelay=(base+rank[w._ln]*step)+'s';
+      });
+      // after the last line lands, unwrap → restore the original word/.ch structure for scatter & scrub
+      const totalMs=Math.ceil((base+(lineCount-1)*step+dur+0.08)*1000);
+      setTimeout(()=>{
+        words.forEach(w=>{
+          const inner=w.querySelector(':scope > .rise-inner');
+          if(inner){ while(inner.firstChild) w.insertBefore(inner.firstChild,inner); w.removeChild(inner); }
+          w.style.clipPath='';
+        });
+        publishTitleSettled();
+      },totalMs);
+      title.style.visibility='';   // reveal: every line now sits below its fixed mask, ready to rise
+    }
+    title.style.visibility='hidden';   // hide synchronously so the settled title never flashes before arm
+    let done=false; const armOnce=()=>{ if(done)return; done=true; arm(); };
+    // wait for fonts so the line buckets are measured against the final layout (fallback if it never resolves)
+    if(document.fonts&&document.fonts.ready){ document.fonts.ready.then(armOnce); }
+    setTimeout(armOnce,1200);
+  })();
+
+  // #why face — pupils follow the cursor (eye-tracking); the mouth sways on its own via CSS
+  (function(){
+    var face=document.querySelector('.why-face');
+    if(!face) return;
+    var pupils=Array.prototype.slice.call(face.querySelectorAll('.wf-pupil'));
+    if(!pupils.length) return;
+    var raf=0, mx=innerWidth/2, my=innerHeight/2;
+    function apply(){
+      raf=0;
+      pupils.forEach(function(p){
+        var r=p.getBoundingClientRect();
+        if(!r.width) return;
+        var cx=r.left+r.width/2, cy=r.top+r.height/2;
+        var dx=mx-cx, dy=my-cy, ang=Math.atan2(dy,dx);
+        // SVG <circle>: CSS translate units are viewBox user units; the clip-path keeps the pupil inside the white
+        var strength=Math.min(1, Math.hypot(dx,dy)/480);
+        var moveVB=80*strength;
+        p.style.transform='translate('+(Math.cos(ang)*moveVB).toFixed(1)+'px,'+(Math.sin(ang)*moveVB).toFixed(1)+'px)';
+      });
+    }
+    window.addEventListener('mousemove',function(e){ mx=e.clientX; my=e.clientY; if(!raf) raf=requestAnimationFrame(apply); },{passive:true});
   })();
 </script>
 </body>

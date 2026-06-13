@@ -659,6 +659,10 @@
   .studio-ctrl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;background:var(--card-solid);border:2px solid var(--blue);cursor:pointer;transition:transform .12s}
   .studio-ctrl input[type=range]::-webkit-slider-thumb:active{transform:scale(1.2)}
   .studio-ctrl input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--card-solid);border:2px solid var(--blue);cursor:pointer}
+  .studio-ctrl.cue label .v{animation:studio-value-cue .9s ease-in-out 2}
+  .studio-ctrl.cue input[type=range]::-webkit-slider-thumb{transform:scale(1.28);box-shadow:0 0 0 8px color-mix(in srgb,var(--blue) 18%,transparent)}
+  .studio-ctrl.cue input[type=range]::-moz-range-thumb{transform:scale(1.28);box-shadow:0 0 0 8px color-mix(in srgb,var(--blue) 18%,transparent)}
+  @keyframes studio-value-cue{0%,100%{transform:none}45%{transform:translateY(-1px);background:color-mix(in srgb,var(--blue) 22%,transparent)}}
   .studio-hint{font-size:.74rem;color:var(--ink-faint);line-height:1.6;padding:2px 0 2px}
   .studio-select{width:100%;font-family:var(--mono);font-size:.76rem;padding:8px 10px;margin:2px 0 8px;border:1px solid var(--border-strong);border-radius:7px;background:var(--card-solid);color:var(--ink);cursor:pointer}
   .studio-select:hover{border-color:var(--blue)}
@@ -1322,6 +1326,73 @@
     // init: card shows its signature look; everything else stays live from the stylesheet until edited
     state['#folderCard']=Object.assign({},DEF_CARD); applyEl('#folderCard');
     select('#folderCard'); setZoomLabel(); pushHistory();
+    const cueSliders=['st-pad','st-gap','st-scale','st-radius','st-shadow'];
+    let cueTimer=0, cueRestore=null, cueStopped=false;
+    function stopStudioCue(e){
+      if(e&&e.type==='wheel'&&!window.__studioCueRunning) return;
+      cueStopped=true;
+      clearTimeout(cueTimer);
+      if(cueRestore) cueRestore();
+      cueRestore=null;
+      window.__studioCueRunning=false;
+      document.querySelectorAll('.studio-ctrl.cue').forEach(c=>c.classList.remove('cue'));
+    }
+    function cueSlider(id,done){
+      const input=el(id), ctrl=input?input.closest('.studio-ctrl'):null;
+      if(!input||!ctrl||cueStopped){ done(); return; }
+      const original=clampSlider(id,val(id));
+      const span=(+input.max)-(+input.min);
+      const delta=Math.max(4,Math.round(span*.18));
+      const target=clampSlider(id,original+delta);
+      const peak=target===original?clampSlider(id,original-delta):target;
+      const cueEase=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+      const dur=1050;
+      let start=0;
+      function setCueValue(v){
+        input.value=clampSlider(id,Math.round(v));
+        st(cur)[PROP[id]]=val(id);
+        applyEl(cur); updLabels(); refresh();
+      }
+      cueRestore=function(){ setCueValue(original); ctrl.classList.remove('cue'); };
+      function tick(ts){
+        if(cueStopped){ done(); return; }
+        if(!start) start=ts;
+        const p=Math.min(1,(ts-start)/dur);
+        let v=peak;
+        if(p<.42) v=original+(peak-original)*cueEase(p/.42);
+        else if(p>.62) v=peak+(original-peak)*cueEase((p-.62)/.38);
+        setCueValue(v);
+        if(p<1) requestAnimationFrame(tick);
+        else {
+          setCueValue(original);
+          ctrl.classList.remove('cue');
+          cueRestore=null;
+          done();
+        }
+      }
+      ctrl.classList.add('cue');
+      setTimeout(()=>requestAnimationFrame(tick),260);
+    }
+    window.__runStudioSliderCue=function(){
+      if(window.__studioCueRunning||cueStopped) return;
+      window.__studioCueRunning=true;
+      let idx=0;
+      function next(){
+        if(cueStopped){ window.__studioCueRunning=false; return; }
+        const id=cueSliders[idx%cueSliders.length];
+        idx++;
+        cueSlider(id,function(){
+          if(cueStopped){ window.__studioCueRunning=false; return; }
+          cueTimer=setTimeout(next,420);
+        });
+      }
+      next();
+    };
+    if(studio){
+      ['pointerdown','input','change','keydown','wheel','touchstart'].forEach(evt=>{
+        studio.addEventListener(evt,stopStudioCue,{capture:true,passive:true});
+      });
+    }
   })();
   const copyBtn=document.getElementById('copyBtn');
   copyBtn.addEventListener('click',()=>{
@@ -1621,7 +1692,7 @@
       if(!shouldCatch(delta)) return false;
       const visuallyOpen=ease(fold)>=.995;
       const maxDelta=mobile()?96:180;
-      const holdNeed=mobile()?340:520;
+      const holdNeed=mobile()?170:260;
       const limitedDelta=Math.sign(delta)*Math.min(Math.abs(delta),maxDelta);
       if(delta>0&&visuallyOpen&&releaseReady){
         if(!locked) lockToCut();
@@ -2086,6 +2157,7 @@
     var demoStage=document.getElementById('whyDemoStage');
     var demo=why.querySelector('.why-demo');
     var face=why.querySelector('.why-face');
+    var demoCueDone=false;
     if(!stage||!head||!lines.length) return;
     var desktop=function(){return window.matchMedia('(min-width:981px)').matches;};
     var ease=function(t){return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;};
@@ -2124,7 +2196,13 @@
         var raw=Math.min(1,Math.max(0,(pinTop-dsr.top)/dtotal));
         var openP=Math.min(1,raw/0.48);
         var de=ease(openP);
-        if(openP>=1){ demo.style.transform=''; demo.style.opacity=''; demo.style.clipPath=''; demo.style.filter=''; }
+        if(openP>=1){
+          demo.style.transform=''; demo.style.opacity=''; demo.style.clipPath=''; demo.style.filter='';
+          if(!demoCueDone){
+            demoCueDone=true;
+            setTimeout(function(){ if(window.__runStudioSliderCue) window.__runStudioSliderCue(); },520);
+          }
+        }
         else {
           var slit=(1-de)*50;
           demo.style.transform='scaleX('+(0.985+de*0.015)+')';
